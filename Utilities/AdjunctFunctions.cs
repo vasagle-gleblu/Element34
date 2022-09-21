@@ -69,25 +69,29 @@ namespace Element34.Utilities
 
         public static void ExecuteJavaScript(this IWebElement element, string script, params object[] args)
         {   // Execute client-side JavaScript on IWebElement
-            IJavaScriptExecutor js = (IJavaScriptExecutor)element;
+            var driver = ((IWrapsDriver)element).WrappedDriver;
+            IJavaScriptExecutor js = (IJavaScriptExecutor)driver;
             js.ExecuteScript(script, args);
         }
 
         public static T ExecuteJavaScript<T>(this IWebElement element, string script, params object[] args)
         {  // Execute client-side JavaScript on IWebElement with return type
-            IJavaScriptExecutor js = (IJavaScriptExecutor)element;
+            var driver = ((IWrapsDriver)element).WrappedDriver;
+            IJavaScriptExecutor js = (IJavaScriptExecutor)driver;
             return (T)js.ExecuteScript(script, args);
         }
 
         public static void ExecuteJavaScript(this SelectElement selectElement, string script, params object[] args)
         {  // Execute client-side JavaScript on Select Element
-            IJavaScriptExecutor js = (IJavaScriptExecutor)selectElement;
+            var driver = ((IWrapsDriver)selectElement).WrappedDriver;
+            IJavaScriptExecutor js = (IJavaScriptExecutor)driver;
             js.ExecuteScript(script, args);
         }
 
         public static T ExecuteJavaScript<T>(this SelectElement selectElement, string script, params object[] args)
         {  // Execute client-side JavaScript on Select Element with return type
-            IJavaScriptExecutor js = (IJavaScriptExecutor)selectElement;
+            var driver = ((IWrapsDriver)selectElement).WrappedDriver;
+            IJavaScriptExecutor js = (IJavaScriptExecutor)driver;
             return (T)js.ExecuteScript(script, args);
         }
 
@@ -174,7 +178,7 @@ namespace Element34.Utilities
             act.Perform();
         }
 
-        public static Dictionary<string, string> GetAttributes(this IWebElement element)
+        public static Dictionary<string, object> GetAttributes(this IWebElement element)
         {
             const string script = "var items = {};" +
                                   "for (index = 0; index < arguments[0].attributes.length; ++index) " +
@@ -183,7 +187,7 @@ namespace Element34.Utilities
                                   "}" +
                                   "return items;";
 
-            return element.ExecuteJavaScript<Dictionary<string, string>>(script, element);
+            return element.ExecuteJavaScript<Dictionary<string, object>>(script, element);
         }
 
         public static void ScrollToPageBottom(this IWebDriver driver)
