@@ -369,12 +369,14 @@ namespace Element34.Utilities.DataManager
                         case "true":
                         case "ok":
                         case "y":
+                        case "+":
                             ReturnVal = true;
                             break;
                         case "no":
                         case "negative":
                         case "false":
                         case "n":
+                        case "-":
                             ReturnVal = false;
                             break;
                         default:

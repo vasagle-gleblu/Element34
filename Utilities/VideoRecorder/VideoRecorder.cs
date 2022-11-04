@@ -159,7 +159,7 @@ namespace Element34.Utilities.VideoRecorder
 /*
     USAGE:
 
-    var rec = new Recorder(new RecorderParams("out.avi", 10, CodecIds.MotionJpeg, 70));
+    var rec = new Recorder(new RecorderParams("out.avi", 10, SharpAvi.KnownFourCCs.Codecs.MotionJpeg, 70));
 
     Console.WriteLine("Press any key to Stop...");
     Console.ReadKey();

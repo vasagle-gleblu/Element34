@@ -6,6 +6,7 @@ using System.Data.OleDb;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Xml.Serialization;
 
 namespace Element34.Utilities.DataManager
 {
@@ -151,6 +152,32 @@ namespace Element34.Utilities.DataManager
             {
                 FileInfo oFile = new FileInfo(Path.GetFullPath(Path.Combine(oDir.FullName, string.Format("{0}.csv", dt.TableName.Replace("$", string.Empty)))));
                 ExportToCSV(oFile, dt);
+            }
+        }
+
+        public static string ExportToXml(this DataTable dt)
+        {
+            using (var memoryStream = new MemoryStream())
+            {
+                using (TextWriter streamWriter = new StreamWriter(memoryStream))
+                {
+                    var xmlSerializer = new XmlSerializer(typeof(DataTable));
+                    xmlSerializer.Serialize(streamWriter, dt);
+                    return Encoding.UTF8.GetString(memoryStream.ToArray());
+                }
+            }
+        }
+
+        public static string ExportToXml(this DataSet ds)
+        {
+            using (var memoryStream = new MemoryStream())
+            {
+                using (TextWriter streamWriter = new StreamWriter(memoryStream))
+                {
+                    var xmlSerializer = new XmlSerializer(typeof(DataSet));
+                    xmlSerializer.Serialize(streamWriter, ds);
+                    return Encoding.UTF8.GetString(memoryStream.ToArray());
+                }
             }
         }
 
