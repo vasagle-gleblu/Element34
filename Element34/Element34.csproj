@@ -14,6 +14,10 @@
     <Deterministic>true</Deterministic>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -70,7 +74,7 @@
       <HintPath>..\packages\Microsoft.Bcl.HashCode.1.1.1\lib\net461\Microsoft.Bcl.HashCode.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.13.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <HintPath>..\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="NLog, Version=5.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
       <HintPath>..\packages\NLog.5.1.2\lib\net46\NLog.dll</HintPath>
@@ -116,27 +120,62 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
     <Reference Include="WebDriver, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Selenium.WebDriver.4.8.1\lib\net48\WebDriver.dll</HintPath>
+      <HintPath>..\packages\Selenium.WebDriver.4.8.2\lib\net48\WebDriver.dll</HintPath>
     </Reference>
     <Reference Include="WebDriver.Support, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Selenium.Support.4.8.1\lib\net48\WebDriver.Support.dll</HintPath>
+      <HintPath>..\packages\Selenium.Support.4.8.2\lib\net48\WebDriver.Support.dll</HintPath>
     </Reference>
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="FuzzySearchUtils.cs" />
+    <Compile Include="StringMetrics\ISimilarityMetric.cs" />
+    <Compile Include="StringMetrics\Phonetic\SoundExDM.cs" />
+    <Compile Include="StringMetrics\Similarity\CheckSimilarity.cs" />
+    <Compile Include="StringMetrics\Similarity\CosineSimilarity.cs" />
+    <Compile Include="StringMetrics\Similarity\LongestCommonSequence.cs" />
+    <Compile Include="StringMetrics\Similarity\LongestCommonSubstring.cs" />
+    <Compile Include="StringMetrics\Similarity\Markov.cs" />
+    <Compile Include="StringMetrics\Similarity\MarkovModel.cs" />
+    <Compile Include="StringMetrics\Similarity\TanimotoCoefficient.cs" />
+    <Compile Include="Utilities\CollectionExtensions.cs" />
+    <Compile Include="StringMetrics\Alphabet.cs" />
+    <Compile Include="StringMetrics\IStringComparison.cs" />
+    <Compile Include="StringMetrics\IStringEncoder.cs" />
+    <Compile Include="StringMetrics\Phonetic\Caverphone1.cs" />
+    <Compile Include="StringMetrics\Phonetic\Caverphone2.cs" />
+    <Compile Include="Utilities\HashDictionary.cs" />
+    <Compile Include="StringMetrics\Phonetic\Metaphone2.cs" />
+    <Compile Include="StringMetrics\Phonetic\NYSIISRefined.cs" />
+    <Compile Include="StringMetrics\Phonetic\SoundExRefined.cs" />
+    <Compile Include="StringMetrics\Phonetic\SoundExReverse.cs" />
+    <Compile Include="StringMetrics\Phonetic\Metaphone1.cs" />
+    <Compile Include="StringMetrics\Phonetic\SoundEx.cs" />
+    <Compile Include="StringMetrics\Phonetic\NYSIIS.cs" />
     <Compile Include="GridSearch.cs" />
+    <Compile Include="StringMetrics\Phonetic\Metaphone3.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="TemporaryFile.cs" />
-    <Compile Include="Utilities.cs" />
+    <Compile Include="StringMetrics\Similarity\WeightedLevenshteinDistance.cs" />
+    <Compile Include="StringMetrics\Similarity\RatcliffObershelpSimilarity.cs" />
+    <Compile Include="StringMetrics\Similarity\OverlapCoefficient.cs" />
+    <Compile Include="StringMetrics\Similarity\NGramDistance.cs" />
+    <Compile Include="StringMetrics\Similarity\LevenshteinDistance.cs" />
+    <Compile Include="StringMetrics\Similarity\JaroWinklerDistance.cs" />
+    <Compile Include="StringMetrics\Similarity\JaroDistance.cs" />
+    <Compile Include="StringMetrics\Similarity\JaccardDistance.cs" />
+    <Compile Include="StringMetrics\Similarity\HammingDistance.cs" />
+    <Compile Include="StringMetrics\Similarity\SorensenDiceDistance.cs" />
+    <Compile Include="Utilities\MathExtensions.cs" />
+    <Compile Include="Utilities\StringBuilderExtensions.cs" />
+    <Compile Include="Utilities\TemporaryFile.cs" />
+    <Compile Include="WebDriverExtensions.cs" />
     <Compile Include="DataManager\DataReadLayer.cs" />
     <Compile Include="DataManager\DataWriteLayer.cs" />
-    <Compile Include="DisposableDataRow.cs" />
-    <Compile Include="GetFolder.cs" />
+    <Compile Include="Utilities\DisposableDataRow.cs" />
+    <Compile Include="Utilities\Useful.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="VideoRecorder\VideoRecorder.cs" />
   </ItemGroup>
@@ -203,20 +242,21 @@
   <ItemGroup>
     <Content Include="Element34.ico" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\Selenium.WebDriver.MSEdgeDriver.109.0.1518.61\build\Selenium.WebDriver.MSEdgeDriver.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Selenium.WebDriver.MSEdgeDriver.109.0.1518.61\build\Selenium.WebDriver.MSEdgeDriver.targets'))" />
-    <Error Condition="!Exists('..\packages\Selenium.WebDriver.ChromeDriver.110.0.5481.7700\build\Selenium.WebDriver.ChromeDriver.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Selenium.WebDriver.ChromeDriver.110.0.5481.7700\build\Selenium.WebDriver.ChromeDriver.targets'))" />
     <Error Condition="!Exists('..\packages\Selenium.WebDriver.GeckoDriver.0.32.2\build\Selenium.WebDriver.GeckoDriver.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Selenium.WebDriver.GeckoDriver.0.32.2\build\Selenium.WebDriver.GeckoDriver.targets'))" />
-    <Error Condition="!Exists('..\packages\Selenium.WebDriver.4.8.1\build\Selenium.WebDriver.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Selenium.WebDriver.4.8.1\build\Selenium.WebDriver.targets'))" />
+    <Error Condition="!Exists('..\packages\Selenium.WebDriver.4.8.2\build\Selenium.WebDriver.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Selenium.WebDriver.4.8.2\build\Selenium.WebDriver.targets'))" />
+    <Error Condition="!Exists('..\packages\Selenium.WebDriver.ChromeDriver.111.0.5563.6400\build\Selenium.WebDriver.ChromeDriver.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Selenium.WebDriver.ChromeDriver.111.0.5563.6400\build\Selenium.WebDriver.ChromeDriver.targets'))" />
     <Error Condition="!Exists('..\packages\Selenium.WebDriver.IEDriver.4.8.1\build\Selenium.WebDriver.IEDriver.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Selenium.WebDriver.IEDriver.4.8.1\build\Selenium.WebDriver.IEDriver.targets'))" />
+    <Error Condition="!Exists('..\packages\Selenium.WebDriver.MSEdgeDriver.110.0.1587.50\build\Selenium.WebDriver.MSEdgeDriver.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Selenium.WebDriver.MSEdgeDriver.110.0.1587.50\build\Selenium.WebDriver.MSEdgeDriver.targets'))" />
   </Target>
-  <Import Project="..\packages\Selenium.WebDriver.MSEdgeDriver.109.0.1518.61\build\Selenium.WebDriver.MSEdgeDriver.targets" Condition="Exists('..\packages\Selenium.WebDriver.MSEdgeDriver.109.0.1518.61\build\Selenium.WebDriver.MSEdgeDriver.targets')" />
-  <Import Project="..\packages\Selenium.WebDriver.ChromeDriver.110.0.5481.7700\build\Selenium.WebDriver.ChromeDriver.targets" Condition="Exists('..\packages\Selenium.WebDriver.ChromeDriver.110.0.5481.7700\build\Selenium.WebDriver.ChromeDriver.targets')" />
   <Import Project="..\packages\Selenium.WebDriver.GeckoDriver.0.32.2\build\Selenium.WebDriver.GeckoDriver.targets" Condition="Exists('..\packages\Selenium.WebDriver.GeckoDriver.0.32.2\build\Selenium.WebDriver.GeckoDriver.targets')" />
-  <Import Project="..\packages\Selenium.WebDriver.4.8.1\build\Selenium.WebDriver.targets" Condition="Exists('..\packages\Selenium.WebDriver.4.8.1\build\Selenium.WebDriver.targets')" />
+  <Import Project="..\packages\Selenium.WebDriver.4.8.2\build\Selenium.WebDriver.targets" Condition="Exists('..\packages\Selenium.WebDriver.4.8.2\build\Selenium.WebDriver.targets')" />
+  <Import Project="..\packages\Selenium.WebDriver.ChromeDriver.111.0.5563.6400\build\Selenium.WebDriver.ChromeDriver.targets" Condition="Exists('..\packages\Selenium.WebDriver.ChromeDriver.111.0.5563.6400\build\Selenium.WebDriver.ChromeDriver.targets')" />
   <Import Project="..\packages\Selenium.WebDriver.IEDriver.4.8.1\build\Selenium.WebDriver.IEDriver.targets" Condition="Exists('..\packages\Selenium.WebDriver.IEDriver.4.8.1\build\Selenium.WebDriver.IEDriver.targets')" />
+  <Import Project="..\packages\Selenium.WebDriver.MSEdgeDriver.110.0.1587.50\build\Selenium.WebDriver.MSEdgeDriver.targets" Condition="Exists('..\packages\Selenium.WebDriver.MSEdgeDriver.110.0.1587.50\build\Selenium.WebDriver.MSEdgeDriver.targets')" />
 </Project>

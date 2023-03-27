@@ -8,6 +8,7 @@ using System.Web;
 
 namespace Element34
 {
+    // Reorganization of this class suggested by u/Slypenslyde of Reddit.
     public abstract class ControlType
     {
         public abstract void Choose(ReadOnlyCollection<IWebElement> cells, int iColumn);
@@ -70,8 +71,8 @@ namespace Element34
                 try { btnPrevious = gridContainer.FindElement(Locators["previousButtonLocator"]); } catch { btnPrevious = null; }
 
                 // Ascertain state of Next and Previous buttons
-                blnNextDisabled = (btnNext == null) ? true : Convert.ToBoolean(btnNext.GetAttribute("disabled"));
-                blnPrevDisabled = (btnPrevious == null) ? true : Convert.ToBoolean(btnPrevious.GetAttribute("disabled"));
+                blnNextDisabled = (btnNext == null) || Convert.ToBoolean(btnNext.GetAttribute("disabled"));
+                blnPrevDisabled = (btnPrevious == null) || Convert.ToBoolean(btnPrevious.GetAttribute("disabled"));
 
                 // Page Navigation
                 if (blnNextDisabled && blnPrevDisabled)  //one page
@@ -133,6 +134,7 @@ namespace Element34
         ///<param name="criteria">Criteria to find in a table row</param>
         ///<param name="blnAllTrue">all criteria must match if true, any one of criteria can match if false</param>
         ///<param name="blnExactMatch">text comparison method (Equals if true, Contains if false)</param>
+
         public int findRow(IEnumerable<IWebElement> tableRows, List<string> criteria, bool blnAllTrue = true, bool blnExactMatch = false)
         {
             // Avoid doing a .Trim() on each criteria for each row and column.
@@ -159,8 +161,7 @@ namespace Element34
                     {
                         // string.Contains(string, StringComparison) is not available for .Net Framework.
                         // If you're using .Net Framework, substitute by "cellContent.IndexOf(criterion, StringComparison.OrdinalIgnoreCase) >= 0
-                        isMatch = (blnExactMatch && string.Equals(criterion, cellContent, StringComparison.OrdinalIgnoreCase)) ||
-                                               cellContent.IndexOf(criterion, StringComparison.OrdinalIgnoreCase) >= 0;
+                        isMatch = (blnExactMatch && string.Equals(criterion, cellContent, StringComparison.OrdinalIgnoreCase)) || cellContent.IndexOf(criterion, StringComparison.OrdinalIgnoreCase) >= 0;
 
                         if (isMatch)
                         {

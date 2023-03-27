@@ -1,5 +1,5 @@
 ﻿using Element34;
-using static Element34.Utilities;
+using static Element34.WebDriverExtensions;
 using OpenQA.Selenium;
 using System.Collections.Generic;
 using System.Linq;

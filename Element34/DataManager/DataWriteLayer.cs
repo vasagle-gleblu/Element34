@@ -1,16 +1,16 @@
 ﻿using CsvHelper;
+using CsvHelper.Configuration;
 using Newtonsoft.Json;
 using OfficeOpenXml;
 using System;
 using System.Data;
 using System.Data.OleDb;
-using static System.Environment;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml.Serialization;
-using CsvHelper.Configuration;
+using static System.Environment;
 
 namespace Element34.DataManager
 {
@@ -119,6 +119,20 @@ namespace Element34.DataManager
             }
         }
 
+        public static void ExportToCSV(DirectoryInfo oDir, DataSet ds)
+        {
+            if (!oDir.Exists)
+                oDir.Create();
+
+            string sFile;
+
+            foreach (DataTable dt in ds.Tables)
+            {
+                sFile = Path.GetFullPath(Path.Combine(oDir.FullName, string.Format("{0}.csv", dt.TableName.Replace("$", string.Empty))));
+                ExportToCSV(sFile, dt);
+            }
+        }
+
         public static void ExportToCSV(string sFile, DataTable dt)
         {
             using (StreamWriter textWriter = File.CreateText(sFile))
@@ -140,6 +154,8 @@ namespace Element34.DataManager
                     }
                     csvWriter.NextRecord();
                 }
+
+                textWriter.Flush();
             }
         }
 
@@ -196,14 +212,15 @@ namespace Element34.DataManager
                 DataTable dt = (DataTable)sender;
                 int iRowIndex = dt.Rows.IndexOf(e.Row);
                 StringBuilder sb = new StringBuilder();
+                string tmp;
 
                 // Open file
                 using (FileStream fsFile = new FileStream(oFile.FullName, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
-                using (StreamReader sr = new StreamReader(fsFile, enc))
-                using (CsvDataReader csvDataReader = new CsvDataReader(new CsvReader(sr, config)))
+                using (StreamReader sr = new StreamReader(fsFile))
+                using (CsvDataReader csvDataReader = new CsvDataReader(new CsvReader(sr, culture)))
                 using (StreamWriter sw = new StreamWriter(fsFile))
-                using (CsvWriter csvWriter = new CsvWriter(sw, config))
-                {                    
+                using (CsvWriter csvWriter = new CsvWriter(sw, culture))
+                {
                     long iSeekAhead = 0;
                     int lineNumber = (csvWriter.Configuration.HasHeaderRecord) ? (iRowIndex + 1) : iRowIndex;
                     try
@@ -212,7 +229,7 @@ namespace Element34.DataManager
                         fsFile.Position = 0;
 
                         // Calculate how far to skip ahead to modified row
-                        for (int k = 0; k < lineNumber; k++)
+                        for (int j = 0; j < lineNumber; j++)
                         {
                             iSeekAhead += sr.ReadLine().Length + NewLine.Length;
                         }
@@ -221,18 +238,29 @@ namespace Element34.DataManager
                         for (int i = 0; i < dt.Columns.Count; i++)
                         {
                             // Row values
+                            tmp = e.Row[i].ToString();
                             if (i < (dt.Columns.Count - 1))
-                                sb.Append(e.Row[i].ToString() + csvWriter.Configuration.Delimiter);                            
+                            {
+                                if (!tmp.Contains(','))
+                                    sb.Append(tmp + csvWriter.Configuration.Delimiter);
+                                else
+                                    sb.AppendFormat("\"{0}\"", tmp + csvWriter.Configuration.Delimiter);
+                            }
                             else
-                                sb.Append(e.Row[i].ToString());
+                            {
+                                if (!tmp.Contains(','))
+                                    sb.Append(tmp);
+                                else
+                                    sb.AppendFormat("\"{0}\"", tmp);
+                            }
                         }
 
-                        fsFile.Seek(iSeekAhead, SeekOrigin.Begin);
+                        fsFile.Seek(iSeekAhead - lineNumber, SeekOrigin.Begin);
                         sw.WriteLine(sb.ToString());
                     }
+
                     catch
                     {
-                        // Abort the update.
                         return;
                     }
                 }
@@ -244,7 +272,7 @@ namespace Element34.DataManager
             if (e.Action == DataRowAction.Delete)
             {
                 DataTable dt = (DataTable)sender;
-                DataRow row;
+                DataRow row; string tmp;
                 long iSeekAhead = 0;
                 int iRowIndex = dt.Rows.IndexOf(e.Row);
                 StringBuilder sb = new StringBuilder();
@@ -278,10 +306,21 @@ namespace Element34.DataManager
                             for (int i = 0; i < dt.Columns.Count; i++)
                             {
                                 // Row values
+                                tmp = row[i].ToString();
                                 if (i < (dt.Columns.Count - 1))
-                                    sb.Append(row[i].ToString() + csvWriter.Configuration.Delimiter);
+                                {
+                                    if (!tmp.Contains(','))
+                                        sb.Append(tmp + csvWriter.Configuration.Delimiter);
+                                    else
+                                        sb.AppendFormat("\"{0}\"", tmp + csvWriter.Configuration.Delimiter);
+                                }
                                 else
-                                    sb.Append(row[i].ToString());
+                                {
+                                    if (!tmp.Contains(','))
+                                        sb.Append(tmp);
+                                    else
+                                        sb.AppendFormat("\"{0}\"", tmp);
+                                }
                             }
 
                             fsFile.Seek(iSeekAhead, SeekOrigin.Begin);
@@ -300,17 +339,16 @@ namespace Element34.DataManager
             }
         }
 
-        public static void ExportToCSV(DirectoryInfo oDir, DataSet ds)
+        public static string ExportToXml(DataSet ds)
         {
-            if (!oDir.Exists)
-                oDir.Create();
-
-            string sFile;
-
-            foreach (DataTable dt in ds.Tables)
+            using (var memoryStream = new MemoryStream())
             {
-                sFile = Path.GetFullPath(Path.Combine(oDir.FullName, string.Format("{0}.csv", dt.TableName.Replace("$", string.Empty))));
-                ExportToCSV(sFile, dt);
+                using (TextWriter streamWriter = new StreamWriter(memoryStream))
+                {
+                    var xmlSerializer = new XmlSerializer(typeof(DataSet));
+                    xmlSerializer.Serialize(streamWriter, ds);
+                    return enc.GetString(memoryStream.ToArray());
+                }
             }
         }
 
@@ -327,27 +365,14 @@ namespace Element34.DataManager
             }
         }
 
-        public static string ExportToXml(DataSet ds)
+        public static string ExportToJSON(DataSet ds)
         {
-            using (var memoryStream = new MemoryStream())
-            {
-                using (TextWriter streamWriter = new StreamWriter(memoryStream))
-                {
-                    var xmlSerializer = new XmlSerializer(typeof(DataSet));
-                    xmlSerializer.Serialize(streamWriter, ds);
-                    return enc.GetString(memoryStream.ToArray());
-                }
-            }
+            return ds.SerializeDataSetToJSON();
         }
 
         public static string ExportToJSON(DataTable dt)
         {
             return dt.SerializeDataTableToJSON();
-        }
-
-        public static string ExportToJSON(DataSet ds)
-        {
-            return ds.SerializeDataSetToJSON();
         }
         #endregion
 
@@ -563,6 +588,32 @@ namespace Element34.DataManager
             }
 
             return ADODB.DataTypeEnum.adVariant;
+        }
+
+        private static void UpdateCSV_WriteHeader(object sender, DataRowChangeEventArgs e, FileInfo oFile)
+        {
+            DataTable dt = (DataTable)sender;
+
+            // Open file
+            using (FileStream fsFile = new FileStream(oFile.FullName, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+            using (StreamWriter sw = new StreamWriter(fsFile))
+            using (CsvWriter csvWriter = new CsvWriter(sw, config))
+            {
+                try
+                {
+                    // Write columns names
+                    foreach (DataColumn column in dt.Columns)
+                    {
+                        csvWriter.WriteField(column.ColumnName);
+                    }
+                    csvWriter.NextRecord();
+                }
+                catch
+                {
+                    // Abort the update.
+                    return;
+                }
+            }
         }
 
         private static string SerializeDataTableToJSON(this DataTable dt)

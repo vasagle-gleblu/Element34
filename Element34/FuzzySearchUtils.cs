@@ -1,10 +1,11 @@
-﻿using FuzzySharp.SimilarityRatio.Scorer.Composite;
-using FuzzySharp.SimilarityRatio.Scorer.StrategySensitive;
-using FuzzySharp.SimilarityRatio.Scorer;
-using FuzzySharp.SimilarityRatio;
-using FuzzySharp;
+﻿using FuzzySharp;
 using FuzzySharp.Extractor;
+using FuzzySharp.SimilarityRatio;
+using FuzzySharp.SimilarityRatio.Scorer;
+using FuzzySharp.SimilarityRatio.Scorer.Composite;
+using FuzzySharp.SimilarityRatio.Scorer.StrategySensitive;
 using System.Collections.Generic;
+
 
 namespace Element34
 {
@@ -51,9 +52,9 @@ namespace Element34
             ExtractedResult<string[]> best = Process.ExtractOne(query2, events, strings => strings[0], weighted);
         }
 
-        IEnumerable<ExtractedResult<string>> sorted = Process.ExtractSorted("goolge", new[] { "google", "bing", "facebook", "linkedin", "twitter", "googleplus", "bingnews", "plexoogl" });
+        IEnumerable<ExtractedResult<string>> sorted = Process.ExtractSorted("goolge", new string[] { "google", "bing", "facebook", "linkedin", "twitter", "googleplus", "bingnews", "plexoogl" });
 
-        IEnumerable<ExtractedResult<string>> top = Process.ExtractTop("goolge", new[] { "google", "bing", "facebook", "linkedin", "twitter", "googleplus", "bingnews", "plexoogl" }, limit: 3);
+        IEnumerable<ExtractedResult<string>> top = Process.ExtractTop("goolge", new string[] { "google", "bing", "facebook", "linkedin", "twitter", "googleplus", "bingnews", "plexoogl" }, limit: 3);
 
     }
 }

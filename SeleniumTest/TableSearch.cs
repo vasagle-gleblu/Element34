@@ -6,7 +6,8 @@ using OpenQA.Selenium;
 using OpenQA.Selenium.Interactions;
 using OpenQA.Selenium.Chrome;
 using Element34;
-using static Element34.Utilities;
+using static Element34.WebDriverExtensions;
+
 
 namespace SeleniumTest
 {

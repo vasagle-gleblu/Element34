@@ -54,35 +54,6 @@ namespace Element34.DataManager
             return result;
         }
 
-        public static DataTable DataTableFromMDB(string connString, string sqlStmt, Dictionary<string, object> paramList = null)
-        {
-            DataTable result = new DataTable();
-
-            using (OleDbConnection conn = new OleDbConnection(connString))
-            {
-                using (OleDbCommand cmd = new OleDbCommand(sqlStmt, conn))
-                {
-                    if (paramList != null)
-                    {
-                        cmd.Parameters.Clear();
-                        foreach (var param in paramList)
-                        {
-                            cmd.Parameters.AddWithValue(param.Key, param.Value);
-                        }
-                    }
-
-                    conn.Open();
-                    using (OleDbDataAdapter adapter = new OleDbDataAdapter(cmd))
-                    {
-                        adapter.Fill(result);
-                    }
-                    conn.Close();
-                }
-            }
-
-            return result;
-        }
-
         public static DataSet DataSetFromMDB(string connString)
         {
             DataSet result = new DataSet();
@@ -121,21 +92,9 @@ namespace Element34.DataManager
             return result;
         }
 
-        public static DataTable DataTableFromXLS(string connString, string sqlStmt, Dictionary<string, object> paramList = null)
+        public static DataTable DataTableFromMDB(string connString, string sqlStmt, Dictionary<string, object> paramList = null)
         {
-            DataTable result;
-            if (sqlStmt.Contains("FROM[") && sqlStmt.Contains("$]"))
-            {
-                int start = sqlStmt.IndexOf("FROM [") + "FROM [".Length;
-                int end = sqlStmt.IndexOf("$]", start) + "$]".Length;
-                string tableName = sqlStmt.Substring(start, end - start);
-                result = new DataTable(tableName);
-            }
-            else
-                result = new DataTable();
-
-            if (!connString.Contains("Extended Properties"))
-                connString += "Extended Properties = 'Excel 12.0 Xml;IMEX=1;";
+            DataTable result = new DataTable();
 
             using (OleDbConnection conn = new OleDbConnection(connString))
             {
@@ -202,79 +161,46 @@ namespace Element34.DataManager
             return result;
         }
 
-        public static DataTable DataTableFromCSV(string sFile, bool blnTableReadOnly = false, bool blnMakeBackup = true)
+        public static DataTable DataTableFromXLS(string connString, string sqlStmt, Dictionary<string, object> paramList = null)
         {
-            DataTable dt = new DataTable();
-
-            // Create backup
-            if (blnMakeBackup)
+            DataTable result;
+            if (sqlStmt.Contains("FROM[") && sqlStmt.Contains("$]"))
             {
-                FileInfo destFile = new FileInfo(Path.ChangeExtension(sFile, ".bak"));
-                File.Copy(sFile, destFile.FullName, true);
+                int start = sqlStmt.IndexOf("FROM [") + "FROM [".Length;
+                int end = sqlStmt.IndexOf("$]", start) + "$]".Length;
+                string tableName = sqlStmt.Substring(start, end - start);
+                result = new DataTable(tableName);
             }
+            else
+                result = new DataTable();
 
-            // Load data from file 
-            using (StreamReader reader = new StreamReader(sFile))
+            if (!connString.Contains("Extended Properties"))
+                connString += "Extended Properties = 'Excel 12.0 Xml;IMEX=1;";
+
+            using (OleDbConnection conn = new OleDbConnection(connString))
             {
-                using (CsvReader csvR = new CsvReader(reader, config))
+                using (OleDbCommand cmd = new OleDbCommand(sqlStmt, conn))
                 {
-                    using (CsvDataReader csvDR = new CsvDataReader(csvR))
+                    if (paramList != null)
                     {
-                        dt.Load(csvDR);
-                        dt.TableName = Path.GetFileNameWithoutExtension(Path.GetFileName(sFile));
+                        cmd.Parameters.Clear();
+                        foreach (var param in paramList)
+                        {
+                            cmd.Parameters.AddWithValue(param.Key, param.Value);
+                        }
                     }
+
+                    conn.Open();
+                    using (OleDbDataAdapter adapter = new OleDbDataAdapter(cmd))
+                    {
+                        adapter.Fill(result);
+                    }
+                    conn.Close();
                 }
             }
 
-            // DataTable readonly or not.
-            if (!blnTableReadOnly)
-            {
-                foreach (DataColumn col in dt.Columns)
-                {
-                    col.ReadOnly = blnTableReadOnly;
-                }
-            }
-
-            return dt;
+            return result;
         }
-
-        //public static DataTable DataTableFromCSV(string sFilename, string sFilter = "")
-        //{
-        //    string sFolder = Path.GetDirectoryName(sFilename);
-        //    sFilename = sFilename.Substring(sFilename.LastIndexOf('\\') + 1, sFilename.Length - sFilename.LastIndexOf('\\') - 1);
-        //    sFilename.Replace('[', '(').Replace(']', ')');
-        //    DataTable dt;
-
-        //    using (OdbcConnection conn = new OdbcConnection("Driver={Microsoft Text Driver (*.txt; *.csv)};Dbq=" + sFolder + ";Extensions=asc,csv,tab,txt;"))
-        //    {
-        //        using (OdbcCommand cmd = new OdbcCommand("SELECT * FROM [" + sFilename + "]", conn))
-        //        {
-        //            conn.Open();
-        //            using (OdbcDataAdapter adapter = new OdbcDataAdapter(cmd))
-        //            {
-        //                dt = new DataTable();
-        //                dt.TableName = Path.GetFileNameWithoutExtension(sFilename);
-        //                adapter.Fill(dt);
-        //            }
-        //            conn.Close();
-        //        }
-
-        //        if (dt.Rows.Count > 0)
-        //        {
-        //            if (sFilter.Length > 0)
-        //            {
-        //                DataRow[] dr = dt.Select(sFilter);
-        //                if (dr.Length > 0)
-        //                {
-        //                    DataTable tmp = dr.CopyToDataTable();
-        //                    dt = tmp;
-        //                }
-        //            }
-        //        }
-        //    }
-
-        //    return dt;
-        //}
 
         public static DataSet DataSetFromCSV(string sPath)
         {
@@ -328,6 +254,81 @@ namespace Element34.DataManager
         //    return result;
         //}
 
+        public static DataTable DataTableFromCSV(string sFile, bool blnTableReadOnly = false, bool blnMakeBackup = true)
+        {
+            DataTable dt = new DataTable();
+
+            // Create backup
+            if (blnMakeBackup)
+            {
+                FileInfo destFile = new FileInfo(Path.ChangeExtension(sFile, ".bak"));
+                File.Copy(sFile, destFile.FullName, true);
+            }
+
+            // Load data from file 
+            using (StreamReader reader = new StreamReader(sFile))
+            using (CsvReader csvReader = new CsvReader(reader, config))
+            using (CsvDataReader csvDataReader = new CsvDataReader(csvReader))
+            {
+                dt.Load(csvDataReader);
+                dt.TableName = Path.GetFileNameWithoutExtension(Path.GetFileName(sFile));
+            }
+
+            // DataTable readonly or not.
+            if (!blnTableReadOnly)
+            {
+                foreach (DataColumn col in dt.Columns)
+                {
+                    col.ReadOnly = blnTableReadOnly;
+                }
+            }
+
+            return dt;
+        }
+
+        //public static DataTable DataTableFromCSV(string sFilename, string sFilter = "")
+        //{
+        //    string sFolder = Path.GetDirectoryName(sFilename);
+        //    sFilename = sFilename.Substring(sFilename.LastIndexOf('\\') + 1, sFilename.Length - sFilename.LastIndexOf('\\') - 1);
+        //    sFilename.Replace('[', '(').Replace(']', ')');
+        //    DataTable dt;
+
+        //    using (OdbcConnection conn = new OdbcConnection("Driver={Microsoft Text Driver (*.txt; *.csv)};Dbq=" + sFolder + ";Extensions=asc,csv,tab,txt;"))
+        //    {
+        //        using (OdbcCommand cmd = new OdbcCommand("SELECT * FROM [" + sFilename + "]", conn))
+        //        {
+        //            conn.Open();
+        //            using (OdbcDataAdapter adapter = new OdbcDataAdapter(cmd))
+        //            {
+        //                dt = new DataTable();
+        //                dt.TableName = Path.GetFileNameWithoutExtension(sFilename);
+        //                adapter.Fill(dt);
+        //            }
+        //            conn.Close();
+        //        }
+
+        //        if (dt.Rows.Count > 0)
+        //        {
+        //            if (sFilter.Length > 0)
+        //            {
+        //                DataRow[] dr = dt.Select(sFilter);
+        //                if (dr.Length > 0)
+        //                {
+        //                    DataTable tmp = dr.CopyToDataTable();
+        //                    dt = tmp;
+        //                }
+        //            }
+        //        }
+        //    }
+
+        //    return dt;
+        //}
+
+        public static DataSet DataSetFromJSON(string sInput)
+        {
+            return sInput.DeserializeDataSetFromJSON();
+        }
+
         public static DataTable DataTableFromJSON(string sInput, string sFilter = "")
         {
             DataTable dt = sInput.DeserializeDataTableFromJSON();
@@ -346,11 +347,6 @@ namespace Element34.DataManager
             }
 
             return dt;
-        }
-
-        public static DataSet DataSetFromJSON(string sInput)
-        {
-            return sInput.DeserializeDataSetFromJSON();
         }
         #endregion
 
