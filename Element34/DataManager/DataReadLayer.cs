@@ -1,6 +1,4 @@
-using CsvHelper;
-using CsvHelper.Configuration;
-using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.OleDb;
@@ -9,6 +7,10 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using CsvHelper;
+using CsvHelper.Configuration;
+using Element34.StringMetrics;
+using Newtonsoft.Json;
 
 namespace Element34.DataManager
 {
@@ -21,7 +23,8 @@ namespace Element34.DataManager
         {
             Delimiter = ",",
             Encoding = enc,
-            Mode = CsvMode.RFC4180
+            Mode = CsvMode.RFC4180,
+            ShouldSkipRecord = args => args.Row.Parser.Record.All(string.IsNullOrWhiteSpace)
         };
         #endregion
 
@@ -254,7 +257,7 @@ namespace Element34.DataManager
         //    return result;
         //}
 
-        public static DataTable DataTableFromCSV(string sFile, bool blnTableReadOnly = false, bool blnMakeBackup = true)
+        public static DataTable DataTableFromCSV(string sFile, bool blnFoldChars = false, bool blnTableReadOnly = false, bool blnMakeBackup = true)
         {
             DataTable dt = new DataTable();
 
@@ -266,12 +269,41 @@ namespace Element34.DataManager
             }
 
             // Load data from file 
-            using (StreamReader reader = new StreamReader(sFile))
-            using (CsvReader csvReader = new CsvReader(reader, config))
-            using (CsvDataReader csvDataReader = new CsvDataReader(csvReader))
+            using (StreamReader reader = new StreamReader(sFile, enc))
             {
-                dt.Load(csvDataReader);
-                dt.TableName = Path.GetFileNameWithoutExtension(Path.GetFileName(sFile));
+                StreamReader sr;
+
+                if (blnFoldChars)
+                {
+                    string line;
+                    IList<string> lines = new List<string>();
+
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        foreach (KeyValuePair<char, char> fold in (Dictionary<char, char>)AlphabetSoup.Foldings.getChars())
+                        {
+                            line = line.Replace(fold.Key, fold.Value);
+                            line = line.Replace(Char.ToUpper(fold.Key), Char.ToUpper(fold.Value));
+                        }
+
+                        lines.Add(line);
+                    }
+                    reader.Close();
+                    reader.Dispose();
+
+                    byte[] bytes = enc.GetBytes(string.Join("\r\n", lines.ToArray()));
+                    Stream s = new MemoryStream(bytes);
+                    sr = new StreamReader(s);
+                }
+                else
+                    sr = reader;
+
+                using (CsvReader csvReader = new CsvReader(sr, config))
+                using (CsvDataReader csvDataReader = new CsvDataReader(csvReader))
+                {
+                    dt.Load(csvDataReader);
+                    dt.TableName = Path.GetFileNameWithoutExtension(Path.GetFileName(sFile));
+                }
             }
 
             // DataTable readonly or not.

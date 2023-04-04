@@ -1,28 +1,43 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Element34.StringMetrics
 {
     public class Alphabet
     {
         private string _name { get; set; }
-        private ICollection<char> _chars { get; set; }
+        private object _chars { get; set; }
 
-        public Alphabet(string name, params char[] chars)
+        public Alphabet(string name, params char[] arr)
         {
             _name = name;
-            _chars = chars;
+            _chars = arr;
         }
 
-        public Alphabet(params char[] chars)
+        public Alphabet(string name, Dictionary<char, char> dictionary)
         {
-            if ((_chars == null))
+            this._name = name;
+            this._chars = dictionary;
+        }
+
+        public Alphabet(params char[] arr)
+        {
+            if ((arr == null))
             {
                 throw new ArgumentNullException("Chars cannot be null.");
             }
 
-            _chars = chars;
+            _chars = arr;
+        }
+
+        public Alphabet(Dictionary<char, char> dictionary)
+        {
+            if ((dictionary == null))
+            {
+                throw new ArgumentNullException("Chars cannot be null.");
+            }
+
+            _chars = dictionary;
         }
 
         public string getName()
@@ -30,64 +45,24 @@ namespace Element34.StringMetrics
             return _name;
         }
 
-        public ICollection<char> getChars()
+        public object getChars()
         {
             return _chars;
         }
-
-        public bool isSuperset(char a)
-        {
-            return _chars.Contains(a);
-        }
-
-        public bool isSuperset(char[] a)
-        {
-            if ((a == null))
-            {
-                throw new ArgumentNullException("Array cannot be null.");
-            }
-
-            if ((a.Length == 0))
-            {
-                return false;
-            }
-
-            foreach (char c in a)
-            {
-                if (!_chars.Contains(c))
-                {
-                    return false;
-                }
-
-            }
-
-            return true;
-        }
-
-        public bool isSuperset(string a)
-        {
-            if ((a == null))
-            {
-                throw new ArgumentNullException("String cannot be null.");
-            }
-
-            return isSuperset(a.ToCharArray());
-        }
     }
 
-    public class AlphabetSoup
+    public static class AlphabetSoup
     {
-        public static Alphabet LowercaseConsonant = new Alphabet("LowercaseConsonant", new char[] {'b', 'c', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'z'});
-        public static Alphabet UppercaseConsonant = new Alphabet("UppercaseConsonant", new char[] {'B', 'C', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Z'});
-        public static Alphabet Consonant = new Alphabet(LowercaseConsonant.getChars().AddRange(UppercaseConsonant.getChars()).ToArray());
-        public static Alphabet LowercaseVowel = new Alphabet(new char[] { 'a', 'e', 'i', 'o', 'u' });
-        public static Alphabet UppercaseVowel = new Alphabet(new char[] { 'A', 'E', 'I', 'O', 'U' });
-        public static Alphabet Vowel = new Alphabet(LowercaseVowel.getChars().AddRange((UppercaseVowel.getChars())).ToArray());
-        public static Alphabet LowercaseY = new Alphabet(new char[] { 'y' });
-        public static Alphabet UppercaseY = new Alphabet(new char[] { 'Y' });
-        public static Alphabet Y = new Alphabet(LowercaseY.getChars().AddRange(UppercaseY.getChars()).ToArray());
-        public static Alphabet LowercaseAlpha = new Alphabet(LowercaseConsonant.getChars().AddRange(LowercaseVowel.getChars()).AddRange(LowercaseY.getChars()).ToArray());
-        public static Alphabet UppercaseAlpha = new Alphabet(UppercaseConsonant.getChars().AddRange(UppercaseVowel.getChars()).AddRange(UppercaseY.getChars()).ToArray());
-        public static Alphabet Alpha = new Alphabet(LowercaseAlpha.getChars().AddRange(UppercaseAlpha.getChars()).ToArray());
+        public static Alphabet Consonants = new Alphabet("Consonants", new char[] { 'b', 'c', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'z' });
+        public static Alphabet Vowels = new Alphabet("Vowels", new char[] { 'a', 'e', 'i', 'o', 'u' });
+        public static Alphabet Foldings = new Alphabet("Foldings", new Dictionary<char, char>() {
+          { 'ß', 's' }, { 'à', 'a' }, { 'á', 'a' }, { 'â', 'a' }, { 'ã', 'a' },
+          { 'ä', 'a' }, { 'å', 'a' }, { 'æ', 'a' }, { 'ç', 'c' }, { 'è', 'e' },
+          { 'é', 'e' }, { 'ê', 'e' }, { 'ë', 'e' }, { 'ì', 'i' }, { 'í', 'i' },
+          { 'î', 'i' }, { 'ï', 'i' }, { 'ð', 'd' }, { 'ñ', 'n' }, { 'ò', 'o' },
+          { 'ó', 'o' }, { 'ô', 'o' }, { 'õ', 'o' }, { 'ö', 'o' }, { 'ø', 'o' },
+          { 'ù', 'u' }, { 'ú', 'u' }, { 'û', 'u' }, { 'ý', 'y' }, { 'ỳ', 'y' },
+          { 'þ', 'b' }, { 'ÿ', 'y' }, { 'ć', 'c' }, { 'ł', 'l' }, { 'ś', 's' },
+          { 'ż', 'z' }, { 'ź', 'z' }});
     }
 }

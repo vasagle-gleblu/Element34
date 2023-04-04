@@ -77,5 +77,12 @@ namespace Element34.Utilities
 
             return result;
         }
+
+        public static string Repeat(this char @this, int repeatCount)
+        {
+            return new string(@this, repeatCount);
+        }
+
     }
+
 }

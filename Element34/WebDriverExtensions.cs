@@ -376,14 +376,14 @@ namespace Element34
         }
 
         public static void basicHTTPAuthenticationURL(this IWebDriver driver, string URL, string username, string password)
-        {
+        {   // Experimental: Workaround for Selenium WebDriver's lack of support for Basic HTTP Authentication.
             int doubleSlash = URL.IndexOf("//") + 2;
             URL = URL.Substring(0, doubleSlash) + Uri.EscapeDataString(username) + ":" + Uri.EscapeDataString(password) + "@" + URL.Substring(doubleSlash, URL.Length - doubleSlash);
             driver.OpenBrowser(URL);
         }
 
         public static IWebDriver basicHTTPAuthenticationXHR(string URL, string username, string password)
-        {
+        {   // Experimental: Workaround for Selenium WebDriver's lack of support for Basic HTTP Authentication.
             // disable CORS: ChromeDriver only!
             //string[] options = { "--disable-web-security", "--disable-site-isolation-trials", "--user-data-dir=C:\\WINDOWS\\TEMP" };
             string[] options = { "--disable-web-security", "--disable-site-isolation-trials" };
@@ -408,8 +408,7 @@ namespace Element34
         }
 
         public static IWebDriver basicHTTPAuthenticaionEx1(browserType browser, string URL, string username, string password)
-        {
-
+        {// Experimental: Workaround for Selenium WebDriver's lack of support for Basic HTTP Authentication.
             IWebDriver driver = getDriver(browser);
             string script;
 
@@ -442,7 +441,7 @@ namespace Element34
         }
 
         public static IWebDriver basicHTTPAuthenticaionEx2(browserType browser, string URL, string username, string password)
-        {
+        {// Experimental: Workaround for Selenium WebDriver's lack of support for Basic HTTP Authentication.
             IWebDriver driver = getDriver(browser);
 
             string script;
@@ -469,7 +468,7 @@ namespace Element34
         }
 
         public static async Task<IWebDriver> basicHTTPAuthenticaionEx3(string URL, string username, string password)
-        {
+        {   // Experimental: Workaround for Selenium WebDriver's lack of support for Basic HTTP Authentication.
             IWebDriver driver = new ChromeDriver();
 
             NetworkAuthenticationHandler handler = new NetworkAuthenticationHandler()
@@ -547,10 +546,10 @@ namespace Element34
                     break;
 
                 case nameof(EdgeDriver):
-                    break;
+                    throw new NotImplementedException();
 
                 case nameof(InternetExplorerDriver):
-                    break;
+                    throw new NotImplementedException();
 
                 default:
                     throw new NotImplementedException(string.Format("Driver {0} is not supported", driver.GetType().Name));
@@ -645,8 +644,11 @@ namespace Element34
                            select option).FirstOrDefault();
                 }
 
-                js.ExecuteScript("arguments[0].selected=true", opt);
-                js.ExecuteScript("const evt=new Event('change',{'bubbles':true,'cancelable':true});arguments[0].dispatchEvent(evt);", selectElement);
+                if (opt != null)
+                {
+                    js.ExecuteScript("arguments[0].selected=true", opt);
+                    js.ExecuteScript("const evt=new Event('change',{'bubbles':true,'cancelable':true});arguments[0].dispatchEvent(evt);", selectElement);
+                }
             }
         }
 
@@ -666,8 +668,11 @@ namespace Element34
             {
                 IWebElement opt = selectElement.Options[iIndex];
 
-                js.ExecuteScript("arguments[0].selected=true", opt);
-                js.ExecuteScript("const evt=new Event('change',{'bubbles':true,'cancelable':true});arguments[0].dispatchEvent(evt);", selectElement);
+                if (opt != null)
+                {
+                    js.ExecuteScript("arguments[0].selected=true", opt);
+                    js.ExecuteScript("const evt=new Event('change',{'bubbles':true,'cancelable':true});arguments[0].dispatchEvent(evt);", selectElement);
+                }
             }
         }
 
@@ -699,8 +704,11 @@ namespace Element34
                            select option).FirstOrDefault();
                 }
 
-                js.ExecuteScript("arguments[0].selected=true", opt);
-                js.ExecuteScript("const evt=new Event('change',{'bubbles':true,'cancelable':true});arguments[0].dispatchEvent(evt);", selectElement);
+                if (opt != null)
+                {
+                    js.ExecuteScript("arguments[0].selected=true", opt);
+                    js.ExecuteScript("const evt=new Event('change',{'bubbles':true,'cancelable':true});arguments[0].dispatchEvent(evt);", selectElement);
+                }
             }
 
         }

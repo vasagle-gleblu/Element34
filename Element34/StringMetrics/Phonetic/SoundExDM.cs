@@ -1,171 +1,164 @@
 ﻿using Element34.Utilities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
 namespace Element34.StringMetrics
 {
-    //**---===WORK IN PROGRESS===---**//
     public class SoundExDM : IStringEncoder, IStringComparison
     {
         /** The code Length of a DM SoundEx value. */
         protected static int MAX_LENGTH = 6;
+        protected static char SEPARATOR = ' ';
+        protected static char GROUPSEPARATOR = ' ';
 
         /** Whether to use ASCII folding prior to encoding. */
         private bool _folding;
 
-        protected static string _vowels = "aeioujy";
+        protected static char[] _vowels = ((char[])AlphabetSoup.Vowels.getChars()).Append('j').Append('y');
 
-        private static Dictionary<char, char> FOLDINGS = new Dictionary<char, char>() {
-          { 'ß', 's' }, { 'à', 'a' }, { 'á', 'a' }, { 'â', 'a' }, { 'ã', 'a' },
-          { 'ä', 'a' }, { 'å', 'a' }, { 'æ', 'a' }, { 'ç', 'c' }, { 'è', 'e' },
-          { 'é', 'e' }, { 'ê', 'e' }, { 'ë', 'e' }, { 'ì', 'i' }, { 'í', 'i' },
-          { 'î', 'i' }, { 'ï', 'i' }, { 'ð', 'd' }, { 'ñ', 'n' }, { 'ò', 'o' },
-          { 'ó', 'o' }, { 'ô', 'o' }, { 'õ', 'o' }, { 'ö', 'o' }, { 'ø', 'o' },
-          { 'ù', 'u' }, { 'ú', 'u' }, { 'û', 'u' }, { 'ý', 'y' }, { 'ỳ', 'y' },
-          { 'þ', 'b' }, { 'ÿ', 'y' }, { 'ć', 'c' }, { 'ł', 'l' }, { 'ś', 's' },
-          { 'ż', 'z' }, { 'ź', 'z' }
-        };
+        private static Dictionary<char, char> FOLDINGS = (Dictionary<char, char>)AlphabetSoup.Foldings.getChars();
 
-        private static Dictionary<Pattern, Replacement> RULES = new Dictionary<Pattern, Replacement>() { 
+        private static Dictionary<string, Replacement> RULES = new Dictionary<string, Replacement>() { 
                 // Vowels
-              { new Pattern("a"), new Replacement("0", "", "") },
-              { new Pattern("e"), new Replacement("0", "", "") },
-              { new Pattern("i"), new Replacement("0", "", "") },
-              { new Pattern("o"), new Replacement("0", "", "") },
-              { new Pattern("u"), new Replacement("0", "", "") },
-              { new Pattern("y"), new Replacement("1", "", "") },
-              { new Pattern("j"), new Replacement("1", "", "") },
+              { "a", new Replacement(new Pattern("a"), "0", "", "") },
+              { "e", new Replacement(new Pattern("e"), "0", "", "") },
+              { "i", new Replacement(new Pattern("i"), "0", "", "") },
+              { "o", new Replacement(new Pattern("o"), "0", "", "") },
+              { "u", new Replacement(new Pattern("u"), "0", "", "") },
+              { "y", new Replacement(new Pattern("y"), "1", "", "") },
+              { "j", new Replacement(new Pattern("j"), "1", "", "") },
 
               // Consonants
-              { new Pattern("b"), new Replacement("7", "7", "7") },
-              { new Pattern("d"), new Replacement("3", "3", "3") },
-              { new Pattern("f"), new Replacement("7", "7", "7") },
-              { new Pattern("g"), new Replacement("5", "5", "5") },
-              { new Pattern("h"), new Replacement("5", "5", "")  },
-              { new Pattern("k"), new Replacement("5", "5", "5") },
-              { new Pattern("l"), new Replacement("8", "8", "8") },
-              { new Pattern("m"), new Replacement("6", "6", "6") },
-              { new Pattern("n"), new Replacement("6", "6", "6") },
-              { new Pattern("p"), new Replacement("7", "7", "7") },
-              { new Pattern("q"), new Replacement("5", "5", "5") },
-              { new Pattern("r"), new Replacement("9", "9", "9") },
-              { new Pattern("s"), new Replacement("4", "4", "4") },
-              { new Pattern("t"), new Replacement("3", "3", "3") },
-              { new Pattern("v"), new Replacement("7", "7", "7") },
-              { new Pattern("w"), new Replacement("7", "7", "7") },
-              { new Pattern("x"), new Replacement("5", "54", "54") },
-              //{ new Pattern("y"), new Replacement("1", "", "") },
-              { new Pattern("z"), new Replacement("4", "4", "4") },
+              { "b", new Replacement(new Pattern("b"), "7", "7", "7") },
+              { "d", new Replacement(new Pattern("d"), "3", "3", "3") },
+              { "f", new Replacement(new Pattern("f"), "7", "7", "7") },
+              { "g", new Replacement(new Pattern("g"), "5", "5", "5") },
+              { "h", new Replacement(new Pattern("h"), "5", "5", "")  },
+              { "k", new Replacement(new Pattern("k"), "5", "5", "5") },
+              { "l", new Replacement(new Pattern("l"), "8", "8", "8") },
+              { "m", new Replacement(new Pattern("m"), "6", "6", "6") },
+              { "n", new Replacement(new Pattern("n"), "6", "6", "6") },
+              { "p", new Replacement(new Pattern("p"), "7", "7", "7") },
+              { "q", new Replacement(new Pattern("q"), "5", "5", "5") },
+              { "r", new Replacement(new Pattern("r"), "9", "9", "9") },
+              { "s", new Replacement(new Pattern("s"), "4", "4", "4") },
+              { "t", new Replacement(new Pattern("t"), "3", "3", "3") },
+              { "v", new Replacement(new Pattern("v"), "7", "7", "7") },
+              { "w", new Replacement(new Pattern("w"), "7", "7", "7") },
+              { "x", new Replacement(new Pattern("x"), "5", "54", "54") },
+              //{ "y", new Replacement(new Pattern("y"), "1", "", "") },
+              { "z", new Replacement(new Pattern("z"), "4", "4", "4") },
 
               // Romanian t-cedilla and t-comma should be equivalent
-              { new Pattern("ţ"), new Replacement("3|4", "3|4", "3|4")  },
-              { new Pattern("ț"), new Replacement("3|4", "3|4", "3|4") },
+              { "ţ", new Replacement(new Pattern("ţ"), "3|4", "3|4", "3|4")  },
+              { "ț", new Replacement(new Pattern("ț"), "3|4", "3|4", "3|4") },
 
               // Polish characters (e-ogonek and a-ogonek): default case branch either
               // not coded or 6
-              { new Pattern("ę"), new Replacement("", "", "|6") },
-              { new Pattern("ą"), new Replacement("", "", "|6") },
+              { "ę", new Replacement(new Pattern("ę"), "", "", "|6") },
+              { "ą", new Replacement(new Pattern("ą"), "", "", "|6") },
 
               // Other terms
-              { new Pattern("schtsch"), new Replacement("2", "4", "4") },
-              { new Pattern("schtsh"), new Replacement("2", "4", "4") },
-              { new Pattern("schtch"), new Replacement("2", "4", "4") },
-              { new Pattern("shtch"), new Replacement("2", "4", "4") },
-              { new Pattern("shtsh"), new Replacement("2", "4", "4") },
-              { new Pattern("stsch"), new Replacement("2", "4", "4") },
-              { new Pattern("ttsch"), new Replacement("4", "4", "4") },
-              { new Pattern("zhdzh"), new Replacement("2", "4", "4") },
-              { new Pattern("shch"), new Replacement("2", "4", "4") },
-              { new Pattern("scht"), new Replacement("2", "43", "43") },
-              { new Pattern("schd"), new Replacement("2", "43", "43") },
-              { new Pattern("stch"), new Replacement("2", "4", "4") },
-              { new Pattern("strz"), new Replacement("2", "4", "4") },
-              { new Pattern("strs"), new Replacement("2", "4", "4") },
-              { new Pattern("stsh"), new Replacement("2", "4", "4") },
-              { new Pattern("szcz"), new Replacement("2", "4", "4") },
-              { new Pattern("szcs"), new Replacement("2", "4", "4") },
-              { new Pattern("ttch"), new Replacement("4", "4", "4") },
-              { new Pattern("tsch"), new Replacement("4", "4", "4") },
-              { new Pattern("ttsz"), new Replacement("4", "4", "4") },
-              { new Pattern("zdzh"), new Replacement("2", "4", "4") },
-              { new Pattern("zsch"), new Replacement("4", "4", "4") },
-              { new Pattern("chs"), new Replacement("5", "54", "54") },
-              { new Pattern("csz"), new Replacement("4", "4", "4") },
-              { new Pattern("czs"), new Replacement("4", "4", "4") },
-              { new Pattern("drz"), new Replacement("4", "4", "4") },
-              { new Pattern("drs"), new Replacement("4", "4", "4") },
-              { new Pattern("dsh"), new Replacement("4", "4", "4") },
-              { new Pattern("dsz"), new Replacement("4", "4", "4") },
-              { new Pattern("dzh"), new Replacement("4", "4", "4") },
-              { new Pattern("dzs"), new Replacement("4", "4", "4") },
-              { new Pattern("sch"), new Replacement("4", "4", "4") },
-              { new Pattern("sht"), new Replacement("2", "43", "43") },
-              { new Pattern("szt"), new Replacement("2", "43", "43") },
-              { new Pattern("shd"), new Replacement("2", "43", "43") },
-              { new Pattern("szd"), new Replacement("2", "43", "43") },
-              { new Pattern("tch"), new Replacement("4", "4", "4") },
-              { new Pattern("trz"), new Replacement("4", "4", "4") },
-              { new Pattern("trs"), new Replacement("4", "4", "4") },
-              { new Pattern("tsh"), new Replacement("4", "4", "4") },
-              { new Pattern("tts"), new Replacement("4", "4", "4") },
-              { new Pattern("ttz"), new Replacement("4", "4", "4") },
-              { new Pattern("tzs"), new Replacement("4", "4", "4") },
-              { new Pattern("tsz"), new Replacement("4", "4", "4") },
-              { new Pattern("zdz"), new Replacement("2", "4", "4") },
-              { new Pattern("zhd"), new Replacement("2", "43", "43") },
-              { new Pattern("zsh"), new Replacement("4", "4", "4") },
-              { new Pattern("ai"), new Replacement("0", "1", "") },
-              { new Pattern("aj"), new Replacement("0", "1", "") },
-              { new Pattern("ay"), new Replacement("0", "1", "") },
-              { new Pattern("au"), new Replacement("0", "7", "") },
-              { new Pattern("cz"), new Replacement("4", "4", "4") },
-              { new Pattern("cs"), new Replacement("4", "4", "4") },
-              { new Pattern("ds"), new Replacement("4", "4", "4") },
-              { new Pattern("dz"), new Replacement("4", "4", "4") },
-              { new Pattern("dt"), new Replacement("3", "3", "3") },
-              { new Pattern("ei"), new Replacement("0", "1", "") },
-              { new Pattern("ej"), new Replacement("0", "1", "") },
-              { new Pattern("ey"), new Replacement("0", "1", "") },
-              { new Pattern("eu"), new Replacement("1", "1", "") },
-              { new Pattern("fb"), new Replacement("7", "7", "7") },
-              { new Pattern("ia"), new Replacement("1", "", "") },
-              { new Pattern("ie"), new Replacement("1", "", "") },
-              { new Pattern("io"), new Replacement("1", "", "") },
-              { new Pattern("iu"), new Replacement("1", "", "") },
-              { new Pattern("ks"), new Replacement("5", "54", "54") },
-              { new Pattern("kh"), new Replacement("5", "5", "5") },
-              { new Pattern("mn"), new Replacement("66", "66", "66") },
-              { new Pattern("nm"), new Replacement("66", "66", "66") },
-              { new Pattern("oi"), new Replacement("0", "1", "") },
-              { new Pattern("oj"), new Replacement("0", "1", "") },
-              { new Pattern("oy"), new Replacement("0", "1", "") },
-              { new Pattern("pf"), new Replacement("7", "7", "7") },
-              { new Pattern("ph"), new Replacement("7", "7", "7") },
-              { new Pattern("sh"), new Replacement("4", "4", "4") },
-              { new Pattern("sc"), new Replacement("2", "4", "4") },
-              { new Pattern("st"), new Replacement("2", "43", "43") },
-              { new Pattern("sd"), new Replacement("2", "43", "43") },
-              { new Pattern("sz"), new Replacement("4", "4", "4") },
-              { new Pattern("th"), new Replacement("3", "3", "3") },
-              { new Pattern("ts"), new Replacement("4", "4", "4") },
-              { new Pattern("tc"), new Replacement("4", "4", "4") },
-              { new Pattern("tz"), new Replacement("4", "4", "4") },
-              { new Pattern("ui"), new Replacement("0", "1", "") },
-              { new Pattern("uj"), new Replacement("0", "1", "") },
-              { new Pattern("uy"), new Replacement("0", "1", "") },
-              { new Pattern("ue"), new Replacement("0", "1", "") },
-              { new Pattern("zd"), new Replacement("2", "43", "43") },
-              { new Pattern("zh"), new Replacement("4", "4", "4") },
-              { new Pattern("zs"), new Replacement("4", "4", "4") },
+              { "schtsch", new Replacement(new Pattern("schtsch"), "2", "4", "4") },
+              { "schtsh", new Replacement(new Pattern("schtsh"), "2", "4", "4") },
+              { "schtch", new Replacement(new Pattern("schtch"), "2", "4", "4") },
+              { "shtch", new Replacement(new Pattern("shtch"), "2", "4", "4") },
+              { "shtsh", new Replacement(new Pattern("shtsh"), "2", "4", "4") },
+              { "stsch", new Replacement(new Pattern("stsch"), "2", "4", "4") },
+              { "ttsch", new Replacement(new Pattern("ttsch"), "4", "4", "4") },
+              { "zhdzh", new Replacement(new Pattern("zhdzh"), "2", "4", "4") },
+              { "shch", new Replacement(new Pattern("shch"), "2", "4", "4") },
+              { "scht", new Replacement(new Pattern("scht"), "2", "43", "43") },
+              { "schd", new Replacement(new Pattern("schd"), "2", "43", "43") },
+              { "stch", new Replacement(new Pattern("stch"), "2", "4", "4") },
+              { "strz", new Replacement(new Pattern("strz"), "2", "4", "4") },
+              { "strs", new Replacement(new Pattern("strs"),"2", "4", "4") },
+              { "stsh", new Replacement(new Pattern("stsh"), "2", "4", "4") },
+              { "szcz", new Replacement(new Pattern("szcz"), "2", "4", "4") },
+              { "szcs", new Replacement(new Pattern("szcs"), "2", "4", "4") },
+              { "ttch", new Replacement(new Pattern("ttch"), "4", "4", "4") },
+              { "tsch", new Replacement(new Pattern("tsch"), "4", "4", "4") },
+              { "ttsz", new Replacement(new Pattern("ttsz"), "4", "4", "4") },
+              { "zdzh", new Replacement(new Pattern("zdzh"), "2", "4", "4") },
+              { "zsch", new Replacement(new Pattern("zsch"), "4", "4", "4") },
+              { "chs", new Replacement(new Pattern("chs"), "5", "54", "54") },
+              { "csz", new Replacement(new Pattern("csz"), "4", "4", "4") },
+              { "czs", new Replacement(new Pattern("czs"), "4", "4", "4") },
+              { "drz", new Replacement(new Pattern("drz"), "4", "4", "4") },
+              { "drs", new Replacement(new Pattern("drs"), "4", "4", "4") },
+              { "dsh", new Replacement(new Pattern("dsh"), "4", "4", "4") },
+              { "dsz", new Replacement(new Pattern("dsz"), "4", "4", "4") },
+              { "dzh", new Replacement(new Pattern("dzh"), "4", "4", "4") },
+              { "dzs", new Replacement(new Pattern("dzs"), "4", "4", "4") },
+              { "sch", new Replacement(new Pattern("sch"), "4", "4", "4") },
+              { "sht", new Replacement(new Pattern("sht"), "2", "43", "43") },
+              { "szt", new Replacement(new Pattern("szt"), "2", "43", "43") },
+              { "shd", new Replacement(new Pattern("shd"), "2", "43", "43") },
+              { "szd", new Replacement(new Pattern("szd"), "2", "43", "43") },
+              { "tch", new Replacement(new Pattern("tch"), "4", "4", "4") },
+              { "trz", new Replacement(new Pattern("trz"), "4", "4", "4") },
+              { "trs", new Replacement(new Pattern("trs"), "4", "4", "4") },
+              { "tsh", new Replacement(new Pattern("tsh"), "4", "4", "4") },
+              { "tts", new Replacement(new Pattern("tts"), "4", "4", "4") },
+              { "ttz", new Replacement(new Pattern("ttz"), "4", "4", "4") },
+              { "tzs", new Replacement(new Pattern("tzs"), "4", "4", "4") },
+              { "tsz", new Replacement(new Pattern("tsz"), "4", "4", "4") },
+              { "zdz", new Replacement(new Pattern("zdz"), "2", "4", "4") },
+              { "zhd", new Replacement(new Pattern("zhd"), "2", "43", "43") },
+              { "zsh", new Replacement(new Pattern("zsh"), "4", "4", "4") },
+              { "ai", new Replacement(new Pattern("ai"), "0", "1", "") },
+              { "aj", new Replacement(new Pattern("aj"), "0", "1", "") },
+              { "ay", new Replacement(new Pattern("ay"), "0", "1", "") },
+              { "au", new Replacement(new Pattern("au"), "0", "7", "") },
+              { "cz", new Replacement(new Pattern("cz"), "4", "4", "4") },
+              { "cs", new Replacement(new Pattern("cs"), "4", "4", "4") },
+              { "ds", new Replacement(new Pattern("ds"), "4", "4", "4") },
+              { "dz", new Replacement(new Pattern("dz"), "4", "4", "4") },
+              { "dt", new Replacement(new Pattern("dt"), "3", "3", "3") },
+              { "ei", new Replacement(new Pattern("ei"), "0", "1", "") },
+              { "ej", new Replacement(new Pattern("ej"), "0", "1", "") },
+              { "ey", new Replacement(new Pattern("ey"), "0", "1", "") },
+              { "eu", new Replacement(new Pattern("eu"), "1", "1", "") },
+              { "fb", new Replacement(new Pattern("fb"), "7", "7", "7") },
+              { "ia", new Replacement(new Pattern("ia"), "1", "", "") },
+              { "ie", new Replacement(new Pattern("ie"), "1", "", "") },
+              { "io", new Replacement(new Pattern("io"), "1", "", "") },
+              { "iu", new Replacement(new Pattern("iu"), "1", "", "") },
+              { "ks", new Replacement(new Pattern("ks"), "5", "54", "54") },
+              { "kh", new Replacement(new Pattern("kh"), "5", "5", "5") },
+              { "mn", new Replacement(new Pattern("mn"), "66", "66", "66") },
+              { "nm", new Replacement(new Pattern("nm"), "66", "66", "66") },
+              { "oi", new Replacement(new Pattern("oi"), "0", "1", "") },
+              { "oj", new Replacement(new Pattern("oj"), "0", "1", "") },
+              { "oy", new Replacement(new Pattern("oy"), "0", "1", "") },
+              { "pf", new Replacement(new Pattern("pf"), "7", "7", "7") },
+              { "ph", new Replacement(new Pattern("ph"), "7", "7", "7") },
+              { "sh", new Replacement(new Pattern("sh"), "4", "4", "4") },
+              { "sc", new Replacement(new Pattern("sc"), "2", "4", "4") },
+              { "st", new Replacement(new Pattern("st"), "2", "43", "43") },
+              { "sd", new Replacement(new Pattern("sd"), "2", "43", "43") },
+              { "sz", new Replacement(new Pattern("sz"), "4", "4", "4") },
+              { "th", new Replacement(new Pattern("th"), "3", "3", "3") },
+              { "ts", new Replacement(new Pattern("ts"), "4", "4", "4") },
+              { "tc", new Replacement(new Pattern("tc"), "4", "4", "4") },
+              { "tz", new Replacement(new Pattern("tz"), "4", "4", "4") },
+              { "ui", new Replacement(new Pattern("ui"), "0", "1", "") },
+              { "uj", new Replacement(new Pattern("uj"), "0", "1", "") },
+              { "uy", new Replacement(new Pattern("uy"), "0", "1", "") },
+              { "ue", new Replacement(new Pattern("ue"), "0", "1", "") },
+              { "zd", new Replacement(new Pattern("zd"), "2", "43", "43") },
+              { "zh", new Replacement(new Pattern("zh"), "4", "4", "4") },
+              { "zs", new Replacement(new Pattern("zs"), "4", "4", "4") },
 
               // Branching cases
-              { new Pattern("c"), new Replacement("4|5", "4|5", "4|5") },
-              { new Pattern("ch"), new Replacement("4|5", "4|5", "4|5") },
-              { new Pattern("ck"), new Replacement("5|45", "5|45", "5|45") },
-              //{ new Pattern("rs"), new Replacement("4|94", "4|94", "4|94") },
-              { new Pattern("rz"), new Replacement("4|94", "4|94", "4|94") },
-              //{ new Pattern("j"), new Replacement( "1|4", "|4", "|4") }
+              { "c", new Replacement(new Pattern("c"), "4|5", "4|5", "4|5") },
+              { "ch", new Replacement(new Pattern("ch"), "4|5", "4|5", "4|5") },
+              { "ck", new Replacement(new Pattern("ck"), "5|45", "5|45", "5|45") },
+              //{ "rs", new Replacement(new Pattern("rs"), "4|94", "4|94", "4|94") },
+              { "rz", new Replacement(new Pattern("rz"), "4|94", "4|94", "4|94") },
+              //{ "j", new Replacement(new Pattern("j"), "1|4", "|4", "|4") }
             };
 
         /**
@@ -249,7 +242,7 @@ namespace Element34.StringMetrics
         }
 
         /**
-       * Perform the actual DM Soundex algorithm on the input string.
+       * Perform the actual DM Soundex algorithm on the beta string.
        *
        * @param source
        *            A string object to encode
@@ -265,15 +258,15 @@ namespace Element34.StringMetrics
                 return null;
             }
 
-            string input = CleanUp(source);
+            string beta = CleanUp(source);
 
             List<Branch> currentBranches = new List<Branch>();
             currentBranches.Add(new Branch());
 
             string lastChar = "\0";
-            for (int i = 0; i < input.Length; i++)
+            for (int i = 0; i < beta.Length; i++)
             {
-                string ch = input[i].ToString();
+                string ch = beta[i].ToString();
 
                 // ignore whitespace inside a name
                 if (ch.IsWhiteSpace())
@@ -281,8 +274,8 @@ namespace Element34.StringMetrics
                     continue;
                 }
 
-                string inputContext = input.Substring(i);
-                Replacement rule = RULES[new Pattern(ch)];
+                string betaContext = beta.Substring(i);
+                Replacement rule = RULES.GetValue(ch);
                 if (rule == null)
                 {
                     continue;
@@ -291,13 +284,13 @@ namespace Element34.StringMetrics
                 // use an EMPTY_LIST to avoid false positive warnings with potential null pointer access
                 List<Branch> nextBranches = branching ? new List<Branch>() : null;
 
-                if (rule.pattern.matches(inputContext))
+                if (rule._pattern.matches(betaContext))
                 {
                     if (branching)
                     {
                         nextBranches.Clear();
                     }
-                    string[] replacements = rule.getReplacements(inputContext, lastChar == "\0");
+                    string[] replacements = rule.getReplacements(betaContext, lastChar == "\0");
                     bool branchingRequired = replacements.Length > 1 && branching;
 
                     foreach (Branch branch in currentBranches)
@@ -325,7 +318,7 @@ namespace Element34.StringMetrics
                         currentBranches.Clear();
                         currentBranches.AddRange(nextBranches);
                     }
-                    i += rule.pattern.getPatternLength() - 1;
+                    i += rule._pattern.getPatternLength() - 1;
                     break;
                 }
 
@@ -345,19 +338,19 @@ namespace Element34.StringMetrics
         }
 
         /**
-         * Performs a cleanup of the input string before the actual SoundEx transformation.
+         * Performs a cleanup of the beta string before the actual SoundEx transformation.
          * <p>
          * Removes all whitespace characters and performs ASCII folding if enabled.
          * </p>
          *
-         * @param input
-         *            the input string to clean up
+         * @param beta
+         *            the beta string to clean up
          * @return a cleaned up string
          */
-        private string CleanUp(string input)
+        private string CleanUp(string beta)
         {
             StringBuilder sb = new StringBuilder();
-            foreach (char ch in input.ToCharArray())
+            foreach (char ch in beta.ToCharArray())
             {
                 if (char.IsWhiteSpace(ch))
                 {
@@ -376,20 +369,17 @@ namespace Element34.StringMetrics
             return sb.ToString();
         }
 
-        /**
-         * Inner class representing a branch during DM SoundEx encoding.
-         */
         internal class Branch
         {
             private StringBuilder builder;
-            private string cachedstring;
+            private string cachedString;
             private string lastReplacement;
 
             public Branch()
             {
                 builder = new StringBuilder();
                 lastReplacement = null;
-                cachedstring = null;
+                cachedString = null;
             }
 
             /**
@@ -428,7 +418,7 @@ namespace Element34.StringMetrics
                 while (builder.Length < MAX_LENGTH)
                 {
                     builder.Append('0');
-                    cachedstring = null;
+                    cachedString = null;
                 }
             }
 
@@ -457,7 +447,7 @@ namespace Element34.StringMetrics
                     {
                         builder.Remove(MAX_LENGTH, builder.Length);
                     }
-                    cachedstring = null;
+                    cachedString = null;
                 }
 
                 lastReplacement = replacement;
@@ -465,18 +455,18 @@ namespace Element34.StringMetrics
 
             public override string ToString()
             {
-                if (cachedstring == null)
+                if (cachedString == null)
                 {
-                    cachedstring = builder.ToString();
+                    cachedString = builder.ToString();
                 }
 
-                return cachedstring;
+                return cachedString;
             }
         }
 
         internal class Pattern
         {
-            internal string _pattern { get; }
+            private string _pattern;
 
             public Pattern(string str)
             {
@@ -497,18 +487,24 @@ namespace Element34.StringMetrics
             {
                 return context.StartsWith(_pattern);
             }
+
+            public override string ToString()
+            {
+                return _pattern;
+            }
         }
 
         internal class Replacement
         {
-            internal Pattern pattern;
+            internal Pattern _pattern;
             private char VERTICAL_BAR = '|';
             private string[] replacementAtStart;
             private string[] replacementBeforeVowel;
             private string[] replacementDefault;
 
-            public Replacement(string replacementAtStart, string replacementBeforeVowel, string replacementDefault)
+            public Replacement(Pattern pattern, string replacementAtStart, string replacementBeforeVowel, string replacementDefault)
             {
+                this._pattern = pattern;
                 this.replacementAtStart = replacementAtStart.Split(VERTICAL_BAR);
                 this.replacementBeforeVowel = replacementBeforeVowel.Split(VERTICAL_BAR);
                 this.replacementDefault = replacementDefault.Split(VERTICAL_BAR);
@@ -521,7 +517,7 @@ namespace Element34.StringMetrics
                     return replacementAtStart;
                 }
 
-                int nextIndex = pattern.getPatternLength();
+                int nextIndex = _pattern.getPatternLength();
                 bool nextCharIsVowel = nextIndex < context.Length && isVowel(context[nextIndex]);
                 if (nextCharIsVowel)
                 {
@@ -538,70 +534,97 @@ namespace Element34.StringMetrics
 
             public override string ToString()
             {
-                return string.Format("{0}=({1},{2},{3})", pattern._pattern, replacementAtStart.ToList<string>(), replacementBeforeVowel.ToList<string>(), replacementDefault.ToList<string>());
+                return string.Format("{0}=({1},{2},{3})", _pattern.ToString(), replacementAtStart.ToList<string>(), replacementBeforeVowel.ToList<string>(), replacementDefault.ToList<string>());
             }
         }
 
-        /**
-         * Inner class for storing rules.
-         */
-        internal class _Rule
+        private string process(string sInput)
         {
-            private string pattern;
-            private char VERTICAL_BAR = '|';
-            private string[] replacementAtStart;
-            private string[] replacementBeforeVowel;
-            private string[] replacementDefault;
+            string alpha = sInput.ToLower();
+            string beta = sInput;
 
-            public _Rule(string pattern, string replacementAtStart, string replacementBeforeVowel, string replacementDefault)
-            {
-                this.pattern = pattern;
-                this.replacementAtStart = replacementAtStart.Split(VERTICAL_BAR);
-                this.replacementBeforeVowel = replacementBeforeVowel.Split(VERTICAL_BAR);
-                this.replacementDefault = replacementDefault.Split(VERTICAL_BAR);
-            }
+            string dm3 = "", tmp, key, xr;
+            bool allblank;
+            int len, dim_dm2, first;
+            char[] dm2, lastdm;
 
-            public char getPattern(int pos)
+            //** beta.Length > 0 **//
+            while (beta.Length > 0)
             {
-                return pattern[pos];
-            }
+                tmp = "";
+                len = beta.Length;
+                int i;
 
-            public int getPatternLength()
-            {
-                return pattern.Length;
-            }
-
-            public string[] getReplacements(string context, bool atStart)
-            {
-                if (atStart)
+                for (i = 0; i < beta.Length; i++)
                 {
-                    return replacementAtStart;
+                    if ((beta[i] >= 'a' && beta[i] <= 'z') || beta[i] == '/')
+                    {
+                        if (beta[i] == '/')
+                        {
+                            beta = beta.Substring(i + 1);
+                            break;
+                        }
+                        else
+                        {
+                            tmp = tmp + beta[i];
+                        }
+                    }
+                    else
+                    {
+                        if (alpha[i] == '(' || alpha[i] == SEPARATOR)
+                        {
+                            break;
+                        }
+                    }
                 }
 
-                int nextIndex = getPatternLength();
-                bool nextCharIsVowel = nextIndex < context.Length && isVowel(context[nextIndex]);
-                if (nextCharIsVowel)
+                if (i == len)
                 {
-                    return replacementBeforeVowel;
+                    beta = ""; // finished
                 }
 
-                return replacementDefault;
-            }
+                alpha = tmp;
+                key = "";
+                allblank = true;
+                for (int k = 0; k < alpha.Length; k++)
+                {
+                    if (alpha[k] != ' ')
+                    {
+                        allblank = false;
+                        break;
+                    }
+                }
 
-            private bool isVowel(char ch)
-            {
-                return _vowels.Contains(ch);
-            }
+                //** NOT ALLBLANK**//
+                if(!allblank)
+                {
+                    dim_dm2 = 1;
+                    dm2 = new char[16];
+                    dm2[0] = '\0';
 
-            public bool matches(string context)
-            {
-                return context.StartsWith(pattern);
-            }
+                    first = 1;
+                    lastdm = new char[16];
+                    lastdm[0] = '\0';
 
-            public override string ToString()
-            {
-                return string.Format("{0}=({1},{2},{3})", pattern, replacementAtStart.ToList<string>(), replacementBeforeVowel.ToList<string>(), replacementDefault.ToList<string>());
-            }
+                    /** alpha.Length > 0 **/
+                    while (alpha.Length > 0)
+                    {
+                        // loop through the rules
+                        for (int j = 0; j < RULES.Count; j++)
+                        {
+                            // match found
+                            //if(alpha.Substring(0, RULES[j][0].Length) == RULES[j][0])
+                            //{
+
+                            //}
+                        }
+
+                    } // alpha.Length > 0
+                } // NOT ALLBLANK
+            } // beta.Length > 0
+
+            key = dm3;
+            return key;
         }
     }
 }

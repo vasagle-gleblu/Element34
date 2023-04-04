@@ -159,45 +159,16 @@ namespace Element34.DataManager
             }
         }
 
-        //public static void ExportToCSV(FileInfo oFile, DataTable dt)
-        //{  // this method for creating a CSV file
-        //    char separator = ',';
-        //    StringBuilder sb = new StringBuilder();
-        //    for (int i = 0; i < dt.Columns.Count; i++)
-        //    {
-        //        sb.Append(dt.Columns[i]);
-        //        if (i < dt.Columns.Count - 1)
-        //            sb.Append(separator);
-        //    }
-        //    sb.AppendLine();
+        public static void AddDataColumn(string sFile, DataTable dt, string fieldName, Type dataType)
+        {
+            if (!dt.Columns.Contains(fieldName))
+            {
+                dt.Columns.Add(fieldName, dataType);
 
-        //    foreach (DataRow dr in dt.Rows)
-        //    {
-        //        for (int i = 0; i < dt.Columns.Count; i++)
-        //        {
-        //            // Types: System.String, System.Int32, System.Boolean, System.TimeSpan, System.DateTime, System.Decimal, System.Byte[]
-        //            if (dr[i].GetType().ToString() == "System.String")
-        //            {
-        //                sb.AppendFormat("\"{0}\"", dr[i].ToString());
-        //                if (i < dt.Columns.Count - 1)
-        //                    sb.Append(separator);
-        //            }
-        //            else
-        //            {
-        //                sb.Append(dr[i].ToString());
-        //                if (i < dt.Columns.Count - 1)
-        //                    sb.Append(separator);
-        //            }
-        //        }
-        //        sb.AppendLine();
-        //    }
-
-        //    //write all text to csv file
-        //    if (oFile.Exists)
-        //        oFile.Delete();
-
-        //    File.WriteAllText(oFile.FullName, sb.ToString(), enc);
-        //}
+                // Update table layout
+                ExportToCSV(sFile, dt);
+            }
+        }
 
         public static void UpdateCSV_MapEvents(DataTable dt, FileInfo oFile)
         {

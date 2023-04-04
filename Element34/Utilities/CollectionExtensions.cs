@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Element34
 {
@@ -50,6 +48,47 @@ namespace Element34
         public static IEnumerable<(T item, int index)> LoopIndex<T>(this IEnumerable<T> source)
         {
             return source.Select((item, index) => (item, index));
+        }
+
+        // "Append" an element to an array.
+        public static T[] Append<T>(this T[] array, T item)
+        {
+            List<T> list = new List<T>(array);
+            list.Add(item);
+
+            return list.ToArray();
+        }
+
+        // Populate array with default value.
+        public static T[] Populate<T>(this T[] source, int size, T defaultValue)
+        {
+            source = new T[size];
+            source = Enumerable.Repeat(defaultValue, source.Length).ToArray();
+            return source;
+        }
+
+
+        // Populate 2D jagged array with default value.
+        public static T[][] Populate<T>(this T[][] source, int rows, int cols, T defaultValue)
+        {
+            source = Enumerable.Repeat(Enumerable.Repeat(defaultValue, cols).ToArray(), rows).ToArray();
+            return source;
+        }
+
+        // Populate 2D array with default value
+        public static T[,] Populate<T>(this T[,] source, int rows, int cols, T defaultValue)
+        {
+            source = new T[rows, cols];
+
+            for (int i = 0; i < rows; i++)
+            {
+                for (int j = 0; j < cols; j++)
+                {
+                    source[i, j] = defaultValue;
+                }
+            }
+
+            return source;
         }
     }
 }
