@@ -27,22 +27,22 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void RefinedNYSIISTest014() { Assert.IsTrue(RefinedNYSIISTest("ciods", "CAD")); }
         [TestMethod] public void RefinedNYSIISTest015() { Assert.IsTrue(RefinedNYSIISTest("deseos", "DAS")); }
         [TestMethod] public void RefinedNYSIISTest016() { Assert.IsTrue(RefinedNYSIISTest("dippin", "DAPAN")); }
-        [TestMethod] public void RefinedNYSIISTest017() { Assert.IsTrue(RefinedNYSIISTest("aranna", "A")); }
+        [TestMethod] public void RefinedNYSIISTest017() { Assert.IsTrue(RefinedNYSIISTest("aranna", "ARAN")); }
         [TestMethod] public void RefinedNYSIISTest018() { Assert.IsTrue(RefinedNYSIISTest("borse", "BARS")); }
         [TestMethod] public void RefinedNYSIISTest019() { Assert.IsTrue(RefinedNYSIISTest("subic", "SABAC")); }
         [TestMethod] public void RefinedNYSIISTest020() { Assert.IsTrue(RefinedNYSIISTest("Vidrio", "VADR")); }
-        [TestMethod] public void RefinedNYSIISTest021() { Assert.IsTrue(RefinedNYSIISTest("inserters", "I")); }
+        [TestMethod] public void RefinedNYSIISTest021() { Assert.IsTrue(RefinedNYSIISTest("inserters", "INSART[AR]")); }
         [TestMethod] public void RefinedNYSIISTest022() { Assert.IsTrue(RefinedNYSIISTest("perature", "PARATA[R]")); }
         [TestMethod] public void RefinedNYSIISTest023() { Assert.IsTrue(RefinedNYSIISTest("msacideas", "MSACAD")); }
         [TestMethod] public void RefinedNYSIISTest024() { Assert.IsTrue(RefinedNYSIISTest("cougs", "CAG")); }
         [TestMethod] public void RefinedNYSIISTest025() { Assert.IsTrue(RefinedNYSIISTest("kittens", "CATAN")); }
-        [TestMethod] public void RefinedNYSIISTest026() { Assert.IsTrue(RefinedNYSIISTest("imperiously", "I")); }
+        [TestMethod] public void RefinedNYSIISTest026() { Assert.IsTrue(RefinedNYSIISTest("imperiously", "INPARA[SLY]")); }
         [TestMethod] public void RefinedNYSIISTest027() { Assert.IsTrue(RefinedNYSIISTest("boccanegra", "BACANA[GR]")); }
         [TestMethod] public void RefinedNYSIISTest028() { Assert.IsTrue(RefinedNYSIISTest("sextet", "SAXTAT")); }
         [TestMethod] public void RefinedNYSIISTest029() { Assert.IsTrue(RefinedNYSIISTest("setattributes", "SATATR[ABAT]")); }
         [TestMethod] public void RefinedNYSIISTest030() { Assert.IsTrue(RefinedNYSIISTest("dsnt", "DSD")); }
         [TestMethod] public void RefinedNYSIISTest031() { Assert.IsTrue(RefinedNYSIISTest("chubby", "CABY")); }
-        [TestMethod] public void RefinedNYSIISTest032() { Assert.IsTrue(RefinedNYSIISTest("ooda", "O")); }
+        [TestMethod] public void RefinedNYSIISTest032() { Assert.IsTrue(RefinedNYSIISTest("ooda", "OD")); }
         [TestMethod] public void RefinedNYSIISTest033() { Assert.IsTrue(RefinedNYSIISTest("Bressman", "BRASNA[N]")); }
         [TestMethod] public void RefinedNYSIISTest034() { Assert.IsTrue(RefinedNYSIISTest("calendarnew", "CALAND[ARN]")); }
         [TestMethod] public void RefinedNYSIISTest035() { Assert.IsTrue(RefinedNYSIISTest("duhon", "DAN")); }
@@ -58,20 +58,20 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void RefinedNYSIISTest045() { Assert.IsTrue(RefinedNYSIISTest("philosophically", "FALASA[FACALY]")); }
         [TestMethod] public void RefinedNYSIISTest046() { Assert.IsTrue(RefinedNYSIISTest("backfill", "BACFAL")); }
         [TestMethod] public void RefinedNYSIISTest047() { Assert.IsTrue(RefinedNYSIISTest("Murders", "MARDAR")); }
-        [TestMethod] public void RefinedNYSIISTest048() { Assert.IsTrue(RefinedNYSIISTest("ecartis", "E")); }
+        [TestMethod] public void RefinedNYSIISTest048() { Assert.IsTrue(RefinedNYSIISTest("ecartis", "ECART")); }
         [TestMethod] public void RefinedNYSIISTest049() { Assert.IsTrue(RefinedNYSIISTest("vede", "VAD")); }
-        [TestMethod] public void RefinedNYSIISTest050() { Assert.IsTrue(RefinedNYSIISTest("usoe", "U")); }
-        [TestMethod] public void RefinedNYSIISTest051() { Assert.IsTrue(RefinedNYSIISTest("ostara", "O")); }
+        [TestMethod] public void RefinedNYSIISTest050() { Assert.IsTrue(RefinedNYSIISTest("usoe", "US")); }
+        [TestMethod] public void RefinedNYSIISTest051() { Assert.IsTrue(RefinedNYSIISTest("ostara", "OSTAR")); }
         [TestMethod] public void RefinedNYSIISTest052() { Assert.IsTrue(RefinedNYSIISTest("labourer", "LABARA[R]")); }
         [TestMethod] public void RefinedNYSIISTest053() { Assert.IsTrue(RefinedNYSIISTest("speir", "SPAR")); }
         [TestMethod] public void RefinedNYSIISTest054() { Assert.IsTrue(RefinedNYSIISTest("durchaus", "DARC")); }
-        [TestMethod] public void RefinedNYSIISTest055() { Assert.IsTrue(RefinedNYSIISTest("inetformfiller", "I")); }
-        [TestMethod] public void RefinedNYSIISTest056() { Assert.IsTrue(RefinedNYSIISTest("itrs", "I")); }
+        [TestMethod] public void RefinedNYSIISTest055() { Assert.IsTrue(RefinedNYSIISTest("inetformfiller", "INATFA[RNFALAR]")); }
+        [TestMethod] public void RefinedNYSIISTest056() { Assert.IsTrue(RefinedNYSIISTest("itrs", "ITR")); }
         [TestMethod] public void RefinedNYSIISTest057() { Assert.IsTrue(RefinedNYSIISTest("Tennant", "TANAD")); }
         [TestMethod] public void RefinedNYSIISTest058() { Assert.IsTrue(RefinedNYSIISTest("bashore", "BASAR")); }
         [TestMethod] public void RefinedNYSIISTest059() { Assert.IsTrue(RefinedNYSIISTest("lemurian", "LANARA[N]")); }
         [TestMethod] public void RefinedNYSIISTest060() { Assert.IsTrue(RefinedNYSIISTest("dungannon", "DANGAN[AN]")); }
-        [TestMethod] public void RefinedNYSIISTest061() { Assert.IsTrue(RefinedNYSIISTest("epl", "E")); }
+        [TestMethod] public void RefinedNYSIISTest061() { Assert.IsTrue(RefinedNYSIISTest("epl", "EPL")); }
         [TestMethod] public void RefinedNYSIISTest062() { Assert.IsTrue(RefinedNYSIISTest("grader", "GRADAR")); }
         [TestMethod] public void RefinedNYSIISTest063() { Assert.IsTrue(RefinedNYSIISTest("synchronise", "SANCHR[ANAS]")); }
         [TestMethod] public void RefinedNYSIISTest064() { Assert.IsTrue(RefinedNYSIISTest("gondorian", "GANDAR[AN]")); }
@@ -90,7 +90,7 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void RefinedNYSIISTest077() { Assert.IsTrue(RefinedNYSIISTest("Rodin", "RADAN")); }
         [TestMethod] public void RefinedNYSIISTest078() { Assert.IsTrue(RefinedNYSIISTest("bluffer", "BLAFAR")); }
         [TestMethod] public void RefinedNYSIISTest079() { Assert.IsTrue(RefinedNYSIISTest("joey", "JY")); }
-        [TestMethod] public void RefinedNYSIISTest080() { Assert.IsTrue(RefinedNYSIISTest("unbekannter", "U")); }
+        [TestMethod] public void RefinedNYSIISTest080() { Assert.IsTrue(RefinedNYSIISTest("unbekannter", "UNBACA[NTAR]")); }
         [TestMethod] public void RefinedNYSIISTest081() { Assert.IsTrue(RefinedNYSIISTest("Baylor", "BALAR")); }
         [TestMethod] public void RefinedNYSIISTest082() { Assert.IsTrue(RefinedNYSIISTest("striplib", "STRAPL[AB]")); }
         [TestMethod] public void RefinedNYSIISTest083() { Assert.IsTrue(RefinedNYSIISTest("boquete", "BAGAT")); }
@@ -106,7 +106,7 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void RefinedNYSIISTest093() { Assert.IsTrue(RefinedNYSIISTest("chihiro", "CAR")); }
         [TestMethod] public void RefinedNYSIISTest094() { Assert.IsTrue(RefinedNYSIISTest("hctc", "HCTC")); }
         [TestMethod] public void RefinedNYSIISTest095() { Assert.IsTrue(RefinedNYSIISTest("nolde", "NALD")); }
-        [TestMethod] public void RefinedNYSIISTest096() { Assert.IsTrue(RefinedNYSIISTest("aerosolized", "A")); }
+        [TestMethod] public void RefinedNYSIISTest096() { Assert.IsTrue(RefinedNYSIISTest("aerosolized", "ARASAL[ASAD]")); }
         [TestMethod] public void RefinedNYSIISTest097() { Assert.IsTrue(RefinedNYSIISTest("canterbury", "CANTAR[BARY]")); }
         [TestMethod] public void RefinedNYSIISTest098() { Assert.IsTrue(RefinedNYSIISTest("jss", "J")); }
         [TestMethod] public void RefinedNYSIISTest099() { Assert.IsTrue(RefinedNYSIISTest("rmn", "RN")); }
@@ -120,13 +120,13 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void RefinedNYSIISTest107() { Assert.IsTrue(RefinedNYSIISTest("forbairt", "FARBAD")); }
         [TestMethod] public void RefinedNYSIISTest108() { Assert.IsTrue(RefinedNYSIISTest("southerners", "SATARN[AR]")); }
         [TestMethod] public void RefinedNYSIISTest109() { Assert.IsTrue(RefinedNYSIISTest("hypnotists", "HAPNAT[AST]")); }
-        [TestMethod] public void RefinedNYSIISTest110() { Assert.IsTrue(RefinedNYSIISTest("euphony", "E")); }
+        [TestMethod] public void RefinedNYSIISTest110() { Assert.IsTrue(RefinedNYSIISTest("euphony", "EFANY")); }
         [TestMethod] public void RefinedNYSIISTest111() { Assert.IsTrue(RefinedNYSIISTest("mhpa", "MHP")); }
         [TestMethod] public void RefinedNYSIISTest112() { Assert.IsTrue(RefinedNYSIISTest("matteotti", "MATAT")); }
         [TestMethod] public void RefinedNYSIISTest113() { Assert.IsTrue(RefinedNYSIISTest("Klande", "CLAND")); }
         [TestMethod] public void RefinedNYSIISTest114() { Assert.IsTrue(RefinedNYSIISTest("Trudgeon", "TRAGAN")); }
         [TestMethod] public void RefinedNYSIISTest115() { Assert.IsTrue(RefinedNYSIISTest("schoolhill", "SCALAL")); }
-        [TestMethod] public void RefinedNYSIISTest116() { Assert.IsTrue(RefinedNYSIISTest("equalizer", "E")); }
+        [TestMethod] public void RefinedNYSIISTest116() { Assert.IsTrue(RefinedNYSIISTest("equalizer", "EGALAS[AR]")); }
         [TestMethod] public void RefinedNYSIISTest117() { Assert.IsTrue(RefinedNYSIISTest("xnet", "XNAT")); }
         [TestMethod] public void RefinedNYSIISTest118() { Assert.IsTrue(RefinedNYSIISTest("Thell", "TAL")); }
         [TestMethod] public void RefinedNYSIISTest119() { Assert.IsTrue(RefinedNYSIISTest("Canel", "CANAL")); }
@@ -134,7 +134,7 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void RefinedNYSIISTest121() { Assert.IsTrue(RefinedNYSIISTest("burgtheater", "BARGTA[TAR]")); }
         [TestMethod] public void RefinedNYSIISTest122() { Assert.IsTrue(RefinedNYSIISTest("Berlinger", "BARLAN[GAR]")); }
         [TestMethod] public void RefinedNYSIISTest123() { Assert.IsTrue(RefinedNYSIISTest("crehan", "CRAN")); }
-        [TestMethod] public void RefinedNYSIISTest124() { Assert.IsTrue(RefinedNYSIISTest("abysses", "A")); }
+        [TestMethod] public void RefinedNYSIISTest124() { Assert.IsTrue(RefinedNYSIISTest("abysses", "ABAS")); }
         [TestMethod] public void RefinedNYSIISTest125() { Assert.IsTrue(RefinedNYSIISTest("Hipolito", "HAPALA[T]")); }
         [TestMethod] public void RefinedNYSIISTest126() { Assert.IsTrue(RefinedNYSIISTest("splintered", "SPLANT[ARAD]")); }
         [TestMethod] public void RefinedNYSIISTest127() { Assert.IsTrue(RefinedNYSIISTest("maintenace", "MANTAN[AC]")); }
@@ -143,7 +143,7 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void RefinedNYSIISTest130() { Assert.IsTrue(RefinedNYSIISTest("wette", "WAT")); }
         [TestMethod] public void RefinedNYSIISTest131() { Assert.IsTrue(RefinedNYSIISTest("Feary", "FARY")); }
         [TestMethod] public void RefinedNYSIISTest132() { Assert.IsTrue(RefinedNYSIISTest("Cuchiara", "CACAR")); }
-        [TestMethod] public void RefinedNYSIISTest133() { Assert.IsTrue(RefinedNYSIISTest("Arbon", "A")); }
+        [TestMethod] public void RefinedNYSIISTest133() { Assert.IsTrue(RefinedNYSIISTest("Arbon", "ARBAN")); }
         [TestMethod] public void RefinedNYSIISTest134() { Assert.IsTrue(RefinedNYSIISTest("shyness", "SAN")); }
         [TestMethod] public void RefinedNYSIISTest135() { Assert.IsTrue(RefinedNYSIISTest("Salin", "SALAN")); }
         [TestMethod] public void RefinedNYSIISTest136() { Assert.IsTrue(RefinedNYSIISTest("Zicafoose", "ZACAFA[S]")); }
@@ -157,7 +157,7 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void RefinedNYSIISTest144() { Assert.IsTrue(RefinedNYSIISTest("zipgenius", "ZAPGAN")); }
         [TestMethod] public void RefinedNYSIISTest145() { Assert.IsTrue(RefinedNYSIISTest("Kirchen", "CARCAN")); }
         [TestMethod] public void RefinedNYSIISTest146() { Assert.IsTrue(RefinedNYSIISTest("commentaar", "CANANT[AR]")); }
-        [TestMethod] public void RefinedNYSIISTest147() { Assert.IsTrue(RefinedNYSIISTest("expansive", "E")); }
+        [TestMethod] public void RefinedNYSIISTest147() { Assert.IsTrue(RefinedNYSIISTest("expansive", "EXPANS[AV]")); }
         [TestMethod] public void RefinedNYSIISTest148() { Assert.IsTrue(RefinedNYSIISTest("castlebar", "CASTLA[BAR]")); }
         [TestMethod] public void RefinedNYSIISTest149() { Assert.IsTrue(RefinedNYSIISTest("lft", "LFT")); }
         [TestMethod] public void RefinedNYSIISTest150() { Assert.IsTrue(RefinedNYSIISTest("robla", "RABL")); }
@@ -165,23 +165,23 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void RefinedNYSIISTest152() { Assert.IsTrue(RefinedNYSIISTest("nawc", "NAC")); }
         [TestMethod] public void RefinedNYSIISTest153() { Assert.IsTrue(RefinedNYSIISTest("resolvconf", "RASALV[CANF]")); }
         [TestMethod] public void RefinedNYSIISTest154() { Assert.IsTrue(RefinedNYSIISTest("networker", "NATWAR[CAR]")); }
-        [TestMethod] public void RefinedNYSIISTest155() { Assert.IsTrue(RefinedNYSIISTest("airlins", "A")); }
+        [TestMethod] public void RefinedNYSIISTest155() { Assert.IsTrue(RefinedNYSIISTest("airlins", "ARLAN")); }
         [TestMethod] public void RefinedNYSIISTest156() { Assert.IsTrue(RefinedNYSIISTest("Piskel", "PASCAL")); }
         [TestMethod] public void RefinedNYSIISTest157() { Assert.IsTrue(RefinedNYSIISTest("hilson", "HALSAN")); }
         [TestMethod] public void RefinedNYSIISTest158() { Assert.IsTrue(RefinedNYSIISTest("deco", "DAC")); }
         [TestMethod] public void RefinedNYSIISTest159() { Assert.IsTrue(RefinedNYSIISTest("cents", "CAD")); }
-        [TestMethod] public void RefinedNYSIISTest160() { Assert.IsTrue(RefinedNYSIISTest("award", "A")); }
+        [TestMethod] public void RefinedNYSIISTest160() { Assert.IsTrue(RefinedNYSIISTest("award", "AD")); }
         [TestMethod] public void RefinedNYSIISTest161() { Assert.IsTrue(RefinedNYSIISTest("reykjanes", "RACJAN")); }
         [TestMethod] public void RefinedNYSIISTest162() { Assert.IsTrue(RefinedNYSIISTest("perona", "PARAN")); }
-        [TestMethod] public void RefinedNYSIISTest163() { Assert.IsTrue(RefinedNYSIISTest("epistle", "E")); }
-        [TestMethod] public void RefinedNYSIISTest164() { Assert.IsTrue(RefinedNYSIISTest("insound", "I")); }
+        [TestMethod] public void RefinedNYSIISTest163() { Assert.IsTrue(RefinedNYSIISTest("epistle", "EPASTL")); }
+        [TestMethod] public void RefinedNYSIISTest164() { Assert.IsTrue(RefinedNYSIISTest("insound", "INSAD")); }
         [TestMethod] public void RefinedNYSIISTest165() { Assert.IsTrue(RefinedNYSIISTest("qantas", "QANT")); }
         [TestMethod] public void RefinedNYSIISTest166() { Assert.IsTrue(RefinedNYSIISTest("wholey", "WALY")); }
-        [TestMethod] public void RefinedNYSIISTest167() { Assert.IsTrue(RefinedNYSIISTest("aragona", "A")); }
+        [TestMethod] public void RefinedNYSIISTest167() { Assert.IsTrue(RefinedNYSIISTest("aragona", "ARAGAN")); }
         [TestMethod] public void RefinedNYSIISTest168() { Assert.IsTrue(RefinedNYSIISTest("Vancheri", "VANCAR")); }
-        [TestMethod] public void RefinedNYSIISTest169() { Assert.IsTrue(RefinedNYSIISTest("allocution", "A")); }
+        [TestMethod] public void RefinedNYSIISTest169() { Assert.IsTrue(RefinedNYSIISTest("allocution", "ALACAT[AN]")); }
         [TestMethod] public void RefinedNYSIISTest170() { Assert.IsTrue(RefinedNYSIISTest("volodya", "VALAD")); }
-        [TestMethod] public void RefinedNYSIISTest171() { Assert.IsTrue(RefinedNYSIISTest("enunciate", "E")); }
+        [TestMethod] public void RefinedNYSIISTest171() { Assert.IsTrue(RefinedNYSIISTest("enunciate", "ENANCA[T]")); }
         [TestMethod] public void RefinedNYSIISTest172() { Assert.IsTrue(RefinedNYSIISTest("uuuu", "U")); }
         [TestMethod] public void RefinedNYSIISTest173() { Assert.IsTrue(RefinedNYSIISTest("Louato", "LAT")); }
         [TestMethod] public void RefinedNYSIISTest174() { Assert.IsTrue(RefinedNYSIISTest("Marquitta", "MARGAT")); }
@@ -192,16 +192,16 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void RefinedNYSIISTest179() { Assert.IsTrue(RefinedNYSIISTest("ritva", "RATV")); }
         [TestMethod] public void RefinedNYSIISTest180() { Assert.IsTrue(RefinedNYSIISTest("spunky", "SPANCY")); }
         [TestMethod] public void RefinedNYSIISTest181() { Assert.IsTrue(RefinedNYSIISTest("npov", "NPAV")); }
-        [TestMethod] public void RefinedNYSIISTest182() { Assert.IsTrue(RefinedNYSIISTest("eurythmics", "E")); }
+        [TestMethod] public void RefinedNYSIISTest182() { Assert.IsTrue(RefinedNYSIISTest("eurythmics", "ERATHN[AC]")); }
         [TestMethod] public void RefinedNYSIISTest183() { Assert.IsTrue(RefinedNYSIISTest("skittish", "SCATAS")); }
         [TestMethod] public void RefinedNYSIISTest184() { Assert.IsTrue(RefinedNYSIISTest("scooter", "SCATAR")); }
-        [TestMethod] public void RefinedNYSIISTest185() { Assert.IsTrue(RefinedNYSIISTest("unfermented", "U")); }
+        [TestMethod] public void RefinedNYSIISTest185() { Assert.IsTrue(RefinedNYSIISTest("unfermented", "UNFARN[ANTAD]")); }
         [TestMethod] public void RefinedNYSIISTest186() { Assert.IsTrue(RefinedNYSIISTest("kerridge", "CARAG")); }
         [TestMethod] public void RefinedNYSIISTest187() { Assert.IsTrue(RefinedNYSIISTest("scenography", "SCANAG[RAFY]")); }
         [TestMethod] public void RefinedNYSIISTest188() { Assert.IsTrue(RefinedNYSIISTest("sahalee", "SALY")); }
         [TestMethod] public void RefinedNYSIISTest189() { Assert.IsTrue(RefinedNYSIISTest("spooktacular", "SPACTA[CALAR]")); }
         [TestMethod] public void RefinedNYSIISTest190() { Assert.IsTrue(RefinedNYSIISTest("boissons", "BASAN")); }
-        [TestMethod] public void RefinedNYSIISTest191() { Assert.IsTrue(RefinedNYSIISTest("arbete", "A")); }
+        [TestMethod] public void RefinedNYSIISTest191() { Assert.IsTrue(RefinedNYSIISTest("arbete", "ARBAT")); }
         [TestMethod] public void RefinedNYSIISTest192() { Assert.IsTrue(RefinedNYSIISTest("Norrick", "NARAC")); }
         [TestMethod] public void RefinedNYSIISTest193() { Assert.IsTrue(RefinedNYSIISTest("Sonnier", "SANAR")); }
         [TestMethod] public void RefinedNYSIISTest194() { Assert.IsTrue(RefinedNYSIISTest("gnomeui", "GNAN")); }
@@ -212,15 +212,15 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void RefinedNYSIISTest199() { Assert.IsTrue(RefinedNYSIISTest("marathon", "MARATA[N]")); }
         [TestMethod] public void RefinedNYSIISTest200() { Assert.IsTrue(RefinedNYSIISTest("layoffs", "LAF")); }
         [TestMethod] public void RefinedNYSIISTest201() { Assert.IsTrue(RefinedNYSIISTest("hotek", "HATAC")); }
-        [TestMethod] public void RefinedNYSIISTest202() { Assert.IsTrue(RefinedNYSIISTest("emme", "E")); }
-        [TestMethod] public void RefinedNYSIISTest203() { Assert.IsTrue(RefinedNYSIISTest("amarasinghe", "A")); }
+        [TestMethod] public void RefinedNYSIISTest202() { Assert.IsTrue(RefinedNYSIISTest("emme", "EN")); }
+        [TestMethod] public void RefinedNYSIISTest203() { Assert.IsTrue(RefinedNYSIISTest("amarasinghe", "ANARAS[ANG]")); }
         [TestMethod] public void RefinedNYSIISTest204() { Assert.IsTrue(RefinedNYSIISTest("midas", "MAD")); }
-        [TestMethod] public void RefinedNYSIISTest205() { Assert.IsTrue(RefinedNYSIISTest("inhaltsangabe", "I")); }
+        [TestMethod] public void RefinedNYSIISTest205() { Assert.IsTrue(RefinedNYSIISTest("inhaltsangabe", "INALTS[ANGAB]")); }
         [TestMethod] public void RefinedNYSIISTest206() { Assert.IsTrue(RefinedNYSIISTest("smow", "SN")); }
         [TestMethod] public void RefinedNYSIISTest207() { Assert.IsTrue(RefinedNYSIISTest("policing", "PALACA[NG]")); }
-        [TestMethod] public void RefinedNYSIISTest208() { Assert.IsTrue(RefinedNYSIISTest("usmf", "U")); }
-        [TestMethod] public void RefinedNYSIISTest209() { Assert.IsTrue(RefinedNYSIISTest("inferred", "I")); }
-        [TestMethod] public void RefinedNYSIISTest210() { Assert.IsTrue(RefinedNYSIISTest("Eaglen", "E")); }
+        [TestMethod] public void RefinedNYSIISTest208() { Assert.IsTrue(RefinedNYSIISTest("usmf", "USNF")); }
+        [TestMethod] public void RefinedNYSIISTest209() { Assert.IsTrue(RefinedNYSIISTest("inferred", "INFARA[D]")); }
+        [TestMethod] public void RefinedNYSIISTest210() { Assert.IsTrue(RefinedNYSIISTest("Eaglen", "EGLAN")); }
         [TestMethod] public void RefinedNYSIISTest211() { Assert.IsTrue(RefinedNYSIISTest("dralle", "DRAL")); }
         [TestMethod] public void RefinedNYSIISTest212() { Assert.IsTrue(RefinedNYSIISTest("kalmus", "CALN")); }
         [TestMethod] public void RefinedNYSIISTest213() { Assert.IsTrue(RefinedNYSIISTest("nork", "NARC")); }
@@ -238,7 +238,7 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void RefinedNYSIISTest225() { Assert.IsTrue(RefinedNYSIISTest("troutbeck", "TRATBA[C]")); }
         [TestMethod] public void RefinedNYSIISTest226() { Assert.IsTrue(RefinedNYSIISTest("moreelse", "MARALS")); }
         [TestMethod] public void RefinedNYSIISTest227() { Assert.IsTrue(RefinedNYSIISTest("seacrest", "SACRAS[T]")); }
-        [TestMethod] public void RefinedNYSIISTest228() { Assert.IsTrue(RefinedNYSIISTest("ufj", "U")); }
+        [TestMethod] public void RefinedNYSIISTest228() { Assert.IsTrue(RefinedNYSIISTest("ufj", "UFJ")); }
         [TestMethod] public void RefinedNYSIISTest229() { Assert.IsTrue(RefinedNYSIISTest("dereferences", "DARAFA[RANC]")); }
         [TestMethod] public void RefinedNYSIISTest230() { Assert.IsTrue(RefinedNYSIISTest("sarena", "SARAN")); }
         [TestMethod] public void RefinedNYSIISTest231() { Assert.IsTrue(RefinedNYSIISTest("Kurt", "CAD")); }
@@ -260,18 +260,18 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void RefinedNYSIISTest247() { Assert.IsTrue(RefinedNYSIISTest("bastide", "BASTAD")); }
         [TestMethod] public void RefinedNYSIISTest248() { Assert.IsTrue(RefinedNYSIISTest("lipo", "LAP")); }
         [TestMethod] public void RefinedNYSIISTest249() { Assert.IsTrue(RefinedNYSIISTest("Bosket", "BASCAT")); }
-        [TestMethod] public void RefinedNYSIISTest250() { Assert.IsTrue(RefinedNYSIISTest("oroms", "O")); }
+        [TestMethod] public void RefinedNYSIISTest250() { Assert.IsTrue(RefinedNYSIISTest("oroms", "ORAN")); }
         [TestMethod] public void RefinedNYSIISTest251() { Assert.IsTrue(RefinedNYSIISTest("vandenburg", "VANDAN[BARG]")); }
         [TestMethod] public void RefinedNYSIISTest252() { Assert.IsTrue(RefinedNYSIISTest("wirtschaftsforschung", "WARTSC[AFTSFARSCANG]")); }
         [TestMethod] public void RefinedNYSIISTest253() { Assert.IsTrue(RefinedNYSIISTest("lilypond", "LALAPA[D]")); }
         [TestMethod] public void RefinedNYSIISTest254() { Assert.IsTrue(RefinedNYSIISTest("mouthfeel", "MATHFA[L]")); }
         [TestMethod] public void RefinedNYSIISTest255() { Assert.IsTrue(RefinedNYSIISTest("wwwunibancocombr", "WANABA[NCACANBR]")); }
         [TestMethod] public void RefinedNYSIISTest256() { Assert.IsTrue(RefinedNYSIISTest("Worster", "WARSTA[R]")); }
-        [TestMethod] public void RefinedNYSIISTest257() { Assert.IsTrue(RefinedNYSIISTest("Ahmad", "A")); }
+        [TestMethod] public void RefinedNYSIISTest257() { Assert.IsTrue(RefinedNYSIISTest("Ahmad", "ANAD")); }
         [TestMethod] public void RefinedNYSIISTest258() { Assert.IsTrue(RefinedNYSIISTest("sweetser", "SWATSA[R]")); }
         [TestMethod] public void RefinedNYSIISTest259() { Assert.IsTrue(RefinedNYSIISTest("vsepr", "VSAPR")); }
         [TestMethod] public void RefinedNYSIISTest260() { Assert.IsTrue(RefinedNYSIISTest("dput", "DPAT")); }
-        [TestMethod] public void RefinedNYSIISTest261() { Assert.IsTrue(RefinedNYSIISTest("austlit", "A")); }
+        [TestMethod] public void RefinedNYSIISTest261() { Assert.IsTrue(RefinedNYSIISTest("austlit", "ASTLAT")); }
         [TestMethod] public void RefinedNYSIISTest262() { Assert.IsTrue(RefinedNYSIISTest("Clemen", "CLANAN")); }
         [TestMethod] public void RefinedNYSIISTest263() { Assert.IsTrue(RefinedNYSIISTest("phrva", "FRV")); }
         [TestMethod] public void RefinedNYSIISTest264() { Assert.IsTrue(RefinedNYSIISTest("weipa", "WAP")); }
@@ -284,10 +284,10 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void RefinedNYSIISTest271() { Assert.IsTrue(RefinedNYSIISTest("flyjacket", "FLAJAC[AT]")); }
         [TestMethod] public void RefinedNYSIISTest272() { Assert.IsTrue(RefinedNYSIISTest("galatian", "GALATA[N]")); }
         [TestMethod] public void RefinedNYSIISTest273() { Assert.IsTrue(RefinedNYSIISTest("hotsel", "HATSAL")); }
-        [TestMethod] public void RefinedNYSIISTest274() { Assert.IsTrue(RefinedNYSIISTest("autorun", "A")); }
+        [TestMethod] public void RefinedNYSIISTest274() { Assert.IsTrue(RefinedNYSIISTest("autorun", "ATARAN")); }
         [TestMethod] public void RefinedNYSIISTest275() { Assert.IsTrue(RefinedNYSIISTest("cocoon", "CACAN")); }
         [TestMethod] public void RefinedNYSIISTest276() { Assert.IsTrue(RefinedNYSIISTest("kooks", "CAC")); }
-        [TestMethod] public void RefinedNYSIISTest277() { Assert.IsTrue(RefinedNYSIISTest("endocrinol", "E")); }
+        [TestMethod] public void RefinedNYSIISTest277() { Assert.IsTrue(RefinedNYSIISTest("endocrinol", "ENDACR[ANAL]")); }
         [TestMethod] public void RefinedNYSIISTest278() { Assert.IsTrue(RefinedNYSIISTest("mesages", "MASAG")); }
         [TestMethod] public void RefinedNYSIISTest279() { Assert.IsTrue(RefinedNYSIISTest("Disney", "DASNY")); }
         [TestMethod] public void RefinedNYSIISTest280() { Assert.IsTrue(RefinedNYSIISTest("speedline", "SPADLA[N]")); }
@@ -295,18 +295,18 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void RefinedNYSIISTest282() { Assert.IsTrue(RefinedNYSIISTest("margaux", "MARGAX")); }
         [TestMethod] public void RefinedNYSIISTest283() { Assert.IsTrue(RefinedNYSIISTest("housecalls", "HASACA[L]")); }
         [TestMethod] public void RefinedNYSIISTest284() { Assert.IsTrue(RefinedNYSIISTest("siltation", "SALTAT[AN]")); }
-        [TestMethod] public void RefinedNYSIISTest285() { Assert.IsTrue(RefinedNYSIISTest("automatic", "A")); }
+        [TestMethod] public void RefinedNYSIISTest285() { Assert.IsTrue(RefinedNYSIISTest("automatic", "ATANAT[AC]")); }
         [TestMethod] public void RefinedNYSIISTest286() { Assert.IsTrue(RefinedNYSIISTest("freakshow", "FRACS")); }
         [TestMethod] public void RefinedNYSIISTest287() { Assert.IsTrue(RefinedNYSIISTest("gorojovsky", "GARAJA[VSCY]")); }
         [TestMethod] public void RefinedNYSIISTest288() { Assert.IsTrue(RefinedNYSIISTest("milwaukie", "MALWAC[Y]")); }
         [TestMethod] public void RefinedNYSIISTest289() { Assert.IsTrue(RefinedNYSIISTest("wwwgap", "WGAP")); }
-        [TestMethod] public void RefinedNYSIISTest290() { Assert.IsTrue(RefinedNYSIISTest("autm", "A")); }
+        [TestMethod] public void RefinedNYSIISTest290() { Assert.IsTrue(RefinedNYSIISTest("autm", "ATN")); }
         [TestMethod] public void RefinedNYSIISTest291() { Assert.IsTrue(RefinedNYSIISTest("borromini", "BARANA[N]")); }
         [TestMethod] public void RefinedNYSIISTest292() { Assert.IsTrue(RefinedNYSIISTest("zpp", "ZP")); }
         [TestMethod] public void RefinedNYSIISTest293() { Assert.IsTrue(RefinedNYSIISTest("Penovich", "PANAVA[CH]")); }
         [TestMethod] public void RefinedNYSIISTest294() { Assert.IsTrue(RefinedNYSIISTest("domine", "DANAN")); }
         [TestMethod] public void RefinedNYSIISTest295() { Assert.IsTrue(RefinedNYSIISTest("caves", "CAV")); }
-        [TestMethod] public void RefinedNYSIISTest296() { Assert.IsTrue(RefinedNYSIISTest("uato", "U")); }
+        [TestMethod] public void RefinedNYSIISTest296() { Assert.IsTrue(RefinedNYSIISTest("uato", "UT")); }
         [TestMethod] public void RefinedNYSIISTest297() { Assert.IsTrue(RefinedNYSIISTest("tiltonsville", "TALTAN[SVAL]")); }
         [TestMethod] public void RefinedNYSIISTest298() { Assert.IsTrue(RefinedNYSIISTest("Ken", "CAN")); }
         [TestMethod] public void RefinedNYSIISTest299() { Assert.IsTrue(RefinedNYSIISTest("Delonais", "DALAN")); }
@@ -326,9 +326,9 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void RefinedNYSIISTest313() { Assert.IsTrue(RefinedNYSIISTest("kuppam", "CAPAN")); }
         [TestMethod] public void RefinedNYSIISTest314() { Assert.IsTrue(RefinedNYSIISTest("ftpadmin", "FTPADN[AN]")); }
         [TestMethod] public void RefinedNYSIISTest315() { Assert.IsTrue(RefinedNYSIISTest("Forst", "FARST")); }
-        [TestMethod] public void RefinedNYSIISTest316() { Assert.IsTrue(RefinedNYSIISTest("Ashauer", "A")); }
-        [TestMethod] public void RefinedNYSIISTest317() { Assert.IsTrue(RefinedNYSIISTest("ashtanga", "A")); }
-        [TestMethod] public void RefinedNYSIISTest318() { Assert.IsTrue(RefinedNYSIISTest("alonissos", "A")); }
+        [TestMethod] public void RefinedNYSIISTest316() { Assert.IsTrue(RefinedNYSIISTest("Ashauer", "ASAR")); }
+        [TestMethod] public void RefinedNYSIISTest317() { Assert.IsTrue(RefinedNYSIISTest("ashtanga", "ASTANG")); }
+        [TestMethod] public void RefinedNYSIISTest318() { Assert.IsTrue(RefinedNYSIISTest("alonissos", "ALANAS")); }
         [TestMethod] public void RefinedNYSIISTest319() { Assert.IsTrue(RefinedNYSIISTest("Chimilio", "CANAL")); }
         [TestMethod] public void RefinedNYSIISTest320() { Assert.IsTrue(RefinedNYSIISTest("deafbazon", "DAFBAS[AN]")); }
         [TestMethod] public void RefinedNYSIISTest321() { Assert.IsTrue(RefinedNYSIISTest("psmb", "PSNB")); }
@@ -343,10 +343,10 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void RefinedNYSIISTest330() { Assert.IsTrue(RefinedNYSIISTest("haspel", "HASPAL")); }
         [TestMethod] public void RefinedNYSIISTest331() { Assert.IsTrue(RefinedNYSIISTest("cortex", "CARTAC")); }
         [TestMethod] public void RefinedNYSIISTest332() { Assert.IsTrue(RefinedNYSIISTest("vechicle", "VACACL")); }
-        [TestMethod] public void RefinedNYSIISTest333() { Assert.IsTrue(RefinedNYSIISTest("epinions", "E")); }
+        [TestMethod] public void RefinedNYSIISTest333() { Assert.IsTrue(RefinedNYSIISTest("epinions", "EPANAN")); }
         [TestMethod] public void RefinedNYSIISTest334() { Assert.IsTrue(RefinedNYSIISTest("wwwusmintgov", "WASNAN[TGAV]")); }
         [TestMethod] public void RefinedNYSIISTest335() { Assert.IsTrue(RefinedNYSIISTest("katies", "CATY")); }
-        [TestMethod] public void RefinedNYSIISTest336() { Assert.IsTrue(RefinedNYSIISTest("aminosalicylic", "A")); }
+        [TestMethod] public void RefinedNYSIISTest336() { Assert.IsTrue(RefinedNYSIISTest("aminosalicylic", "ANANAS[ALACALAC]")); }
         [TestMethod] public void RefinedNYSIISTest337() { Assert.IsTrue(RefinedNYSIISTest("mmegi", "MNAG")); }
         [TestMethod] public void RefinedNYSIISTest338() { Assert.IsTrue(RefinedNYSIISTest("sbir", "SBAR")); }
         [TestMethod] public void RefinedNYSIISTest339() { Assert.IsTrue(RefinedNYSIISTest("learned", "LARNAD")); }
@@ -355,9 +355,9 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void RefinedNYSIISTest342() { Assert.IsTrue(RefinedNYSIISTest("selzer", "SALSAR")); }
         [TestMethod] public void RefinedNYSIISTest343() { Assert.IsTrue(RefinedNYSIISTest("tmug", "TNAG")); }
         [TestMethod] public void RefinedNYSIISTest344() { Assert.IsTrue(RefinedNYSIISTest("Kisto", "CAST")); }
-        [TestMethod] public void RefinedNYSIISTest345() { Assert.IsTrue(RefinedNYSIISTest("iib", "I")); }
+        [TestMethod] public void RefinedNYSIISTest345() { Assert.IsTrue(RefinedNYSIISTest("iib", "IB")); }
         [TestMethod] public void RefinedNYSIISTest346() { Assert.IsTrue(RefinedNYSIISTest("wwwincredimail", "WANCRA[DANAL]")); }
-        [TestMethod] public void RefinedNYSIISTest347() { Assert.IsTrue(RefinedNYSIISTest("izpack", "I")); }
+        [TestMethod] public void RefinedNYSIISTest347() { Assert.IsTrue(RefinedNYSIISTest("izpack", "ISPAC")); }
         [TestMethod] public void RefinedNYSIISTest348() { Assert.IsTrue(RefinedNYSIISTest("gaymovie", "GANAVY")); }
         [TestMethod] public void RefinedNYSIISTest349() { Assert.IsTrue(RefinedNYSIISTest("Buchholz", "BACHAL")); }
         [TestMethod] public void RefinedNYSIISTest350() { Assert.IsTrue(RefinedNYSIISTest("culcairn", "CALCAR[N]")); }
@@ -366,12 +366,12 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void RefinedNYSIISTest353() { Assert.IsTrue(RefinedNYSIISTest("Sorce", "SARC")); }
         [TestMethod] public void RefinedNYSIISTest354() { Assert.IsTrue(RefinedNYSIISTest("chimique", "CANAG")); }
         [TestMethod] public void RefinedNYSIISTest355() { Assert.IsTrue(RefinedNYSIISTest("kitada", "CATAD")); }
-        [TestMethod] public void RefinedNYSIISTest356() { Assert.IsTrue(RefinedNYSIISTest("Engeman", "E")); }
+        [TestMethod] public void RefinedNYSIISTest356() { Assert.IsTrue(RefinedNYSIISTest("Engeman", "ENGANA[N]")); }
         [TestMethod] public void RefinedNYSIISTest357() { Assert.IsTrue(RefinedNYSIISTest("raveendran", "RAVAND[RAN]")); }
         [TestMethod] public void RefinedNYSIISTest358() { Assert.IsTrue(RefinedNYSIISTest("Bendele", "BANDAL")); }
         [TestMethod] public void RefinedNYSIISTest359() { Assert.IsTrue(RefinedNYSIISTest("Pawlitschek", "PALATS[CAC]")); }
         [TestMethod] public void RefinedNYSIISTest360() { Assert.IsTrue(RefinedNYSIISTest("hogfather", "HAGFAT[AR]")); }
-        [TestMethod] public void RefinedNYSIISTest361() { Assert.IsTrue(RefinedNYSIISTest("eyedrum", "E")); }
+        [TestMethod] public void RefinedNYSIISTest361() { Assert.IsTrue(RefinedNYSIISTest("eyedrum", "EDRAN")); }
         [TestMethod] public void RefinedNYSIISTest362() { Assert.IsTrue(RefinedNYSIISTest("Ferrara", "FARAR")); }
         [TestMethod] public void RefinedNYSIISTest363() { Assert.IsTrue(RefinedNYSIISTest("zhuh", "ZAH")); }
         [TestMethod] public void RefinedNYSIISTest364() { Assert.IsTrue(RefinedNYSIISTest("zodiak", "ZADAC")); }
@@ -388,7 +388,7 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void RefinedNYSIISTest375() { Assert.IsTrue(RefinedNYSIISTest("Racheal", "RACAL")); }
         [TestMethod] public void RefinedNYSIISTest376() { Assert.IsTrue(RefinedNYSIISTest("bizben", "BASBAN")); }
         [TestMethod] public void RefinedNYSIISTest377() { Assert.IsTrue(RefinedNYSIISTest("musictalk", "MASACT[ALC]")); }
-        [TestMethod] public void RefinedNYSIISTest378() { Assert.IsTrue(RefinedNYSIISTest("ogoal", "O")); }
+        [TestMethod] public void RefinedNYSIISTest378() { Assert.IsTrue(RefinedNYSIISTest("ogoal", "OGAL")); }
         [TestMethod] public void RefinedNYSIISTest379() { Assert.IsTrue(RefinedNYSIISTest("Skoff", "SCAF")); }
         [TestMethod] public void RefinedNYSIISTest380() { Assert.IsTrue(RefinedNYSIISTest("Seehusen", "SASAN")); }
         [TestMethod] public void RefinedNYSIISTest381() { Assert.IsTrue(RefinedNYSIISTest("Reim", "RAN")); }
@@ -398,7 +398,7 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void RefinedNYSIISTest385() { Assert.IsTrue(RefinedNYSIISTest("shuey", "SY")); }
         [TestMethod] public void RefinedNYSIISTest386() { Assert.IsTrue(RefinedNYSIISTest("posium", "PASAN")); }
         [TestMethod] public void RefinedNYSIISTest387() { Assert.IsTrue(RefinedNYSIISTest("Falknor", "FALNAR")); }
-        [TestMethod] public void RefinedNYSIISTest388() { Assert.IsTrue(RefinedNYSIISTest("ucat", "U")); }
+        [TestMethod] public void RefinedNYSIISTest388() { Assert.IsTrue(RefinedNYSIISTest("ucat", "UCAT")); }
         [TestMethod] public void RefinedNYSIISTest389() { Assert.IsTrue(RefinedNYSIISTest("properspace", "PRAPAR[SPAC]")); }
         [TestMethod] public void RefinedNYSIISTest390() { Assert.IsTrue(RefinedNYSIISTest("showimg", "SANG")); }
         [TestMethod] public void RefinedNYSIISTest391() { Assert.IsTrue(RefinedNYSIISTest("Montecillo", "MANTAC[AL]")); }
@@ -411,7 +411,7 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void RefinedNYSIISTest398() { Assert.IsTrue(RefinedNYSIISTest("mervtormel", "MARVTA[RNAL]")); }
         [TestMethod] public void RefinedNYSIISTest399() { Assert.IsTrue(RefinedNYSIISTest("guanahani", "GANAN")); }
         [TestMethod] public void RefinedNYSIISTest400() { Assert.IsTrue(RefinedNYSIISTest("citement", "CATANA[D]")); }
-        [TestMethod] public void RefinedNYSIISTest401() { Assert.IsTrue(RefinedNYSIISTest("immu", "I")); }
+        [TestMethod] public void RefinedNYSIISTest401() { Assert.IsTrue(RefinedNYSIISTest("immu", "IN")); }
         [TestMethod] public void RefinedNYSIISTest402() { Assert.IsTrue(RefinedNYSIISTest("virulence", "VARALA[NC]")); }
         [TestMethod] public void RefinedNYSIISTest403() { Assert.IsTrue(RefinedNYSIISTest("kussa", "CAS")); }
         [TestMethod] public void RefinedNYSIISTest404() { Assert.IsTrue(RefinedNYSIISTest("gso", "GS")); }
@@ -424,7 +424,7 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void RefinedNYSIISTest411() { Assert.IsTrue(RefinedNYSIISTest("Vanis", "VAN")); }
         [TestMethod] public void RefinedNYSIISTest412() { Assert.IsTrue(RefinedNYSIISTest("Buena", "BAN")); }
         [TestMethod] public void RefinedNYSIISTest413() { Assert.IsTrue(RefinedNYSIISTest("Tauares", "TAR")); }
-        [TestMethod] public void RefinedNYSIISTest414() { Assert.IsTrue(RefinedNYSIISTest("ikus", "I")); }
+        [TestMethod] public void RefinedNYSIISTest414() { Assert.IsTrue(RefinedNYSIISTest("ikus", "IC")); }
         [TestMethod] public void RefinedNYSIISTest415() { Assert.IsTrue(RefinedNYSIISTest("genrebox", "GANRAB[AX]")); }
         [TestMethod] public void RefinedNYSIISTest416() { Assert.IsTrue(RefinedNYSIISTest("rth", "RTH")); }
         [TestMethod] public void RefinedNYSIISTest417() { Assert.IsTrue(RefinedNYSIISTest("Spaun", "SPAN")); }
@@ -439,22 +439,22 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void RefinedNYSIISTest426() { Assert.IsTrue(RefinedNYSIISTest("Hollendonner", "HALAND[ANAR]")); }
         [TestMethod] public void RefinedNYSIISTest427() { Assert.IsTrue(RefinedNYSIISTest("Huitzacua", "HATSAC")); }
         [TestMethod] public void RefinedNYSIISTest428() { Assert.IsTrue(RefinedNYSIISTest("subjunctive", "SABJAN[CTAV]")); }
-        [TestMethod] public void RefinedNYSIISTest429() { Assert.IsTrue(RefinedNYSIISTest("implored", "I")); }
+        [TestMethod] public void RefinedNYSIISTest429() { Assert.IsTrue(RefinedNYSIISTest("implored", "INPLAR[AD]")); }
         [TestMethod] public void RefinedNYSIISTest430() { Assert.IsTrue(RefinedNYSIISTest("pompeius", "PANP")); }
-        [TestMethod] public void RefinedNYSIISTest431() { Assert.IsTrue(RefinedNYSIISTest("afleet", "A")); }
-        [TestMethod] public void RefinedNYSIISTest432() { Assert.IsTrue(RefinedNYSIISTest("iacc", "I")); }
+        [TestMethod] public void RefinedNYSIISTest431() { Assert.IsTrue(RefinedNYSIISTest("afleet", "AFLAT")); }
+        [TestMethod] public void RefinedNYSIISTest432() { Assert.IsTrue(RefinedNYSIISTest("iacc", "IC")); }
         [TestMethod] public void RefinedNYSIISTest433() { Assert.IsTrue(RefinedNYSIISTest("sabalos", "SABAL")); }
-        [TestMethod] public void RefinedNYSIISTest434() { Assert.IsTrue(RefinedNYSIISTest("Abdi", "A")); }
+        [TestMethod] public void RefinedNYSIISTest434() { Assert.IsTrue(RefinedNYSIISTest("Abdi", "ABD")); }
         [TestMethod] public void RefinedNYSIISTest435() { Assert.IsTrue(RefinedNYSIISTest("microinsurance", "MACRAN[SARANC]")); }
-        [TestMethod] public void RefinedNYSIISTest436() { Assert.IsTrue(RefinedNYSIISTest("audiobook", "A")); }
+        [TestMethod] public void RefinedNYSIISTest436() { Assert.IsTrue(RefinedNYSIISTest("audiobook", "ADABAC")); }
         [TestMethod] public void RefinedNYSIISTest437() { Assert.IsTrue(RefinedNYSIISTest("fulpmes", "FALPN")); }
         [TestMethod] public void RefinedNYSIISTest438() { Assert.IsTrue(RefinedNYSIISTest("registreren", "RAGAST[RARAN]")); }
         [TestMethod] public void RefinedNYSIISTest439() { Assert.IsTrue(RefinedNYSIISTest("megapath", "MAGAPA[TH]")); }
         [TestMethod] public void RefinedNYSIISTest440() { Assert.IsTrue(RefinedNYSIISTest("prestidigitation", "PRASTA[DAGATATAN]")); }
         [TestMethod] public void RefinedNYSIISTest441() { Assert.IsTrue(RefinedNYSIISTest("wby", "WBY")); }
         [TestMethod] public void RefinedNYSIISTest442() { Assert.IsTrue(RefinedNYSIISTest("vorschau", "VARSC")); }
-        [TestMethod] public void RefinedNYSIISTest443() { Assert.IsTrue(RefinedNYSIISTest("Albertha", "A")); }
-        [TestMethod] public void RefinedNYSIISTest444() { Assert.IsTrue(RefinedNYSIISTest("aspalpha", "A")); }
+        [TestMethod] public void RefinedNYSIISTest443() { Assert.IsTrue(RefinedNYSIISTest("Albertha", "ALBART")); }
+        [TestMethod] public void RefinedNYSIISTest444() { Assert.IsTrue(RefinedNYSIISTest("aspalpha", "ASPALF")); }
         [TestMethod] public void RefinedNYSIISTest445() { Assert.IsTrue(RefinedNYSIISTest("Belden", "BALDAN")); }
         [TestMethod] public void RefinedNYSIISTest446() { Assert.IsTrue(RefinedNYSIISTest("deterministic", "DATARN[ANASTAC]")); }
         [TestMethod] public void RefinedNYSIISTest447() { Assert.IsTrue(RefinedNYSIISTest("philosophique", "FALASA[FAG]")); }
@@ -467,13 +467,13 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void RefinedNYSIISTest454() { Assert.IsTrue(RefinedNYSIISTest("Mook", "MAC")); }
         [TestMethod] public void RefinedNYSIISTest455() { Assert.IsTrue(RefinedNYSIISTest("medseek", "MADSAC")); }
         [TestMethod] public void RefinedNYSIISTest456() { Assert.IsTrue(RefinedNYSIISTest("chugalug", "CAGALA[G]")); }
-        [TestMethod] public void RefinedNYSIISTest457() { Assert.IsTrue(RefinedNYSIISTest("olms", "O")); }
+        [TestMethod] public void RefinedNYSIISTest457() { Assert.IsTrue(RefinedNYSIISTest("olms", "OLN")); }
         [TestMethod] public void RefinedNYSIISTest458() { Assert.IsTrue(RefinedNYSIISTest("bogo", "BAG")); }
-        [TestMethod] public void RefinedNYSIISTest459() { Assert.IsTrue(RefinedNYSIISTest("essing", "E")); }
+        [TestMethod] public void RefinedNYSIISTest459() { Assert.IsTrue(RefinedNYSIISTest("essing", "ESANG")); }
         [TestMethod] public void RefinedNYSIISTest460() { Assert.IsTrue(RefinedNYSIISTest("rarden", "RARDAN")); }
         [TestMethod] public void RefinedNYSIISTest461() { Assert.IsTrue(RefinedNYSIISTest("mittlere", "MATLAR")); }
         [TestMethod] public void RefinedNYSIISTest462() { Assert.IsTrue(RefinedNYSIISTest("Borsa", "BARS")); }
-        [TestMethod] public void RefinedNYSIISTest463() { Assert.IsTrue(RefinedNYSIISTest("Ainslie", "A")); }
+        [TestMethod] public void RefinedNYSIISTest463() { Assert.IsTrue(RefinedNYSIISTest("Ainslie", "ANSLY")); }
         [TestMethod] public void RefinedNYSIISTest464() { Assert.IsTrue(RefinedNYSIISTest("Ganska", "GANSC")); }
         [TestMethod] public void RefinedNYSIISTest465() { Assert.IsTrue(RefinedNYSIISTest("miv", "MAV")); }
         [TestMethod] public void RefinedNYSIISTest466() { Assert.IsTrue(RefinedNYSIISTest("concessions", "CANCAS[AN]")); }
@@ -489,7 +489,7 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void RefinedNYSIISTest476() { Assert.IsTrue(RefinedNYSIISTest("bodystyles", "BADAST[AL]")); }
         [TestMethod] public void RefinedNYSIISTest477() { Assert.IsTrue(RefinedNYSIISTest("beaatiality", "BATALA[TY]")); }
         [TestMethod] public void RefinedNYSIISTest478() { Assert.IsTrue(RefinedNYSIISTest("Bobrowski", "BABRAS[C]")); }
-        [TestMethod] public void RefinedNYSIISTest479() { Assert.IsTrue(RefinedNYSIISTest("erudition", "E")); }
+        [TestMethod] public void RefinedNYSIISTest479() { Assert.IsTrue(RefinedNYSIISTest("erudition", "ERADAT[AN]")); }
         [TestMethod] public void RefinedNYSIISTest480() { Assert.IsTrue(RefinedNYSIISTest("huttner", "HATNAR")); }
         [TestMethod] public void RefinedNYSIISTest481() { Assert.IsTrue(RefinedNYSIISTest("wwwaskjeevescom", "WASCJA[FASCAN]")); }
         [TestMethod] public void RefinedNYSIISTest482() { Assert.IsTrue(RefinedNYSIISTest("Duross", "DAR")); }
@@ -511,6 +511,7 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void RefinedNYSIISTest498() { Assert.IsTrue(RefinedNYSIISTest("shadyac", "SADAC")); }
         [TestMethod] public void RefinedNYSIISTest499() { Assert.IsTrue(RefinedNYSIISTest("lossphentermine", "LASFAN[TARNAN]")); }
         [TestMethod] public void RefinedNYSIISTest500() { Assert.IsTrue(RefinedNYSIISTest("Dreith", "DRATH")); }
+        [TestMethod] public void RefinedNYSIISTest501() { Assert.IsTrue(RefinedNYSIISTest("Windsor", "WANDSA[R]")); }
 
     }
 }

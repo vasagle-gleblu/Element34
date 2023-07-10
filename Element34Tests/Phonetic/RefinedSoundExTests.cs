@@ -510,6 +510,7 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void RefinedSoundExTest498() { Assert.IsTrue(RefinedSoundExTest("shadyac", "S363")); }
         [TestMethod] public void RefinedSoundExTest499() { Assert.IsTrue(RefinedSoundExTest("lossphentermine", "L7318698")); }
         [TestMethod] public void RefinedSoundExTest500() { Assert.IsTrue(RefinedSoundExTest("Dreith", "D696")); }
+        [TestMethod] public void RefinedSoundExTest501() { Assert.IsTrue(RefinedSoundExTest("Windsor", "W8639")); }
 
     }
 }

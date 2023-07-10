@@ -518,8 +518,8 @@ namespace Element34
                     // to select "All time".
                     IWebElement root2 = root6.FindElement(By.CssSelector("iron-pages#tabs")).FindElement(By.CssSelector("settings-dropdown-menu#clearFromBasic"));
                     ShadowRoot shadowRoot7 = driver.getShadowRootElement(root2);
-                    IWebElement ddnTimeRange = shadowRoot7.FindElement(By.CssSelector("select#dropdownMenu"));
-                    new SelectElement(ddnTimeRange).SelectByValue("4");
+                    IWebElement ddlTimeRange = shadowRoot7.FindElement(By.CssSelector("select#dropdownMenu"));
+                    new SelectElement(ddlTimeRange).SelectByValue("4");
 
                     IWebElement clearDataButton = root6.FindElement(By.CssSelector("#clearBrowsingDataConfirm"));
                     clearDataButton.Click(); // click that hard to reach button!
@@ -546,7 +546,10 @@ namespace Element34
                     break;
 
                 case nameof(EdgeDriver):
-                    throw new NotImplementedException();
+                    driver.Navigate().GoToUrl("edge://settings/clearBrowserData");
+                    driver.FindElement(By.XPath("//*[@id='modal-root']//button[@id='selecttrigger-35']")).Click();                        
+            
+                    break;
 
                 case nameof(InternetExplorerDriver):
                     throw new NotImplementedException();
@@ -648,6 +651,7 @@ namespace Element34
                 {
                     js.ExecuteScript("arguments[0].selected=true", opt);
                     js.ExecuteScript("const evt=new Event('change',{'bubbles':true,'cancelable':true});arguments[0].dispatchEvent(evt);", selectElement);
+                    js.ExecuteScript("const evt=new Event('input',{'bubbles':true,'cancelable':true});arguments[0].dispatchEvent(evt);", selectElement);
                 }
             }
         }
@@ -672,6 +676,7 @@ namespace Element34
                 {
                     js.ExecuteScript("arguments[0].selected=true", opt);
                     js.ExecuteScript("const evt=new Event('change',{'bubbles':true,'cancelable':true});arguments[0].dispatchEvent(evt);", selectElement);
+                    js.ExecuteScript("const evt=new Event('input',{'bubbles':true,'cancelable':true});arguments[0].dispatchEvent(evt);", selectElement);
                 }
             }
         }
@@ -708,6 +713,7 @@ namespace Element34
                 {
                     js.ExecuteScript("arguments[0].selected=true", opt);
                     js.ExecuteScript("const evt=new Event('change',{'bubbles':true,'cancelable':true});arguments[0].dispatchEvent(evt);", selectElement);
+                    js.ExecuteScript("const evt=new Event('input',{'bubbles':true,'cancelable':true});arguments[0].dispatchEvent(evt);", selectElement);
                 }
             }
 
@@ -989,7 +995,7 @@ namespace Element34
 
             switch (driver.GetType().ToString())
             {
-                case "OpenQA.Selenium.Chrome.ChromeDriver":
+                case nameof(ChromeDriver):
                     // sourceURL: use "document.querySelector('downloads-manager').shadowRoot.querySelector('#downloadsList downloads-item').shadowRoot.querySelector('div#content #file-link').href"
                     // downloadLocation: use "document.querySelector('downloads-manager').shadowRoot.querySelector('#downloadsList downloads-item').shadowRoot.querySelector('div.is-active.focus-row-active #file-icon-wrapper img').src"
                     scriptFileName = "return document.querySelector('downloads-manager').shadowRoot.querySelector('#downloadsList downloads-item').shadowRoot.querySelector('div#content #file-link').text";
@@ -997,7 +1003,7 @@ namespace Element34
                     downloadsURL = "chrome://downloads";
                     break;
 
-                case "OpenQA.Selenium.Firefox.FirefoxDriver":
+                case nameof(FirefoxDriver):
                     scriptFileName = "return document.querySelector('#contentAreaDownloadsView description:nth-of-type(1)').value";
                     scriptPercentage = "return document.querySelector('#contentAreaDownloadsView richlistitem.download:nth-child(1) > hbox:nth-child(1) > vbox:nth-child(2) > progress:nth-child(2)').value";
                     downloadsURL = "about:downloads";

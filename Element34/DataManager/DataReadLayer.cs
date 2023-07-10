@@ -1,3 +1,10 @@
+using CsvHelper;
+using CsvHelper.Configuration;
+using Element34.StringMetrics;
+using Newtonsoft.Json;
+using OfficeOpenXml;
+using OfficeOpenXml.FormulaParsing.Excel.Functions.RefAndLookup;
+using OfficeOpenXml.FormulaParsing.Excel.Functions.Text;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -7,10 +14,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using CsvHelper;
-using CsvHelper.Configuration;
-using Element34.StringMetrics;
-using Newtonsoft.Json;
 
 namespace Element34.DataManager
 {
@@ -57,6 +60,7 @@ namespace Element34.DataManager
             return result;
         }
 
+        #region [MS Access File Support]
         public static DataSet DataSetFromMDB(string connString)
         {
             DataSet result = new DataSet();
@@ -123,7 +127,9 @@ namespace Element34.DataManager
 
             return result;
         }
+        #endregion
 
+        #region [MS Excel File Support]
         public static DataSet DataSetFromXLS(FileInfo oFile)
         {
             DataSet result = new DataSet();
@@ -164,47 +170,48 @@ namespace Element34.DataManager
             return result;
         }
 
-        public static DataTable DataTableFromXLS(string connString, string sqlStmt, Dictionary<string, object> paramList = null)
+        public static DataTable DataTableFromXLS(FileInfo oFile, string sSheetName = "", bool hasHeader = true)
         {
-            DataTable result;
-            if (sqlStmt.Contains("FROM[") && sqlStmt.Contains("$]"))
-            {
-                int start = sqlStmt.IndexOf("FROM [") + "FROM [".Length;
-                int end = sqlStmt.IndexOf("$]", start) + "$]".Length;
-                string tableName = sqlStmt.Substring(start, end - start);
-                result = new DataTable(tableName);
-            }
-            else
-                result = new DataTable();
+            if (!oFile.Exists)
+                throw new FileNotFoundException();
 
-            if (!connString.Contains("Extended Properties"))
-                connString += "Extended Properties = 'Excel 12.0 Xml;IMEX=1;";
+            DataTable dt = new DataTable();
 
-            using (OleDbConnection conn = new OleDbConnection(connString))
+            using (ExcelPackage package = new ExcelPackage(oFile))
             {
-                using (OleDbCommand cmd = new OleDbCommand(sqlStmt, conn))
+                // Select named worksheet, default to first if name not supplied
+                ExcelWorksheet worksheet = (string.IsNullOrEmpty(sSheetName)) ? package.Workbook.Worksheets[0] : package.Workbook.Worksheets[sSheetName];
+                int colCount = worksheet.Dimension.End.Column;  // get column count
+                int rowCount = worksheet.Dimension.End.Row;     // get row count
+                int start = 1;
+
+                if (hasHeader)
                 {
-                    if (paramList != null)
+                    start = 2;
+                    ExcelRange wsHeader = worksheet.Cells[1, 1, 1, colCount];
+                    foreach (ExcelRangeBase firstRowCell in wsHeader)
                     {
-                        cmd.Parameters.Clear();
-                        foreach (var param in paramList)
-                        {
-                            cmd.Parameters.AddWithValue(param.Key, param.Value);
-                        }
+                        dt.Columns.Add(firstRowCell.Value.ToString().Trim(), typeof(string));
                     }
+                }
 
-                    conn.Open();
-                    using (OleDbDataAdapter adapter = new OleDbDataAdapter(cmd))
+                for (int row = start; row <= rowCount; row++)
+                {
+                    ExcelRange wsRow = worksheet.Cells[row, 1, row, colCount];
+                    DataRow dr = dt.Rows.Add();
+
+                    foreach (ExcelRangeBase cell in wsRow)
                     {
-                        adapter.Fill(result);
+                        dr[cell.Start.Column - 1] = cell.Value.ToString().Trim();
                     }
-                    conn.Close();
                 }
             }
 
-            return result;
+            return dt;
         }
+        #endregion
 
+        #region [CSV File Support]
         public static DataSet DataSetFromCSV(string sPath)
         {
             DataSet result = new DataSet();
@@ -224,38 +231,6 @@ namespace Element34.DataManager
             // Return the filled DataSet
             return result;
         }
-
-        //public static DataSet DataSetFromCSV(string sPath)
-        //{
-        //    DataSet result = new DataSet();
-        //    DataTable dt;
-
-        //    // For convenience, the DataSet is identified by the name of the named folder.
-        //    string sFolder = Path.GetDirectoryName(sPath);
-        //    result.DataSetName = sFolder.Substring(sFolder.LastIndexOf('\\'), sFolder.Length - sFolder.LastIndexOf('\\') - 1).Replace(" ", "_");
-
-        //    // Process the list of files found in the folder.
-        //    foreach (string sFile in Directory.GetFiles(sFolder, "*.csv"))
-        //    {
-        //        string sFilename = sFile.Substring(sFile.LastIndexOf('\\') + 1, sFile.Length - sFile.LastIndexOf('\\') - 1);
-
-        //        using (OdbcConnection conn = new OdbcConnection("Driver={Microsoft Text Driver (*.txt; *.csv)};Dbq=" + sFolder + ";Extensions=asc,csv,tab,txt;"))
-        //        {
-        //            conn.Open();
-        //            OdbcDataAdapter objDA = new OdbcDataAdapter("SELECT * FROM [" + sFilename + "]", conn);
-        //            dt = new DataTable();
-        //            dt.TableName = sFilename;
-        //            objDA.Fill(dt);
-        //            objDA.Dispose();
-        //            conn.Close();
-        //        }
-
-        //        result.Tables.Add(dt);
-        //    }
-
-        //    // Return the filled DataSet
-        //    return result;
-        //}
 
         public static DataTable DataTableFromCSV(string sFile, bool blnFoldChars = false, bool blnTableReadOnly = false, bool blnMakeBackup = true)
         {
@@ -291,7 +266,7 @@ namespace Element34.DataManager
                     reader.Close();
                     reader.Dispose();
 
-                    byte[] bytes = enc.GetBytes(string.Join("\r\n", lines.ToArray()));
+                    byte[] bytes = enc.GetBytes(string.Join(Environment.NewLine, lines.ToArray()));
                     Stream s = new MemoryStream(bytes);
                     sr = new StreamReader(s);
                 }
@@ -317,45 +292,12 @@ namespace Element34.DataManager
 
             return dt;
         }
+        #endregion
 
-        //public static DataTable DataTableFromCSV(string sFilename, string sFilter = "")
-        //{
-        //    string sFolder = Path.GetDirectoryName(sFilename);
-        //    sFilename = sFilename.Substring(sFilename.LastIndexOf('\\') + 1, sFilename.Length - sFilename.LastIndexOf('\\') - 1);
-        //    sFilename.Replace('[', '(').Replace(']', ')');
-        //    DataTable dt;
+        #region [XML File Support]
+        #endregion
 
-        //    using (OdbcConnection conn = new OdbcConnection("Driver={Microsoft Text Driver (*.txt; *.csv)};Dbq=" + sFolder + ";Extensions=asc,csv,tab,txt;"))
-        //    {
-        //        using (OdbcCommand cmd = new OdbcCommand("SELECT * FROM [" + sFilename + "]", conn))
-        //        {
-        //            conn.Open();
-        //            using (OdbcDataAdapter adapter = new OdbcDataAdapter(cmd))
-        //            {
-        //                dt = new DataTable();
-        //                dt.TableName = Path.GetFileNameWithoutExtension(sFilename);
-        //                adapter.Fill(dt);
-        //            }
-        //            conn.Close();
-        //        }
-
-        //        if (dt.Rows.Count > 0)
-        //        {
-        //            if (sFilter.Length > 0)
-        //            {
-        //                DataRow[] dr = dt.Select(sFilter);
-        //                if (dr.Length > 0)
-        //                {
-        //                    DataTable tmp = dr.CopyToDataTable();
-        //                    dt = tmp;
-        //                }
-        //            }
-        //        }
-        //    }
-
-        //    return dt;
-        //}
-
+        #region [JSON File Support]
         public static DataSet DataSetFromJSON(string sInput)
         {
             return sInput.DeserializeDataSetFromJSON();
@@ -380,6 +322,7 @@ namespace Element34.DataManager
 
             return dt;
         }
+        #endregion
         #endregion
 
         #region [Private Functions]

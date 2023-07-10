@@ -14,7 +14,11 @@ namespace Element34.StringMetrics
 
         public bool Compare(string value1, string value2)
         {
-            throw new System.NotImplementedException();
+            SoundEx sdx = new SoundEx();
+            value1 = sdx.Encode(value1);
+            value2 = sdx.Encode(value2);
+
+            return value1.Equals(value2);
         }
 
         public string Encode(string source)

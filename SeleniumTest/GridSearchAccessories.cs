@@ -10,15 +10,15 @@ namespace SeleniumTest
     #region Control Types
     public class CheckBoxControlType : ControlType
     {
-        public override void Choose(ReadOnlyCollection<IWebElement> cells, int iColumn)
+        public override void Choose(ReadOnlyCollection<IWebElement> cells, int iColumn, string value = "true")
         {
-            Check(cells[iColumn].FindElement(By.XPath(".//mat-checkbox//input[@type='checkbox']")), "true");
+            Check(cells[iColumn].FindElement(By.XPath(".//mat-checkbox//input[@type='checkbox']")), value);
         }
     }
 
     public class AnchorControlType : ControlType
     {
-        public override void Choose(ReadOnlyCollection<IWebElement> cells, int iColumn)
+        public override void Choose(ReadOnlyCollection<IWebElement> cells, int iColumn, string value = "true")
         {
             cells[iColumn].FindElement(By.XPath(".//a")).Click();
         }
@@ -26,7 +26,7 @@ namespace SeleniumTest
 
     public class RowControlType : ControlType
     {
-        public override void Choose(ReadOnlyCollection<IWebElement> cells, int iColumn = 0)
+        public override void Choose(ReadOnlyCollection<IWebElement> cells, int iColumn, string value = "true")
         {
             cells[iColumn].FindElement(By.XPath(".//parent::tr")).Click();
         }

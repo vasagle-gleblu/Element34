@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Text;
+using System.Collections.Generic;
 
 namespace Element34.StringMetrics
 {
@@ -7,97 +7,51 @@ namespace Element34.StringMetrics
     {
         private const int tokenLength = 4;
 
+        private IReadOnlyDictionary<char, char> Map = new Dictionary<char, char>()
+            {{'B', '1'},{ 'P', '1'},{ 'F', '2'},{ 'V', '2'},{ 'C', '3'},{ 'K', '3'},
+            { 'S', '3'},{ 'G', '4'},{ 'J', '4'},{ 'Q', '5'},{ 'X', '5'},{ 'Z', '5'},
+            { 'D', '6'},{ 'T', '6'},{ 'L', '7'},{ 'M', '8'},{ 'N', '8'},{ 'R', '9'}};
+
         public bool Compare(string value1, string value2)
         {
-            throw new NotImplementedException();
+            SoundExRefined sdx = new SoundExRefined();
+            value1 = sdx.Encode(value1);
+            value2 = sdx.Encode(value2);
+
+            return value1.Equals(value2);
         }
 
         public string Encode(string source)
         {
-            StringBuilder result = new StringBuilder();
+            source = source.ToUpper().Trim();
 
-            if (source != null && source.Length > 0)
+            if (source.Length == 0)
+                return string.Empty;
+
+            List<char> token = new List<char>();
+
+            token.Add(source[0]);
+            char last = '*', current = '\0';
+
+            for (int i = 0; i < source.Length; i++)
             {
-                char previousCode = ' ', currentCode, currentLetter;
-                result.Append(source[0]); // keep initial char
+                if (Map.ContainsKey(source[i]))
+                    current = Map[source[i]];
 
-                for (int i = 0; i < source.Length; i++) //start at 0 in order to correctly encode "Pf..."
+                if (current == last)
                 {
-                    currentLetter = char.ToUpper(source[i]);
-                    currentCode = ' ';
-
-                    switch (currentLetter)
-                    {
-                        case 'A':
-                        case 'E':
-                        case 'H':
-                        case 'I':
-                        case 'O':
-                        case 'U':
-                        case 'W':
-                        case 'Y':
-                            currentCode = '0';
-                            break;
-
-                        case 'B':
-                        case 'P':
-                            currentCode = '1';
-                            break;
-
-                        case 'F':
-                        case 'V':
-                            currentCode = '2';
-                            break;
-
-                        case 'C':
-                        case 'K':
-                        case 'S':
-                            currentCode = '3';
-                            break;
-
-                        case 'G':
-                        case 'J':
-                            currentCode = '4';
-                            break;
-
-                        case 'Q':
-                        case 'X':
-                        case 'Z':
-                            currentCode = '5';
-                            break;
-
-                        case 'D':
-                        case 'T':
-                            currentCode = '6';
-                            break;
-
-                        case 'L':
-                            currentCode = '7';
-                            break;
-
-                        case 'M':
-                        case 'N':
-                            currentCode = '8';
-                            break;
-
-                        case 'R':
-                            currentCode = '9';
-                            break;
-
-                    }
-
-                    if (currentCode != previousCode && i > 0) // do not add first code to result string
-                        result.Append(currentCode);
-
-                    if (result.Length == tokenLength) break;
-
-                    previousCode = currentCode; // always retain previous code, even empty
+                    continue;
                 }
-            }
-            if (result.Length < tokenLength)
-                result.Append(new string('0', tokenLength - result.Length));
 
-            return result.ToString();
+                if (current != '\0')
+                {
+                    token.Add(current);
+                }
+
+                last = current;
+            }
+
+            return new string(token.ToArray());
         }
 
     }

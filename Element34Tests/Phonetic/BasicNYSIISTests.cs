@@ -511,6 +511,7 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void NYSIISTest498() { Assert.IsTrue(BasicNYSIISTest("shadyac", "SHADYA[C]")); }
         [TestMethod] public void NYSIISTest499() { Assert.IsTrue(BasicNYSIISTest("lossphentermine", "LASFAN[TARNAN]")); }
         [TestMethod] public void NYSIISTest500() { Assert.IsTrue(BasicNYSIISTest("Dreith", "DRAT")); }
+        [TestMethod] public void NYSIISTest501() { Assert.IsTrue(BasicNYSIISTest("Windsor", "WANDSA[R]")); }
 
     }
 }

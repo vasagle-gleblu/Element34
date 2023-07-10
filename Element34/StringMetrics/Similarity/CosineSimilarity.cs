@@ -5,14 +5,28 @@ using System.Text.RegularExpressions;
 
 namespace Element34.StringMetrics.Similarity
 {
-    public static class CosineSimilarity
+    /// <summary>
+    /// Cosine Similarity:
+    /// In NLP, Cosine similarity is a metric used to measure how similar the documents are 
+    /// irrespective of their size.  A word is represented into a vector form. The text documents 
+    /// are represented in n-dimensional vector space.  Mathematically, it calculates the 
+    /// cosine of the angle between two vectors projected in the n-dimensional space.
+    /// <a href="https://en.wikipedia.org/wiki/Cosine_similarity" />
+    /// 
+    /// This algorithm was converted from Java to C# from the following repository.
+    /// <a href="https://gist.github.com/vamsigp/e2c7857a9aae4b653778" /> 
+    /// </summary>
+
+
+    public class CosineSimilarity
     {
-        /**
-         * @param source 
-         * @param target 
-         * @return cosine similarity of source and target
-         */
-        public static double Compute(string source, string target)
+        /// <summary>
+        /// The cosine similarity is a measure of similarity between two words.
+        /// </summary>
+        /// <param name="source">string A</param>
+        /// <param name="target">string B</param>
+        /// <returns>The cosine similarity of source and target</returns>
+        public double Compute(string source, string target)
         {
             //Get vectors
             Dictionary<string, int> src = getTermFrequencyMap(Regex.Split(source, "\\W+"));
@@ -45,12 +59,22 @@ namespace Element34.StringMetrics.Similarity
             return dotProduct / Math.Sqrt(magnitudeS * magnitudeT);
         }
 
+        /// <summary>
+        /// The cosine distance is commonly used as the complement of cosine similarity.
+        /// </summary>
+        /// <param name="source">string A</param>
+        /// <param name="target">string B</param>
+        /// <returns>The cosine distance of source and target</returns>
+        public double Distance(string source, string target)
+        {
+            return 1 - Compute(source, target);
+        }
 
-        /**
-        * @param terms values to analyze
-        * @return a map containing unique 
-        * terms and their frequency
-        */
+        /// <summary>
+        /// Term frequency–inverse document frequency; TF-IDF.
+        /// </summary>
+        /// <param name="terms">term values to analyze</param>
+        /// <returns>A dictionary containing unique terms and their frequency</returns>
         private static Dictionary<string, int> getTermFrequencyMap(String[] terms)
         {
             Dictionary<string, int> termFrequencyMap = new Dictionary<string, int>();
@@ -63,5 +87,6 @@ namespace Element34.StringMetrics.Similarity
 
             return termFrequencyMap;
         }
+
     }
 }

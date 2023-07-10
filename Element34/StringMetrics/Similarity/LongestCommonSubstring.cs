@@ -6,16 +6,16 @@ using System.Threading.Tasks;
 
 namespace Element34.StringMetrics.Similarity
 {
-    public static class LongestCommonSubstring
+    public class LongestCommonSubstring
     {
-        public static string Compute(string source, string target)
+        public string Compute(string source, string target)
         {
             if (string.IsNullOrEmpty(source) || string.IsNullOrEmpty(target)) return null;
 
-            var L = new int[source.Length, target.Length];
-            var maximumLength = 0;
-            var lastSubsBegin = 0;
-            var stringBuilder = new StringBuilder();
+            int[,] L = new int[source.Length, target.Length];
+            int maximumLength = 0;
+            int lastSubsBegin = 0;
+            StringBuilder stringBuilder = new StringBuilder();
 
             for (var i = 0; i < source.Length; i++)
                 for (var j = 0; j < target.Length; j++)

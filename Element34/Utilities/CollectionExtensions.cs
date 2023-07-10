@@ -38,6 +38,12 @@ namespace Element34
             return generated;
         }
 
+        // Extension methods to add Python-style get() to C#
+        public static V GetValue<K, V>(this IDictionary<K, V> dict, K key)
+        {
+            return dict.GetValue(key, default(V));
+        }
+
         public static V GetValue<K, V>(this IDictionary<K, V> dict, K key, V defaultValue = default(V))
         {
             V value;

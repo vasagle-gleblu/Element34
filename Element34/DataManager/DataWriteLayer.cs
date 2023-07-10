@@ -2,6 +2,8 @@
 using CsvHelper.Configuration;
 using Newtonsoft.Json;
 using OfficeOpenXml;
+using OfficeOpenXml.FormulaParsing.Excel.Functions.RefAndLookup;
+using OfficeOpenXml.Style;
 using System;
 using System.Data;
 using System.Data.OleDb;
@@ -10,7 +12,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml.Serialization;
-using static System.Environment;
 
 namespace Element34.DataManager
 {
@@ -23,11 +24,13 @@ namespace Element34.DataManager
         {
             Delimiter = ",",
             Encoding = enc,
-            Mode = CsvMode.RFC4180
+            Mode = CsvMode.RFC4180,
+            ShouldSkipRecord = args => args.Row.Parser.Record.All(string.IsNullOrWhiteSpace)
         };
         #endregion
 
         #region [Public Functions]
+        #region [MS Access File Support]
         public static void ExportToMDB(string fileName, DataSet ds)
         {
             string connection = string.Format("Data Source={0};User Id=Admin;Password=;Provider={1}", fileName, "Microsoft.ACE.OLEDB.12.0");
@@ -74,7 +77,9 @@ namespace Element34.DataManager
             GC.Collect();
             GC.WaitForPendingFinalizers();
         }
+        #endregion
 
+        #region [MS Excel File Support]
         public static void ExportToXLS(string sFilename, DataSet ds)
         {
             if (File.Exists(sFilename))
@@ -83,11 +88,11 @@ namespace Element34.DataManager
             FileInfo newFile = new FileInfo(sFilename);
             DataRow dr;
 
-            using (ExcelPackage ExcelPkg = new ExcelPackage(newFile))
+            using (ExcelPackage pkg = new ExcelPackage(newFile))
             {
                 foreach (DataTable dt in ds.Tables)
                 {
-                    ExcelWorksheet wkSheet = ExcelPkg.Workbook.Worksheets.Add(dt.TableName.Replace("$", string.Empty));
+                    ExcelWorksheet wkSheet = pkg.Workbook.Worksheets.Add(dt.TableName.Replace("$", string.Empty));
                     DataColumnCollection cols = dt.Columns;
 
                     for (int rowIndex = 0; rowIndex < dt.Rows.Count; rowIndex++)
@@ -101,24 +106,144 @@ namespace Element34.DataManager
                     }
                 }
 
-                ExcelPkg.Save();
+                pkg.Save();
             }
         }
 
-        public static void CreateXLS(string sFilename)
+        public static void CreateXLS(string sFilename, DataTable dt, string sheetName = "")
         {
             if (File.Exists(sFilename))
                 File.Delete(sFilename);
 
             FileInfo newFile = new FileInfo(sFilename);
+            DataRow row; int offset = 1;
+            string tmp;
 
-            using (ExcelPackage ExcelPkg = new ExcelPackage(newFile))
+            if (sheetName == string.Empty)
+                tmp = (dt.TableName == string.Empty) ? Path.GetFileNameWithoutExtension(Path.GetFileName(sFilename)) : dt.TableName.Replace("$", string.Empty);
+            else
+                tmp = sheetName;
+
+            using (ExcelPackage pkg = new ExcelPackage(newFile))
             {
-                ExcelPkg.Workbook.Worksheets.Add("Sheet1");
-                ExcelPkg.Save();
+                ExcelWorksheet wksht = pkg.Workbook.Worksheets.Add(tmp);
+
+                wksht.TabColor = System.Drawing.Color.Black;
+                wksht.DefaultRowHeight = 12;
+
+                // Write columns names
+                wksht.Row(1).Height = 20;
+                wksht.Row(1).Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                wksht.Row(1).Style.Font.Bold = true;
+
+                for (int i = 0; i < dt.Columns.Count; i++)
+                {
+                    DataColumn column = dt.Columns[i];
+                    wksht.Cells[1, i + 1].Value = column.ColumnName;
+                }
+
+                // Write out rows
+                for (int recordIndex = 0; recordIndex < dt.Rows.Count; recordIndex++)
+                {
+                    row = dt.Rows[recordIndex];
+
+                    for (int j = 0; j < dt.Columns.Count; j++)
+                    {
+                        tmp = row[j].ToString();
+                        tmp = tmp.Replace(Environment.NewLine, "\r\n");  // OS dependent
+
+                        wksht.Cells[recordIndex + offset + 1, j + 1].Value = tmp;
+                    }
+                }
+
+                pkg.Save();
             }
         }
 
+        public static void AddDataColumnXLS(string sFile, DataTable dt, string sheetName, string fieldName, Type dataType)
+        {
+            if (!dt.Columns.Contains(fieldName))
+            {
+                dt.Columns.Add(fieldName, dataType);
+
+                // Update table layout
+                CreateXLS(sFile, dt, sheetName);
+            }
+        }
+
+        public static void UpdateXLS_MapEvents(DataTable dt, FileInfo oFile, string sheetName)
+        {
+            dt.RowChanged += (sender, e) => UpdateXLS_RowChanged(sender, e, oFile, sheetName);
+            dt.RowDeleted += (sender, e) => UpdateXLS_RowDeleted(sender, e, oFile, sheetName);
+        }
+
+        public static void UpdateXLS_RowDeleted(object sender, DataRowChangeEventArgs e, FileInfo oFile, string sheetName, bool hasHeader = true)
+        {
+            if (e.Action == DataRowAction.Delete)
+            {
+                DataTable dt = (DataTable)sender;
+                int recordIndex = dt.Rows.IndexOf(e.Row);
+                string tmp; int offset = (hasHeader) ? 1 : 0;
+
+                // Open file
+                using (ExcelPackage pkg = new ExcelPackage(oFile))
+                using (ExcelWorkbook wkbk = pkg.Workbook)
+                using (ExcelWorksheet wksht = wkbk.Worksheets[sheetName])
+                {
+                    // Build updated row
+                    for (int i = 0; i < dt.Columns.Count; i++)
+                    {
+                        // Cell values
+                        tmp = e.Row[i].ToString();
+                        tmp = tmp.Replace(Environment.NewLine, "\r\n");  // OS dependent
+
+                        wksht.Cells[recordIndex + offset + 1, i + 1].Value = tmp;
+                    }
+
+                    pkg.Save();
+                }
+            }
+        }
+
+
+        public static void UpdateXLS_RowChanged(object sender, DataRowChangeEventArgs e, FileInfo oFile, string sheetName, bool hasHeader = true)
+        {
+            if ((e.Action == DataRowAction.Change) || (e.Row.RowState == DataRowState.Added))
+            {
+                DataTable dt = (DataTable)sender;
+                int recordIndex = dt.Rows.IndexOf(e.Row);
+                string tmp; int offset = (hasHeader) ? 1 : 0;
+                DataRow row;
+
+                // Open file
+                using (ExcelPackage pkg = new ExcelPackage(oFile))
+                using (ExcelWorkbook wkbk = pkg.Workbook)
+                using (ExcelWorksheet wksht = wkbk.Worksheets[sheetName])
+                {
+                    int lineNumber = (hasHeader) ? (recordIndex + 1) : recordIndex;
+
+                    //  Overwrite deleted row and write out remaining rows
+                    for (int j = lineNumber; j < dt.Rows.Count; j++)
+                    {
+                        row = dt.Rows[j];
+
+                        for (int i = 0; i < dt.Columns.Count; i++)
+                        {
+                            // Cell values
+                            tmp = row[i].ToString();
+                            tmp = tmp.Replace(Environment.NewLine, "\r\n");  // OS dependent
+
+                            wksht.Cells[recordIndex + offset + 1, i + 1].Value = tmp;
+                        }
+                    }
+
+                        pkg.Save();
+                }
+            }
+        }
+        #endregion
+
+        #region [CSV File Support]
         public static void ExportToCSV(DirectoryInfo oDir, DataSet ds)
         {
             if (!oDir.Exists)
@@ -129,11 +254,11 @@ namespace Element34.DataManager
             foreach (DataTable dt in ds.Tables)
             {
                 sFile = Path.GetFullPath(Path.Combine(oDir.FullName, string.Format("{0}.csv", dt.TableName.Replace("$", string.Empty))));
-                ExportToCSV(sFile, dt);
+                CreateCSV(sFile, dt);
             }
         }
 
-        public static void ExportToCSV(string sFile, DataTable dt)
+        public static void CreateCSV(string sFile, DataTable dt)
         {
             using (StreamWriter textWriter = File.CreateText(sFile))
             using (CsvWriter csvWriter = new CsvWriter(textWriter, culture))
@@ -159,14 +284,14 @@ namespace Element34.DataManager
             }
         }
 
-        public static void AddDataColumn(string sFile, DataTable dt, string fieldName, Type dataType)
+        public static void AddDataColumnCSV(string sFile, DataTable dt, string fieldName, Type dataType)
         {
             if (!dt.Columns.Contains(fieldName))
             {
                 dt.Columns.Add(fieldName, dataType);
 
                 // Update table layout
-                ExportToCSV(sFile, dt);
+                CreateCSV(sFile, dt);
             }
         }
 
@@ -176,40 +301,48 @@ namespace Element34.DataManager
             dt.RowDeleted += (sender, e) => UpdateCSV_RowDeleted(sender, e, oFile);
         }
 
-        public static void UpdateCSV_RowChanged(object sender, DataRowChangeEventArgs e, FileInfo oFile)
+        public static void UpdateCSV_RowDeleted(object sender, DataRowChangeEventArgs e, FileInfo oFile)
         {
-            if ((e.Action == DataRowAction.Change) || (e.Row.RowState == DataRowState.Added))
+            if (e.Action == DataRowAction.Delete)
             {
                 DataTable dt = (DataTable)sender;
+                DataRow row; string tmp;
+                long iSeekAhead = 0;
                 int iRowIndex = dt.Rows.IndexOf(e.Row);
                 StringBuilder sb = new StringBuilder();
-                string tmp;
 
                 // Open file
-                using (FileStream fsFile = new FileStream(oFile.FullName, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
-                using (StreamReader sr = new StreamReader(fsFile))
-                using (CsvDataReader csvDataReader = new CsvDataReader(new CsvReader(sr, culture)))
-                using (StreamWriter sw = new StreamWriter(fsFile))
+                using (FileStream fsFile = new FileStream(oFile.FullName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None))
+                using (StreamReader sr = new StreamReader(fsFile, enc))
+                using (StreamWriter sw = new StreamWriter(fsFile, enc))
+                using (CsvReader csvReader = new CsvReader(sr, culture))
+                using (CsvDataReader csvDataReader = new CsvDataReader(csvReader))
                 using (CsvWriter csvWriter = new CsvWriter(sw, culture))
                 {
-                    long iSeekAhead = 0;
+                    // Calculate how far to skip ahead to deleted row
                     int lineNumber = (csvWriter.Configuration.HasHeaderRecord) ? (iRowIndex + 1) : iRowIndex;
-                    try
+
+                    // Set current position to the beginning
+                    fsFile.Position = 0;
+
+                    // Calculate how far to skip ahead to modified row
+                    for (int j = 0; j < lineNumber; j++)
                     {
-                        // Set current position to the beginning
-                        fsFile.Position = 0;
+                        iSeekAhead += enc.GetByteCount(sr.ReadLine() + Environment.NewLine);
+                    }
 
-                        // Calculate how far to skip ahead to modified row
-                        for (int j = 0; j < lineNumber; j++)
-                        {
-                            iSeekAhead += sr.ReadLine().Length + NewLine.Length;
-                        }
+                    //  Overwrite deleted row and write out remaining rows
+                    for (int j = lineNumber; j < dt.Rows.Count; j++)
+                    {
+                        row = dt.Rows[j];
+                        sb.Clear();
 
-                        // Build updated row
                         for (int i = 0; i < dt.Columns.Count; i++)
                         {
-                            // Row values
+                            // Cell values
                             tmp = e.Row[i].ToString();
+                            tmp = tmp.Replace(Environment.NewLine, "\r\n");
+
                             if (i < (dt.Columns.Count - 1))
                             {
                                 if (!tmp.Contains(','))
@@ -226,90 +359,76 @@ namespace Element34.DataManager
                             }
                         }
 
-                        fsFile.Seek(iSeekAhead - lineNumber, SeekOrigin.Begin);
+                        fsFile.Seek(iSeekAhead, SeekOrigin.Begin);
                         sw.WriteLine(sb.ToString());
-                    }
 
-                    catch
-                    {
-                        return;
+                        // Calculate how far to move the current position for the next write.
+                        iSeekAhead = enc.GetByteCount(sr.ReadLine() + Environment.NewLine);
                     }
                 }
             }
         }
 
-        public static void UpdateCSV_RowDeleted(object sender, DataRowChangeEventArgs e, FileInfo oFile)
+        public static void UpdateCSV_RowChanged(object sender, DataRowChangeEventArgs e, FileInfo oFile)
         {
-            if (e.Action == DataRowAction.Delete)
+            if ((e.Action == DataRowAction.Change) || (e.Row.RowState == DataRowState.Added))
             {
                 DataTable dt = (DataTable)sender;
-                DataRow row; string tmp;
-                long iSeekAhead = 0;
                 int iRowIndex = dt.Rows.IndexOf(e.Row);
+                long iSeekAhead = 0;
                 StringBuilder sb = new StringBuilder();
+                string tmp;
 
                 // Open file
-                using (FileStream fsFile = new FileStream(oFile.FullName, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+                using (FileStream fsFile = new FileStream(oFile.FullName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None))
                 using (StreamReader sr = new StreamReader(fsFile, enc))
-                using (CsvDataReader csvDataReader = new CsvDataReader(new CsvReader(sr, config)))
-                using (StreamWriter sw = new StreamWriter(fsFile))
-                using (CsvWriter csvWriter = new CsvWriter(sw, config))
+                using (StreamWriter sw = new StreamWriter(fsFile, enc))
+                using (CsvReader csvReader = new CsvReader(sr, culture))
+                using (CsvDataReader csvDataReader = new CsvDataReader(csvReader))
+                using (CsvWriter csvWriter = new CsvWriter(sw, culture))
                 {
-                    // Calculate how far to skip ahead to deleted row
                     int lineNumber = (csvWriter.Configuration.HasHeaderRecord) ? (iRowIndex + 1) : iRowIndex;
-                    try
+
+                    // Set current position to the beginning
+                    fsFile.Position = 0;
+
+                    // Calculate how far to skip ahead to modified row
+                    for (int j = 0; j < lineNumber; j++)
                     {
-                        // Set current position to the beginning
-                        fsFile.Position = 0;
+                        iSeekAhead += enc.GetByteCount(sr.ReadLine() + Environment.NewLine);
+                    }
 
-                        // Calculate how far to skip ahead to modified row
-                        for (int k = 0; k < lineNumber; k++)
+                    // Build updated row
+                    for (int i = 0; i < dt.Columns.Count; i++)
+                    {
+                        // Cell values
+                        tmp = e.Row[i].ToString();
+                        tmp = tmp.Replace(Environment.NewLine, "\r\n");  // OS dependent
+
+                        if (i < (dt.Columns.Count - 1))
                         {
-                            iSeekAhead += sr.ReadLine().Length + NewLine.Length;
+                            if (!tmp.Contains(','))
+                                sb.Append(tmp + csvWriter.Configuration.Delimiter);
+                            else
+                                sb.AppendFormat("\"{0}\"", tmp + csvWriter.Configuration.Delimiter);
                         }
-
-                        //  Overwrite deleted row and write out remaining rows
-                        for (int j = lineNumber; j < dt.Rows.Count; j++)
+                        else
                         {
-                            row = dt.Rows[j];
-                            sb.Clear();
-
-                            for (int i = 0; i < dt.Columns.Count; i++)
-                            {
-                                // Row values
-                                tmp = row[i].ToString();
-                                if (i < (dt.Columns.Count - 1))
-                                {
-                                    if (!tmp.Contains(','))
-                                        sb.Append(tmp + csvWriter.Configuration.Delimiter);
-                                    else
-                                        sb.AppendFormat("\"{0}\"", tmp + csvWriter.Configuration.Delimiter);
-                                }
-                                else
-                                {
-                                    if (!tmp.Contains(','))
-                                        sb.Append(tmp);
-                                    else
-                                        sb.AppendFormat("\"{0}\"", tmp);
-                                }
-                            }
-
-                            fsFile.Seek(iSeekAhead, SeekOrigin.Begin);
-                            sw.WriteLine(sb.ToString());
-
-                            // Calculate how far to move the current position for the next write.
-                            iSeekAhead = sb.ToString().Length;
+                            if (!tmp.Contains(','))
+                                sb.Append(tmp);
+                            else
+                                sb.AppendFormat("\"{0}\"", tmp);
                         }
                     }
-                    catch
-                    {
-                        // Abort the update.
-                        return;
-                    }
+
+                    fsFile.Seek(iSeekAhead, SeekOrigin.Begin);
+                    sw.WriteLine(sb.ToString());
                 }
             }
         }
+        #endregion
 
+        #region [XML File Support]
         public static string ExportToXml(DataSet ds)
         {
             using (var memoryStream = new MemoryStream())
@@ -335,7 +454,9 @@ namespace Element34.DataManager
                 }
             }
         }
+        #endregion
 
+        #region [JSON File Support]
         public static string ExportToJSON(DataSet ds)
         {
             return ds.SerializeDataSetToJSON();
@@ -345,6 +466,7 @@ namespace Element34.DataManager
         {
             return dt.SerializeDataTableToJSON();
         }
+        #endregion
         #endregion
 
         #region [Private Functions]
@@ -566,24 +688,16 @@ namespace Element34.DataManager
             DataTable dt = (DataTable)sender;
 
             // Open file
-            using (FileStream fsFile = new FileStream(oFile.FullName, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+            using (FileStream fsFile = new FileStream(oFile.FullName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None))
             using (StreamWriter sw = new StreamWriter(fsFile))
             using (CsvWriter csvWriter = new CsvWriter(sw, config))
             {
-                try
+                // Write columns names
+                foreach (DataColumn column in dt.Columns)
                 {
-                    // Write columns names
-                    foreach (DataColumn column in dt.Columns)
-                    {
-                        csvWriter.WriteField(column.ColumnName);
-                    }
-                    csvWriter.NextRecord();
+                    csvWriter.WriteField(column.ColumnName);
                 }
-                catch
-                {
-                    // Abort the update.
-                    return;
-                }
+                csvWriter.NextRecord();
             }
         }
 

@@ -17,7 +17,7 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void Metaphone3Test002() { Assert.IsTrue(Metaphone3Test("worships", "ARSPS", "")); }
         [TestMethod] public void Metaphone3Test003() { Assert.IsTrue(Metaphone3Test("televisionhome", "TLFSNM", "")); }
         [TestMethod] public void Metaphone3Test004() { Assert.IsTrue(Metaphone3Test("bumi", "PM", "")); }
-        [TestMethod] public void Metaphone3Test005() { Assert.IsTrue(Metaphone3Test("shortbread", "SRTPRT", "")); }
+        [TestMethod] public void Metaphone3Test005() { Assert.IsTrue(Metaphone3Test("shortbread", "XRTPRT", "")); }
         [TestMethod] public void Metaphone3Test006() { Assert.IsTrue(Metaphone3Test("slice", "SLK", "")); }
         [TestMethod] public void Metaphone3Test007() { Assert.IsTrue(Metaphone3Test("reint", "RNT", "")); }
         [TestMethod] public void Metaphone3Test008() { Assert.IsTrue(Metaphone3Test("Florence", "FLRNK", "")); }
@@ -26,27 +26,27 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void Metaphone3Test011() { Assert.IsTrue(Metaphone3Test("modano", "MTN", "")); }
         [TestMethod] public void Metaphone3Test012() { Assert.IsTrue(Metaphone3Test("stumpage", "STMPK", "")); }
         [TestMethod] public void Metaphone3Test013() { Assert.IsTrue(Metaphone3Test("clears", "KLRS", "")); }
-        [TestMethod] public void Metaphone3Test014() { Assert.IsTrue(Metaphone3Test("ciods", "KTS", "")); }
+        [TestMethod] public void Metaphone3Test014() { Assert.IsTrue(Metaphone3Test("ciods", "STS", "")); }
         [TestMethod] public void Metaphone3Test015() { Assert.IsTrue(Metaphone3Test("deseos", "TSS", "")); }
         [TestMethod] public void Metaphone3Test016() { Assert.IsTrue(Metaphone3Test("dippin", "TPPN", "")); }
-        [TestMethod] public void Metaphone3Test017() { Assert.IsTrue(Metaphone3Test("aranna", "A", "")); }
+        [TestMethod] public void Metaphone3Test017() { Assert.IsTrue(Metaphone3Test("aranna", "ARN", "")); }
         [TestMethod] public void Metaphone3Test018() { Assert.IsTrue(Metaphone3Test("borse", "PRS", "")); }
         [TestMethod] public void Metaphone3Test019() { Assert.IsTrue(Metaphone3Test("subic", "SPK", "")); }
         [TestMethod] public void Metaphone3Test020() { Assert.IsTrue(Metaphone3Test("Vidrio", "FTR", "")); }
-        [TestMethod] public void Metaphone3Test021() { Assert.IsTrue(Metaphone3Test("inserters", "A", "")); }
+        [TestMethod] public void Metaphone3Test021() { Assert.IsTrue(Metaphone3Test("inserters", "ANSRTRS", "")); }
         [TestMethod] public void Metaphone3Test022() { Assert.IsTrue(Metaphone3Test("perature", "PRTR", "")); }
         [TestMethod] public void Metaphone3Test023() { Assert.IsTrue(Metaphone3Test("msacideas", "MSKTS", "")); }
         [TestMethod] public void Metaphone3Test024() { Assert.IsTrue(Metaphone3Test("cougs", "KKS", "")); }
         [TestMethod] public void Metaphone3Test025() { Assert.IsTrue(Metaphone3Test("kittens", "KTTNS", "")); }
-        [TestMethod] public void Metaphone3Test026() { Assert.IsTrue(Metaphone3Test("imperiously", "A", "")); }
+        [TestMethod] public void Metaphone3Test026() { Assert.IsTrue(Metaphone3Test("imperiously", "AMPRSL", "")); }
         [TestMethod] public void Metaphone3Test027() { Assert.IsTrue(Metaphone3Test("boccanegra", "PKKNKR", "")); }
-        [TestMethod] public void Metaphone3Test028() { Assert.IsTrue(Metaphone3Test("sextet", "SKSTT", "")); }
+        [TestMethod] public void Metaphone3Test028() { Assert.IsTrue(Metaphone3Test("sextet", "SKST", "")); }
         [TestMethod] public void Metaphone3Test029() { Assert.IsTrue(Metaphone3Test("setattributes", "STTTRPTS", "")); }
         [TestMethod] public void Metaphone3Test030() { Assert.IsTrue(Metaphone3Test("dsnt", "TSNT", "")); }
-        [TestMethod] public void Metaphone3Test031() { Assert.IsTrue(Metaphone3Test("chubby", "KP", "")); }
-        [TestMethod] public void Metaphone3Test032() { Assert.IsTrue(Metaphone3Test("ooda", "A", "")); }
+        [TestMethod] public void Metaphone3Test031() { Assert.IsTrue(Metaphone3Test("chubby", "XP", "")); }
+        [TestMethod] public void Metaphone3Test032() { Assert.IsTrue(Metaphone3Test("ooda", "AT", "")); }
         [TestMethod] public void Metaphone3Test033() { Assert.IsTrue(Metaphone3Test("Bressman", "PRSSMN", "")); }
-        [TestMethod] public void Metaphone3Test034() { Assert.IsTrue(Metaphone3Test("calendarnew", "KLNTRNV", "")); }
+        [TestMethod] public void Metaphone3Test034() { Assert.IsTrue(Metaphone3Test("calendarnew", "KLNTRN", "")); }
         [TestMethod] public void Metaphone3Test035() { Assert.IsTrue(Metaphone3Test("duhon", "THN", "")); }
         [TestMethod] public void Metaphone3Test036() { Assert.IsTrue(Metaphone3Test("nchen", "NKN", "")); }
         [TestMethod] public void Metaphone3Test037() { Assert.IsTrue(Metaphone3Test("betjemans", "PTJMNS", "")); }
@@ -55,48 +55,48 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void Metaphone3Test040() { Assert.IsTrue(Metaphone3Test("pantys", "PNTS", "")); }
         [TestMethod] public void Metaphone3Test041() { Assert.IsTrue(Metaphone3Test("cofactors", "KFKTRS", "")); }
         [TestMethod] public void Metaphone3Test042() { Assert.IsTrue(Metaphone3Test("clickz", "KLKKS", "")); }
-        [TestMethod] public void Metaphone3Test043() { Assert.IsTrue(Metaphone3Test("chiap", "KP", "")); }
+        [TestMethod] public void Metaphone3Test043() { Assert.IsTrue(Metaphone3Test("chiap", "KP", "XP")); }
         [TestMethod] public void Metaphone3Test044() { Assert.IsTrue(Metaphone3Test("Dalpiaz", "TLPS", "")); }
         [TestMethod] public void Metaphone3Test045() { Assert.IsTrue(Metaphone3Test("philosophically", "FLSFKL", "")); }
         [TestMethod] public void Metaphone3Test046() { Assert.IsTrue(Metaphone3Test("backfill", "PKKFL", "")); }
         [TestMethod] public void Metaphone3Test047() { Assert.IsTrue(Metaphone3Test("Murders", "MRTRS", "")); }
-        [TestMethod] public void Metaphone3Test048() { Assert.IsTrue(Metaphone3Test("ecartis", "A", "")); }
+        [TestMethod] public void Metaphone3Test048() { Assert.IsTrue(Metaphone3Test("ecartis", "AKRTS", "")); }
         [TestMethod] public void Metaphone3Test049() { Assert.IsTrue(Metaphone3Test("vede", "FT", "")); }
-        [TestMethod] public void Metaphone3Test050() { Assert.IsTrue(Metaphone3Test("usoe", "A", "")); }
-        [TestMethod] public void Metaphone3Test051() { Assert.IsTrue(Metaphone3Test("ostara", "A", "")); }
+        [TestMethod] public void Metaphone3Test050() { Assert.IsTrue(Metaphone3Test("usoe", "AS", "")); }
+        [TestMethod] public void Metaphone3Test051() { Assert.IsTrue(Metaphone3Test("ostara", "ASTR", "")); }
         [TestMethod] public void Metaphone3Test052() { Assert.IsTrue(Metaphone3Test("labourer", "LPRR", "")); }
         [TestMethod] public void Metaphone3Test053() { Assert.IsTrue(Metaphone3Test("speir", "SPR", "")); }
         [TestMethod] public void Metaphone3Test054() { Assert.IsTrue(Metaphone3Test("durchaus", "TRKS", "")); }
-        [TestMethod] public void Metaphone3Test055() { Assert.IsTrue(Metaphone3Test("inetformfiller", "A", "")); }
-        [TestMethod] public void Metaphone3Test056() { Assert.IsTrue(Metaphone3Test("itrs", "A", "")); }
+        [TestMethod] public void Metaphone3Test055() { Assert.IsTrue(Metaphone3Test("inetformfiller", "ANTFRMFL", "")); }
+        [TestMethod] public void Metaphone3Test056() { Assert.IsTrue(Metaphone3Test("itrs", "ATRS", "")); }
         [TestMethod] public void Metaphone3Test057() { Assert.IsTrue(Metaphone3Test("Tennant", "TNNT", "")); }
         [TestMethod] public void Metaphone3Test058() { Assert.IsTrue(Metaphone3Test("bashore", "PSR", "")); }
         [TestMethod] public void Metaphone3Test059() { Assert.IsTrue(Metaphone3Test("lemurian", "LMRN", "")); }
         [TestMethod] public void Metaphone3Test060() { Assert.IsTrue(Metaphone3Test("dungannon", "TNKNN", "")); }
-        [TestMethod] public void Metaphone3Test061() { Assert.IsTrue(Metaphone3Test("epl", "A", "")); }
+        [TestMethod] public void Metaphone3Test061() { Assert.IsTrue(Metaphone3Test("epl", "APL", "")); }
         [TestMethod] public void Metaphone3Test062() { Assert.IsTrue(Metaphone3Test("grader", "KRTR", "")); }
         [TestMethod] public void Metaphone3Test063() { Assert.IsTrue(Metaphone3Test("synchronise", "SNKRNS", "")); }
         [TestMethod] public void Metaphone3Test064() { Assert.IsTrue(Metaphone3Test("gondorian", "KNTRN", "")); }
         [TestMethod] public void Metaphone3Test065() { Assert.IsTrue(Metaphone3Test("cvnet", "KFNT", "")); }
-        [TestMethod] public void Metaphone3Test066() { Assert.IsTrue(Metaphone3Test("Centers", "KNTRS", "")); }
+        [TestMethod] public void Metaphone3Test066() { Assert.IsTrue(Metaphone3Test("Centers", "SNTRS", "")); }
         [TestMethod] public void Metaphone3Test067() { Assert.IsTrue(Metaphone3Test("soaks", "SKS", "")); }
         [TestMethod] public void Metaphone3Test068() { Assert.IsTrue(Metaphone3Test("gogllle", "KKLL", "")); }
         [TestMethod] public void Metaphone3Test069() { Assert.IsTrue(Metaphone3Test("peotone", "PTN", "")); }
-        [TestMethod] public void Metaphone3Test070() { Assert.IsTrue(Metaphone3Test("Sharp", "SRP", "")); }
+        [TestMethod] public void Metaphone3Test070() { Assert.IsTrue(Metaphone3Test("Sharp", "XRP", "")); }
         [TestMethod] public void Metaphone3Test071() { Assert.IsTrue(Metaphone3Test("mawer", "MR", "")); }
         [TestMethod] public void Metaphone3Test072() { Assert.IsTrue(Metaphone3Test("Morasca", "MRSK", "")); }
         [TestMethod] public void Metaphone3Test073() { Assert.IsTrue(Metaphone3Test("ticknor", "TKKNR", "")); }
         [TestMethod] public void Metaphone3Test074() { Assert.IsTrue(Metaphone3Test("beaverdale", "PFRTL", "")); }
-        [TestMethod] public void Metaphone3Test075() { Assert.IsTrue(Metaphone3Test("caledonianew", "KLTNNV", "")); }
+        [TestMethod] public void Metaphone3Test075() { Assert.IsTrue(Metaphone3Test("caledonianew", "KLTNN", "")); }
         [TestMethod] public void Metaphone3Test076() { Assert.IsTrue(Metaphone3Test("wellnessdicke", "ALNSSTKK", "")); }
         [TestMethod] public void Metaphone3Test077() { Assert.IsTrue(Metaphone3Test("Rodin", "RTN", "")); }
         [TestMethod] public void Metaphone3Test078() { Assert.IsTrue(Metaphone3Test("bluffer", "PLFR", "")); }
         [TestMethod] public void Metaphone3Test079() { Assert.IsTrue(Metaphone3Test("joey", "J", "")); }
-        [TestMethod] public void Metaphone3Test080() { Assert.IsTrue(Metaphone3Test("unbekannter", "A", "")); }
+        [TestMethod] public void Metaphone3Test080() { Assert.IsTrue(Metaphone3Test("unbekannter", "ANPKNTR", "")); }
         [TestMethod] public void Metaphone3Test081() { Assert.IsTrue(Metaphone3Test("Baylor", "PLR", "")); }
         [TestMethod] public void Metaphone3Test082() { Assert.IsTrue(Metaphone3Test("striplib", "STRPLP", "")); }
         [TestMethod] public void Metaphone3Test083() { Assert.IsTrue(Metaphone3Test("boquete", "PKT", "")); }
-        [TestMethod] public void Metaphone3Test084() { Assert.IsTrue(Metaphone3Test("geylang", "JLNK", "")); }
+        [TestMethod] public void Metaphone3Test084() { Assert.IsTrue(Metaphone3Test("geylang", "KLNK", "JLNK")); }
         [TestMethod] public void Metaphone3Test085() { Assert.IsTrue(Metaphone3Test("Lavi", "LF", "")); }
         [TestMethod] public void Metaphone3Test086() { Assert.IsTrue(Metaphone3Test("moldovans", "MLTFNS", "")); }
         [TestMethod] public void Metaphone3Test087() { Assert.IsTrue(Metaphone3Test("linq", "LNK", "")); }
@@ -105,10 +105,10 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void Metaphone3Test090() { Assert.IsTrue(Metaphone3Test("czechoslovakian", "KSKSLFKN", "")); }
         [TestMethod] public void Metaphone3Test091() { Assert.IsTrue(Metaphone3Test("marmora", "MRMR", "")); }
         [TestMethod] public void Metaphone3Test092() { Assert.IsTrue(Metaphone3Test("Carvill", "KRFL", "")); }
-        [TestMethod] public void Metaphone3Test093() { Assert.IsTrue(Metaphone3Test("chihiro", "KHR", "")); }
+        [TestMethod] public void Metaphone3Test093() { Assert.IsTrue(Metaphone3Test("chihiro", "XHR", "")); }
         [TestMethod] public void Metaphone3Test094() { Assert.IsTrue(Metaphone3Test("hctc", "KTK", "")); }
         [TestMethod] public void Metaphone3Test095() { Assert.IsTrue(Metaphone3Test("nolde", "NLT", "")); }
-        [TestMethod] public void Metaphone3Test096() { Assert.IsTrue(Metaphone3Test("aerosolized", "A", "")); }
+        [TestMethod] public void Metaphone3Test096() { Assert.IsTrue(Metaphone3Test("aerosolized", "ARSLST", "")); }
         [TestMethod] public void Metaphone3Test097() { Assert.IsTrue(Metaphone3Test("canterbury", "KNTRPR", "")); }
         [TestMethod] public void Metaphone3Test098() { Assert.IsTrue(Metaphone3Test("jss", "JSS", "")); }
         [TestMethod] public void Metaphone3Test099() { Assert.IsTrue(Metaphone3Test("rmn", "RM", "")); }
@@ -122,21 +122,21 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void Metaphone3Test107() { Assert.IsTrue(Metaphone3Test("forbairt", "FRPRT", "")); }
         [TestMethod] public void Metaphone3Test108() { Assert.IsTrue(Metaphone3Test("southerners", "STRNRS", "")); }
         [TestMethod] public void Metaphone3Test109() { Assert.IsTrue(Metaphone3Test("hypnotists", "HPNTSTS", "")); }
-        [TestMethod] public void Metaphone3Test110() { Assert.IsTrue(Metaphone3Test("euphony", "A", "")); }
+        [TestMethod] public void Metaphone3Test110() { Assert.IsTrue(Metaphone3Test("euphony", "AFN", "")); }
         [TestMethod] public void Metaphone3Test111() { Assert.IsTrue(Metaphone3Test("mhpa", "MP", "")); }
         [TestMethod] public void Metaphone3Test112() { Assert.IsTrue(Metaphone3Test("matteotti", "MTTTT", "")); }
         [TestMethod] public void Metaphone3Test113() { Assert.IsTrue(Metaphone3Test("Klande", "KLNT", "")); }
         [TestMethod] public void Metaphone3Test114() { Assert.IsTrue(Metaphone3Test("Trudgeon", "TRTKN", "")); }
         [TestMethod] public void Metaphone3Test115() { Assert.IsTrue(Metaphone3Test("schoolhill", "SKLL", "")); }
-        [TestMethod] public void Metaphone3Test116() { Assert.IsTrue(Metaphone3Test("equalizer", "A", "")); }
+        [TestMethod] public void Metaphone3Test116() { Assert.IsTrue(Metaphone3Test("equalizer", "AKLSR", "")); }
         [TestMethod] public void Metaphone3Test117() { Assert.IsTrue(Metaphone3Test("xnet", "SNT", "")); }
-        [TestMethod] public void Metaphone3Test118() { Assert.IsTrue(Metaphone3Test("Thell", "TL", "")); }
+        [TestMethod] public void Metaphone3Test118() { Assert.IsTrue(Metaphone3Test("Thell", "0L", "")); }
         [TestMethod] public void Metaphone3Test119() { Assert.IsTrue(Metaphone3Test("Canel", "KNL", "")); }
         [TestMethod] public void Metaphone3Test120() { Assert.IsTrue(Metaphone3Test("vmetro", "FMTR", "")); }
         [TestMethod] public void Metaphone3Test121() { Assert.IsTrue(Metaphone3Test("burgtheater", "PRKTTR", "")); }
         [TestMethod] public void Metaphone3Test122() { Assert.IsTrue(Metaphone3Test("Berlinger", "PRLNKR", "")); }
         [TestMethod] public void Metaphone3Test123() { Assert.IsTrue(Metaphone3Test("crehan", "KRHN", "")); }
-        [TestMethod] public void Metaphone3Test124() { Assert.IsTrue(Metaphone3Test("abysses", "A", "")); }
+        [TestMethod] public void Metaphone3Test124() { Assert.IsTrue(Metaphone3Test("abysses", "APSSS", "")); }
         [TestMethod] public void Metaphone3Test125() { Assert.IsTrue(Metaphone3Test("Hipolito", "HPLT", "")); }
         [TestMethod] public void Metaphone3Test126() { Assert.IsTrue(Metaphone3Test("splintered", "SPLNTRT", "")); }
         [TestMethod] public void Metaphone3Test127() { Assert.IsTrue(Metaphone3Test("maintenace", "MNTNK", "")); }
@@ -145,8 +145,8 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void Metaphone3Test130() { Assert.IsTrue(Metaphone3Test("wette", "ATT", "")); }
         [TestMethod] public void Metaphone3Test131() { Assert.IsTrue(Metaphone3Test("Feary", "FR", "")); }
         [TestMethod] public void Metaphone3Test132() { Assert.IsTrue(Metaphone3Test("Cuchiara", "KKR", "")); }
-        [TestMethod] public void Metaphone3Test133() { Assert.IsTrue(Metaphone3Test("Arbon", "A", "")); }
-        [TestMethod] public void Metaphone3Test134() { Assert.IsTrue(Metaphone3Test("shyness", "SNSS", "")); }
+        [TestMethod] public void Metaphone3Test133() { Assert.IsTrue(Metaphone3Test("Arbon", "ARPN", "")); }
+        [TestMethod] public void Metaphone3Test134() { Assert.IsTrue(Metaphone3Test("shyness", "XNSS", "")); }
         [TestMethod] public void Metaphone3Test135() { Assert.IsTrue(Metaphone3Test("Salin", "SLN", "")); }
         [TestMethod] public void Metaphone3Test136() { Assert.IsTrue(Metaphone3Test("Zicafoose", "SKFS", "")); }
         [TestMethod] public void Metaphone3Test137() { Assert.IsTrue(Metaphone3Test("Menn", "MN", "")); }
@@ -155,11 +155,11 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void Metaphone3Test140() { Assert.IsTrue(Metaphone3Test("punani", "PNN", "")); }
         [TestMethod] public void Metaphone3Test141() { Assert.IsTrue(Metaphone3Test("basa", "PS", "")); }
         [TestMethod] public void Metaphone3Test142() { Assert.IsTrue(Metaphone3Test("bluefin", "PLFN", "")); }
-        [TestMethod] public void Metaphone3Test143() { Assert.IsTrue(Metaphone3Test("cc", "KK", "")); }
+        [TestMethod] public void Metaphone3Test143() { Assert.IsTrue(Metaphone3Test("cc", "K", "")); }
         [TestMethod] public void Metaphone3Test144() { Assert.IsTrue(Metaphone3Test("zipgenius", "SPKNS", "")); }
         [TestMethod] public void Metaphone3Test145() { Assert.IsTrue(Metaphone3Test("Kirchen", "KRKN", "")); }
         [TestMethod] public void Metaphone3Test146() { Assert.IsTrue(Metaphone3Test("commentaar", "KMNTR", "")); }
-        [TestMethod] public void Metaphone3Test147() { Assert.IsTrue(Metaphone3Test("expansive", "A", "")); }
+        [TestMethod] public void Metaphone3Test147() { Assert.IsTrue(Metaphone3Test("expansive", "AKSNSF", "")); }
         [TestMethod] public void Metaphone3Test148() { Assert.IsTrue(Metaphone3Test("castlebar", "KSTLPR", "")); }
         [TestMethod] public void Metaphone3Test149() { Assert.IsTrue(Metaphone3Test("lft", "LFT", "")); }
         [TestMethod] public void Metaphone3Test150() { Assert.IsTrue(Metaphone3Test("robla", "RPL", "")); }
@@ -167,23 +167,23 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void Metaphone3Test152() { Assert.IsTrue(Metaphone3Test("nawc", "NK", "")); }
         [TestMethod] public void Metaphone3Test153() { Assert.IsTrue(Metaphone3Test("resolvconf", "RSLFKNF", "")); }
         [TestMethod] public void Metaphone3Test154() { Assert.IsTrue(Metaphone3Test("networker", "NTRKR", "")); }
-        [TestMethod] public void Metaphone3Test155() { Assert.IsTrue(Metaphone3Test("airlins", "A", "")); }
+        [TestMethod] public void Metaphone3Test155() { Assert.IsTrue(Metaphone3Test("airlins", "ARLNS", "")); }
         [TestMethod] public void Metaphone3Test156() { Assert.IsTrue(Metaphone3Test("Piskel", "PSKL", "")); }
         [TestMethod] public void Metaphone3Test157() { Assert.IsTrue(Metaphone3Test("hilson", "HLSN", "")); }
         [TestMethod] public void Metaphone3Test158() { Assert.IsTrue(Metaphone3Test("deco", "TK", "")); }
-        [TestMethod] public void Metaphone3Test159() { Assert.IsTrue(Metaphone3Test("cents", "KNTS", "")); }
-        [TestMethod] public void Metaphone3Test160() { Assert.IsTrue(Metaphone3Test("award", "A", "")); }
+        [TestMethod] public void Metaphone3Test159() { Assert.IsTrue(Metaphone3Test("cents", "SNTS", "")); }
+        [TestMethod] public void Metaphone3Test160() { Assert.IsTrue(Metaphone3Test("award", "ART", "")); }
         [TestMethod] public void Metaphone3Test161() { Assert.IsTrue(Metaphone3Test("reykjanes", "RKJNS", "")); }
         [TestMethod] public void Metaphone3Test162() { Assert.IsTrue(Metaphone3Test("perona", "PRN", "")); }
-        [TestMethod] public void Metaphone3Test163() { Assert.IsTrue(Metaphone3Test("epistle", "A", "")); }
-        [TestMethod] public void Metaphone3Test164() { Assert.IsTrue(Metaphone3Test("insound", "A", "")); }
+        [TestMethod] public void Metaphone3Test163() { Assert.IsTrue(Metaphone3Test("epistle", "APSTL", "")); }
+        [TestMethod] public void Metaphone3Test164() { Assert.IsTrue(Metaphone3Test("insound", "ANSNT", "")); }
         [TestMethod] public void Metaphone3Test165() { Assert.IsTrue(Metaphone3Test("qantas", "KNTS", "")); }
         [TestMethod] public void Metaphone3Test166() { Assert.IsTrue(Metaphone3Test("wholey", "HL", "")); }
-        [TestMethod] public void Metaphone3Test167() { Assert.IsTrue(Metaphone3Test("aragona", "A", "")); }
+        [TestMethod] public void Metaphone3Test167() { Assert.IsTrue(Metaphone3Test("aragona", "ARKN", "")); }
         [TestMethod] public void Metaphone3Test168() { Assert.IsTrue(Metaphone3Test("Vancheri", "FNKR", "")); }
-        [TestMethod] public void Metaphone3Test169() { Assert.IsTrue(Metaphone3Test("allocution", "A", "")); }
+        [TestMethod] public void Metaphone3Test169() { Assert.IsTrue(Metaphone3Test("allocution", "ALKTN", "")); }
         [TestMethod] public void Metaphone3Test170() { Assert.IsTrue(Metaphone3Test("volodya", "FLT", "")); }
-        [TestMethod] public void Metaphone3Test171() { Assert.IsTrue(Metaphone3Test("enunciate", "A", "")); }
+        [TestMethod] public void Metaphone3Test171() { Assert.IsTrue(Metaphone3Test("enunciate", "ANNKT", "")); }
         [TestMethod] public void Metaphone3Test172() { Assert.IsTrue(Metaphone3Test("uuuu", "A", "")); }
         [TestMethod] public void Metaphone3Test173() { Assert.IsTrue(Metaphone3Test("Louato", "LT", "")); }
         [TestMethod] public void Metaphone3Test174() { Assert.IsTrue(Metaphone3Test("Marquitta", "MRKTT", "")); }
@@ -194,63 +194,63 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void Metaphone3Test179() { Assert.IsTrue(Metaphone3Test("ritva", "RTF", "")); }
         [TestMethod] public void Metaphone3Test180() { Assert.IsTrue(Metaphone3Test("spunky", "SPNK", "")); }
         [TestMethod] public void Metaphone3Test181() { Assert.IsTrue(Metaphone3Test("npov", "NPF", "")); }
-        [TestMethod] public void Metaphone3Test182() { Assert.IsTrue(Metaphone3Test("eurythmics", "A", "")); }
+        [TestMethod] public void Metaphone3Test182() { Assert.IsTrue(Metaphone3Test("eurythmics", "ARTMKS", "")); }
         [TestMethod] public void Metaphone3Test183() { Assert.IsTrue(Metaphone3Test("skittish", "SKTTS", "")); }
         [TestMethod] public void Metaphone3Test184() { Assert.IsTrue(Metaphone3Test("scooter", "SKTR", "")); }
-        [TestMethod] public void Metaphone3Test185() { Assert.IsTrue(Metaphone3Test("unfermented", "A", "")); }
+        [TestMethod] public void Metaphone3Test185() { Assert.IsTrue(Metaphone3Test("unfermented", "ANFRMNTT", "")); }
         [TestMethod] public void Metaphone3Test186() { Assert.IsTrue(Metaphone3Test("kerridge", "KRTK", "")); }
         [TestMethod] public void Metaphone3Test187() { Assert.IsTrue(Metaphone3Test("scenography", "SKNKRF", "")); }
         [TestMethod] public void Metaphone3Test188() { Assert.IsTrue(Metaphone3Test("sahalee", "SHL", "")); }
         [TestMethod] public void Metaphone3Test189() { Assert.IsTrue(Metaphone3Test("spooktacular", "SPKTKLR", "")); }
         [TestMethod] public void Metaphone3Test190() { Assert.IsTrue(Metaphone3Test("boissons", "PSSNS", "")); }
-        [TestMethod] public void Metaphone3Test191() { Assert.IsTrue(Metaphone3Test("arbete", "A", "")); }
+        [TestMethod] public void Metaphone3Test191() { Assert.IsTrue(Metaphone3Test("arbete", "ARPT", "")); }
         [TestMethod] public void Metaphone3Test192() { Assert.IsTrue(Metaphone3Test("Norrick", "NRKK", "")); }
         [TestMethod] public void Metaphone3Test193() { Assert.IsTrue(Metaphone3Test("Sonnier", "SNR", "")); }
-        [TestMethod] public void Metaphone3Test194() { Assert.IsTrue(Metaphone3Test("gnomeui", "KNM", "")); }
+        [TestMethod] public void Metaphone3Test194() { Assert.IsTrue(Metaphone3Test("gnomeui", "NM", "")); }
         [TestMethod] public void Metaphone3Test195() { Assert.IsTrue(Metaphone3Test("milian", "MLN", "")); }
-        [TestMethod] public void Metaphone3Test196() { Assert.IsTrue(Metaphone3Test("blackplanetcom", "PLKKPLNTKM", "")); }
+        [TestMethod] public void Metaphone3Test196() { Assert.IsTrue(Metaphone3Test("blackplanetcom", "PLKKPLNT", "")); }
         [TestMethod] public void Metaphone3Test197() { Assert.IsTrue(Metaphone3Test("tuned", "TNT", "")); }
         [TestMethod] public void Metaphone3Test198() { Assert.IsTrue(Metaphone3Test("Salone", "SLN", "")); }
         [TestMethod] public void Metaphone3Test199() { Assert.IsTrue(Metaphone3Test("marathon", "MRTN", "")); }
         [TestMethod] public void Metaphone3Test200() { Assert.IsTrue(Metaphone3Test("layoffs", "LFS", "")); }
         [TestMethod] public void Metaphone3Test201() { Assert.IsTrue(Metaphone3Test("hotek", "HTK", "")); }
-        [TestMethod] public void Metaphone3Test202() { Assert.IsTrue(Metaphone3Test("emme", "A", "")); }
-        [TestMethod] public void Metaphone3Test203() { Assert.IsTrue(Metaphone3Test("amarasinghe", "A", "")); }
+        [TestMethod] public void Metaphone3Test202() { Assert.IsTrue(Metaphone3Test("emme", "AM", "")); }
+        [TestMethod] public void Metaphone3Test203() { Assert.IsTrue(Metaphone3Test("amarasinghe", "AMRSNK", "")); }
         [TestMethod] public void Metaphone3Test204() { Assert.IsTrue(Metaphone3Test("midas", "MTS", "")); }
-        [TestMethod] public void Metaphone3Test205() { Assert.IsTrue(Metaphone3Test("inhaltsangabe", "A", "")); }
-        [TestMethod] public void Metaphone3Test206() { Assert.IsTrue(Metaphone3Test("smow", "SMV", "")); }
+        [TestMethod] public void Metaphone3Test205() { Assert.IsTrue(Metaphone3Test("inhaltsangabe", "ANLTSNKP", "")); }
+        [TestMethod] public void Metaphone3Test206() { Assert.IsTrue(Metaphone3Test("smow", "SM", "")); }
         [TestMethod] public void Metaphone3Test207() { Assert.IsTrue(Metaphone3Test("policing", "PLKNK", "")); }
-        [TestMethod] public void Metaphone3Test208() { Assert.IsTrue(Metaphone3Test("usmf", "A", "")); }
-        [TestMethod] public void Metaphone3Test209() { Assert.IsTrue(Metaphone3Test("inferred", "A", "")); }
-        [TestMethod] public void Metaphone3Test210() { Assert.IsTrue(Metaphone3Test("Eaglen", "A", "")); }
+        [TestMethod] public void Metaphone3Test208() { Assert.IsTrue(Metaphone3Test("usmf", "ASMF", "")); }
+        [TestMethod] public void Metaphone3Test209() { Assert.IsTrue(Metaphone3Test("inferred", "ANFRT", "")); }
+        [TestMethod] public void Metaphone3Test210() { Assert.IsTrue(Metaphone3Test("Eaglen", "AKLN", "")); }
         [TestMethod] public void Metaphone3Test211() { Assert.IsTrue(Metaphone3Test("dralle", "TRL", "")); }
         [TestMethod] public void Metaphone3Test212() { Assert.IsTrue(Metaphone3Test("kalmus", "KLMS", "")); }
         [TestMethod] public void Metaphone3Test213() { Assert.IsTrue(Metaphone3Test("nork", "NRK", "")); }
         [TestMethod] public void Metaphone3Test214() { Assert.IsTrue(Metaphone3Test("Waterston", "ATRSTN", "")); }
         [TestMethod] public void Metaphone3Test215() { Assert.IsTrue(Metaphone3Test("penalised", "PNLST", "")); }
         [TestMethod] public void Metaphone3Test216() { Assert.IsTrue(Metaphone3Test("Lupacchino", "LPKKN", "")); }
-        [TestMethod] public void Metaphone3Test217() { Assert.IsTrue(Metaphone3Test("getgid", "JTKT", "")); }
+        [TestMethod] public void Metaphone3Test217() { Assert.IsTrue(Metaphone3Test("getgid", "KTKT", "JTKT")); }
         [TestMethod] public void Metaphone3Test218() { Assert.IsTrue(Metaphone3Test("kever", "KFR", "")); }
         [TestMethod] public void Metaphone3Test219() { Assert.IsTrue(Metaphone3Test("pallavicini", "PLFKN", "")); }
         [TestMethod] public void Metaphone3Test220() { Assert.IsTrue(Metaphone3Test("Pais", "PS", "")); }
-        [TestMethod] public void Metaphone3Test221() { Assert.IsTrue(Metaphone3Test("youghiogheny", "A", "")); }
+        [TestMethod] public void Metaphone3Test221() { Assert.IsTrue(Metaphone3Test("youghiogheny", "AKKN", "")); }
         [TestMethod] public void Metaphone3Test222() { Assert.IsTrue(Metaphone3Test("Catherina", "KTRN", "")); }
-        [TestMethod] public void Metaphone3Test223() { Assert.IsTrue(Metaphone3Test("Givant", "JFNT", "")); }
+        [TestMethod] public void Metaphone3Test223() { Assert.IsTrue(Metaphone3Test("Givant", "KFNT", "JFNT")); }
         [TestMethod] public void Metaphone3Test224() { Assert.IsTrue(Metaphone3Test("koffi", "KF", "")); }
         [TestMethod] public void Metaphone3Test225() { Assert.IsTrue(Metaphone3Test("troutbeck", "TRTPKK", "")); }
         [TestMethod] public void Metaphone3Test226() { Assert.IsTrue(Metaphone3Test("moreelse", "MRLS", "")); }
         [TestMethod] public void Metaphone3Test227() { Assert.IsTrue(Metaphone3Test("seacrest", "SKRST", "")); }
-        [TestMethod] public void Metaphone3Test228() { Assert.IsTrue(Metaphone3Test("ufj", "A", "")); }
+        [TestMethod] public void Metaphone3Test228() { Assert.IsTrue(Metaphone3Test("ufj", "AFJ", "")); }
         [TestMethod] public void Metaphone3Test229() { Assert.IsTrue(Metaphone3Test("dereferences", "TRFRNKS", "")); }
         [TestMethod] public void Metaphone3Test230() { Assert.IsTrue(Metaphone3Test("sarena", "SRN", "")); }
         [TestMethod] public void Metaphone3Test231() { Assert.IsTrue(Metaphone3Test("Kurt", "KRT", "")); }
         [TestMethod] public void Metaphone3Test232() { Assert.IsTrue(Metaphone3Test("comanche", "KMNK", "")); }
-        [TestMethod] public void Metaphone3Test233() { Assert.IsTrue(Metaphone3Test("chersoness", "KRSNSS", "")); }
+        [TestMethod] public void Metaphone3Test233() { Assert.IsTrue(Metaphone3Test("chersoness", "XRSNSS", "")); }
         [TestMethod] public void Metaphone3Test234() { Assert.IsTrue(Metaphone3Test("cd", "KT", "")); }
-        [TestMethod] public void Metaphone3Test235() { Assert.IsTrue(Metaphone3Test("merzky", "MRSK", "")); }
+        [TestMethod] public void Metaphone3Test235() { Assert.IsTrue(Metaphone3Test("merzky", "MRTSK", "")); }
         [TestMethod] public void Metaphone3Test236() { Assert.IsTrue(Metaphone3Test("Nordsiek", "NRTSK", "")); }
         [TestMethod] public void Metaphone3Test237() { Assert.IsTrue(Metaphone3Test("samus", "SMS", "")); }
-        [TestMethod] public void Metaphone3Test238() { Assert.IsTrue(Metaphone3Test("tougher", "TKR", "")); }
+        [TestMethod] public void Metaphone3Test238() { Assert.IsTrue(Metaphone3Test("tougher", "TFR", "")); }
         [TestMethod] public void Metaphone3Test239() { Assert.IsTrue(Metaphone3Test("monodoc", "MNTK", "")); }
         [TestMethod] public void Metaphone3Test240() { Assert.IsTrue(Metaphone3Test("deepings", "TPNKS", "")); }
         [TestMethod] public void Metaphone3Test241() { Assert.IsTrue(Metaphone3Test("datel", "TTL", "")); }
@@ -258,38 +258,38 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void Metaphone3Test243() { Assert.IsTrue(Metaphone3Test("bryum", "PRM", "")); }
         [TestMethod] public void Metaphone3Test244() { Assert.IsTrue(Metaphone3Test("surveyed", "SRFT", "")); }
         [TestMethod] public void Metaphone3Test245() { Assert.IsTrue(Metaphone3Test("microcephaly", "MKRKFL", "")); }
-        [TestMethod] public void Metaphone3Test246() { Assert.IsTrue(Metaphone3Test("trimoxazole", "TRMKSSL", "")); }
+        [TestMethod] public void Metaphone3Test246() { Assert.IsTrue(Metaphone3Test("trimoxazole", "TRMKSL", "")); }
         [TestMethod] public void Metaphone3Test247() { Assert.IsTrue(Metaphone3Test("bastide", "PSTT", "")); }
         [TestMethod] public void Metaphone3Test248() { Assert.IsTrue(Metaphone3Test("lipo", "LP", "")); }
         [TestMethod] public void Metaphone3Test249() { Assert.IsTrue(Metaphone3Test("Bosket", "PSKT", "")); }
-        [TestMethod] public void Metaphone3Test250() { Assert.IsTrue(Metaphone3Test("oroms", "A", "")); }
+        [TestMethod] public void Metaphone3Test250() { Assert.IsTrue(Metaphone3Test("oroms", "ARMS", "")); }
         [TestMethod] public void Metaphone3Test251() { Assert.IsTrue(Metaphone3Test("vandenburg", "FNTNPRK", "")); }
-        [TestMethod] public void Metaphone3Test252() { Assert.IsTrue(Metaphone3Test("wirtschaftsforschung", "ARTSKFTSFRSKNK", "")); }
+        [TestMethod] public void Metaphone3Test252() { Assert.IsTrue(Metaphone3Test("wirtschaftsforschung", "ARTSKFTS", "FRTSKFTS")); }
         [TestMethod] public void Metaphone3Test253() { Assert.IsTrue(Metaphone3Test("lilypond", "LLPNT", "")); }
         [TestMethod] public void Metaphone3Test254() { Assert.IsTrue(Metaphone3Test("mouthfeel", "MTFL", "")); }
         [TestMethod] public void Metaphone3Test255() { Assert.IsTrue(Metaphone3Test("wwwunibancocombr", "NPNKKMPR", "")); }
         [TestMethod] public void Metaphone3Test256() { Assert.IsTrue(Metaphone3Test("Worster", "ARSTR", "")); }
-        [TestMethod] public void Metaphone3Test257() { Assert.IsTrue(Metaphone3Test("Ahmad", "A", "")); }
+        [TestMethod] public void Metaphone3Test257() { Assert.IsTrue(Metaphone3Test("Ahmad", "AMT", "")); }
         [TestMethod] public void Metaphone3Test258() { Assert.IsTrue(Metaphone3Test("sweetser", "STSR", "")); }
         [TestMethod] public void Metaphone3Test259() { Assert.IsTrue(Metaphone3Test("vsepr", "FSPR", "")); }
         [TestMethod] public void Metaphone3Test260() { Assert.IsTrue(Metaphone3Test("dput", "TPT", "")); }
-        [TestMethod] public void Metaphone3Test261() { Assert.IsTrue(Metaphone3Test("austlit", "A", "")); }
+        [TestMethod] public void Metaphone3Test261() { Assert.IsTrue(Metaphone3Test("austlit", "ASTLT", "")); }
         [TestMethod] public void Metaphone3Test262() { Assert.IsTrue(Metaphone3Test("Clemen", "KLMN", "")); }
         [TestMethod] public void Metaphone3Test263() { Assert.IsTrue(Metaphone3Test("phrva", "FRF", "")); }
         [TestMethod] public void Metaphone3Test264() { Assert.IsTrue(Metaphone3Test("weipa", "AP", "")); }
         [TestMethod] public void Metaphone3Test265() { Assert.IsTrue(Metaphone3Test("Schrantz", "SKRNTS", "")); }
         [TestMethod] public void Metaphone3Test266() { Assert.IsTrue(Metaphone3Test("meany", "MN", "")); }
         [TestMethod] public void Metaphone3Test267() { Assert.IsTrue(Metaphone3Test("hodgepodge", "HTKPTK", "")); }
-        [TestMethod] public void Metaphone3Test268() { Assert.IsTrue(Metaphone3Test("knuble", "KNPL", "")); }
+        [TestMethod] public void Metaphone3Test268() { Assert.IsTrue(Metaphone3Test("knuble", "NPL", "")); }
         [TestMethod] public void Metaphone3Test269() { Assert.IsTrue(Metaphone3Test("caniglia", "KNKL", "")); }
         [TestMethod] public void Metaphone3Test270() { Assert.IsTrue(Metaphone3Test("blowjobsasics", "PLJPSSKS", "")); }
         [TestMethod] public void Metaphone3Test271() { Assert.IsTrue(Metaphone3Test("flyjacket", "FLJKKT", "")); }
         [TestMethod] public void Metaphone3Test272() { Assert.IsTrue(Metaphone3Test("galatian", "KLTN", "")); }
         [TestMethod] public void Metaphone3Test273() { Assert.IsTrue(Metaphone3Test("hotsel", "HTSL", "")); }
-        [TestMethod] public void Metaphone3Test274() { Assert.IsTrue(Metaphone3Test("autorun", "A", "")); }
+        [TestMethod] public void Metaphone3Test274() { Assert.IsTrue(Metaphone3Test("autorun", "ATRN", "")); }
         [TestMethod] public void Metaphone3Test275() { Assert.IsTrue(Metaphone3Test("cocoon", "KKN", "")); }
         [TestMethod] public void Metaphone3Test276() { Assert.IsTrue(Metaphone3Test("kooks", "KKS", "")); }
-        [TestMethod] public void Metaphone3Test277() { Assert.IsTrue(Metaphone3Test("endocrinol", "A", "")); }
+        [TestMethod] public void Metaphone3Test277() { Assert.IsTrue(Metaphone3Test("endocrinol", "ANTKRNL", "")); }
         [TestMethod] public void Metaphone3Test278() { Assert.IsTrue(Metaphone3Test("mesages", "MSKS", "")); }
         [TestMethod] public void Metaphone3Test279() { Assert.IsTrue(Metaphone3Test("Disney", "TSN", "")); }
         [TestMethod] public void Metaphone3Test280() { Assert.IsTrue(Metaphone3Test("speedline", "SPTLN", "")); }
@@ -297,18 +297,18 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void Metaphone3Test282() { Assert.IsTrue(Metaphone3Test("margaux", "MRKKS", "")); }
         [TestMethod] public void Metaphone3Test283() { Assert.IsTrue(Metaphone3Test("housecalls", "HSKLS", "")); }
         [TestMethod] public void Metaphone3Test284() { Assert.IsTrue(Metaphone3Test("siltation", "SLTTN", "")); }
-        [TestMethod] public void Metaphone3Test285() { Assert.IsTrue(Metaphone3Test("automatic", "A", "")); }
-        [TestMethod] public void Metaphone3Test286() { Assert.IsTrue(Metaphone3Test("freakshow", "FRKSV", "")); }
+        [TestMethod] public void Metaphone3Test285() { Assert.IsTrue(Metaphone3Test("automatic", "ATMTK", "")); }
+        [TestMethod] public void Metaphone3Test286() { Assert.IsTrue(Metaphone3Test("freakshow", "FRKS", "")); }
         [TestMethod] public void Metaphone3Test287() { Assert.IsTrue(Metaphone3Test("gorojovsky", "KRJFSK", "")); }
         [TestMethod] public void Metaphone3Test288() { Assert.IsTrue(Metaphone3Test("milwaukie", "MLK", "")); }
         [TestMethod] public void Metaphone3Test289() { Assert.IsTrue(Metaphone3Test("wwwgap", "KP", "")); }
-        [TestMethod] public void Metaphone3Test290() { Assert.IsTrue(Metaphone3Test("autm", "A", "")); }
+        [TestMethod] public void Metaphone3Test290() { Assert.IsTrue(Metaphone3Test("autm", "ATM", "")); }
         [TestMethod] public void Metaphone3Test291() { Assert.IsTrue(Metaphone3Test("borromini", "PRMN", "")); }
         [TestMethod] public void Metaphone3Test292() { Assert.IsTrue(Metaphone3Test("zpp", "SPP", "")); }
         [TestMethod] public void Metaphone3Test293() { Assert.IsTrue(Metaphone3Test("Penovich", "PNFK", "")); }
         [TestMethod] public void Metaphone3Test294() { Assert.IsTrue(Metaphone3Test("domine", "TMN", "")); }
         [TestMethod] public void Metaphone3Test295() { Assert.IsTrue(Metaphone3Test("caves", "KFS", "")); }
-        [TestMethod] public void Metaphone3Test296() { Assert.IsTrue(Metaphone3Test("uato", "A", "")); }
+        [TestMethod] public void Metaphone3Test296() { Assert.IsTrue(Metaphone3Test("uato", "AT", "")); }
         [TestMethod] public void Metaphone3Test297() { Assert.IsTrue(Metaphone3Test("tiltonsville", "TLTNSFL", "")); }
         [TestMethod] public void Metaphone3Test298() { Assert.IsTrue(Metaphone3Test("Ken", "KN", "")); }
         [TestMethod] public void Metaphone3Test299() { Assert.IsTrue(Metaphone3Test("Delonais", "TLNS", "")); }
@@ -328,12 +328,12 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void Metaphone3Test313() { Assert.IsTrue(Metaphone3Test("kuppam", "KPPM", "")); }
         [TestMethod] public void Metaphone3Test314() { Assert.IsTrue(Metaphone3Test("ftpadmin", "FTPTMN", "")); }
         [TestMethod] public void Metaphone3Test315() { Assert.IsTrue(Metaphone3Test("Forst", "FRST", "")); }
-        [TestMethod] public void Metaphone3Test316() { Assert.IsTrue(Metaphone3Test("Ashauer", "A", "")); }
-        [TestMethod] public void Metaphone3Test317() { Assert.IsTrue(Metaphone3Test("ashtanga", "A", "")); }
-        [TestMethod] public void Metaphone3Test318() { Assert.IsTrue(Metaphone3Test("alonissos", "A", "")); }
-        [TestMethod] public void Metaphone3Test319() { Assert.IsTrue(Metaphone3Test("Chimilio", "KML", "")); }
+        [TestMethod] public void Metaphone3Test316() { Assert.IsTrue(Metaphone3Test("Ashauer", "ASR", "")); }
+        [TestMethod] public void Metaphone3Test317() { Assert.IsTrue(Metaphone3Test("ashtanga", "ASTNK", "")); }
+        [TestMethod] public void Metaphone3Test318() { Assert.IsTrue(Metaphone3Test("alonissos", "ALNSSS", "")); }
+        [TestMethod] public void Metaphone3Test319() { Assert.IsTrue(Metaphone3Test("Chimilio", "XML", "")); }
         [TestMethod] public void Metaphone3Test320() { Assert.IsTrue(Metaphone3Test("deafbazon", "TFPSN", "")); }
-        [TestMethod] public void Metaphone3Test321() { Assert.IsTrue(Metaphone3Test("psmb", "PSM", "")); }
+        [TestMethod] public void Metaphone3Test321() { Assert.IsTrue(Metaphone3Test("psmb", "SM", "")); }
         [TestMethod] public void Metaphone3Test322() { Assert.IsTrue(Metaphone3Test("Ferraraccio", "FRRKK", "")); }
         [TestMethod] public void Metaphone3Test323() { Assert.IsTrue(Metaphone3Test("fractionated", "FRKTNTT", "")); }
         [TestMethod] public void Metaphone3Test324() { Assert.IsTrue(Metaphone3Test("rrd", "RT", "")); }
@@ -345,35 +345,35 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void Metaphone3Test330() { Assert.IsTrue(Metaphone3Test("haspel", "HSPL", "")); }
         [TestMethod] public void Metaphone3Test331() { Assert.IsTrue(Metaphone3Test("cortex", "KRTKS", "")); }
         [TestMethod] public void Metaphone3Test332() { Assert.IsTrue(Metaphone3Test("vechicle", "FKKL", "")); }
-        [TestMethod] public void Metaphone3Test333() { Assert.IsTrue(Metaphone3Test("epinions", "A", "")); }
+        [TestMethod] public void Metaphone3Test333() { Assert.IsTrue(Metaphone3Test("epinions", "APNNS", "")); }
         [TestMethod] public void Metaphone3Test334() { Assert.IsTrue(Metaphone3Test("wwwusmintgov", "SMNTKF", "")); }
         [TestMethod] public void Metaphone3Test335() { Assert.IsTrue(Metaphone3Test("katies", "KTS", "")); }
-        [TestMethod] public void Metaphone3Test336() { Assert.IsTrue(Metaphone3Test("aminosalicylic", "A", "")); }
+        [TestMethod] public void Metaphone3Test336() { Assert.IsTrue(Metaphone3Test("aminosalicylic", "AMNSLKLK", "")); }
         [TestMethod] public void Metaphone3Test337() { Assert.IsTrue(Metaphone3Test("mmegi", "MK", "")); }
         [TestMethod] public void Metaphone3Test338() { Assert.IsTrue(Metaphone3Test("sbir", "SPR", "")); }
         [TestMethod] public void Metaphone3Test339() { Assert.IsTrue(Metaphone3Test("learned", "LRNT", "")); }
         [TestMethod] public void Metaphone3Test340() { Assert.IsTrue(Metaphone3Test("supris", "SPRS", "")); }
-        [TestMethod] public void Metaphone3Test341() { Assert.IsTrue(Metaphone3Test("mozarteum", "MSRTM", "")); }
+        [TestMethod] public void Metaphone3Test341() { Assert.IsTrue(Metaphone3Test("mozarteum", "MTSRTM", "")); }
         [TestMethod] public void Metaphone3Test342() { Assert.IsTrue(Metaphone3Test("selzer", "SLSR", "")); }
         [TestMethod] public void Metaphone3Test343() { Assert.IsTrue(Metaphone3Test("tmug", "TMK", "")); }
         [TestMethod] public void Metaphone3Test344() { Assert.IsTrue(Metaphone3Test("Kisto", "KST", "")); }
-        [TestMethod] public void Metaphone3Test345() { Assert.IsTrue(Metaphone3Test("iib", "A", "")); }
+        [TestMethod] public void Metaphone3Test345() { Assert.IsTrue(Metaphone3Test("iib", "AP", "")); }
         [TestMethod] public void Metaphone3Test346() { Assert.IsTrue(Metaphone3Test("wwwincredimail", "NKRTML", "")); }
-        [TestMethod] public void Metaphone3Test347() { Assert.IsTrue(Metaphone3Test("izpack", "A", "")); }
+        [TestMethod] public void Metaphone3Test347() { Assert.IsTrue(Metaphone3Test("izpack", "ASPKK", "")); }
         [TestMethod] public void Metaphone3Test348() { Assert.IsTrue(Metaphone3Test("gaymovie", "KMF", "")); }
         [TestMethod] public void Metaphone3Test349() { Assert.IsTrue(Metaphone3Test("Buchholz", "PKHLS", "")); }
         [TestMethod] public void Metaphone3Test350() { Assert.IsTrue(Metaphone3Test("culcairn", "KLKRN", "")); }
         [TestMethod] public void Metaphone3Test351() { Assert.IsTrue(Metaphone3Test("barys", "PRS", "")); }
         [TestMethod] public void Metaphone3Test352() { Assert.IsTrue(Metaphone3Test("burets", "PRTS", "")); }
         [TestMethod] public void Metaphone3Test353() { Assert.IsTrue(Metaphone3Test("Sorce", "SRK", "")); }
-        [TestMethod] public void Metaphone3Test354() { Assert.IsTrue(Metaphone3Test("chimique", "KMK", "")); }
+        [TestMethod] public void Metaphone3Test354() { Assert.IsTrue(Metaphone3Test("chimique", "XMK", "")); }
         [TestMethod] public void Metaphone3Test355() { Assert.IsTrue(Metaphone3Test("kitada", "KTT", "")); }
-        [TestMethod] public void Metaphone3Test356() { Assert.IsTrue(Metaphone3Test("Engeman", "A", "")); }
+        [TestMethod] public void Metaphone3Test356() { Assert.IsTrue(Metaphone3Test("Engeman", "ANKMN", "")); }
         [TestMethod] public void Metaphone3Test357() { Assert.IsTrue(Metaphone3Test("raveendran", "RFNTRN", "")); }
         [TestMethod] public void Metaphone3Test358() { Assert.IsTrue(Metaphone3Test("Bendele", "PNTL", "")); }
         [TestMethod] public void Metaphone3Test359() { Assert.IsTrue(Metaphone3Test("Pawlitschek", "PLTSKK", "")); }
         [TestMethod] public void Metaphone3Test360() { Assert.IsTrue(Metaphone3Test("hogfather", "HKFTR", "")); }
-        [TestMethod] public void Metaphone3Test361() { Assert.IsTrue(Metaphone3Test("eyedrum", "A", "")); }
+        [TestMethod] public void Metaphone3Test361() { Assert.IsTrue(Metaphone3Test("eyedrum", "ATRM", "")); }
         [TestMethod] public void Metaphone3Test362() { Assert.IsTrue(Metaphone3Test("Ferrara", "FRR", "")); }
         [TestMethod] public void Metaphone3Test363() { Assert.IsTrue(Metaphone3Test("zhuh", "J", "")); }
         [TestMethod] public void Metaphone3Test364() { Assert.IsTrue(Metaphone3Test("zodiak", "STK", "")); }
@@ -381,28 +381,28 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void Metaphone3Test366() { Assert.IsTrue(Metaphone3Test("conferees", "KNFRS", "")); }
         [TestMethod] public void Metaphone3Test367() { Assert.IsTrue(Metaphone3Test("Decillis", "TKLS", "")); }
         [TestMethod] public void Metaphone3Test368() { Assert.IsTrue(Metaphone3Test("downloar", "TNLR", "")); }
-        [TestMethod] public void Metaphone3Test369() { Assert.IsTrue(Metaphone3Test("shard", "SRT", "")); }
+        [TestMethod] public void Metaphone3Test369() { Assert.IsTrue(Metaphone3Test("shard", "XRT", "")); }
         [TestMethod] public void Metaphone3Test370() { Assert.IsTrue(Metaphone3Test("fajr", "FJR", "")); }
         [TestMethod] public void Metaphone3Test371() { Assert.IsTrue(Metaphone3Test("quisque", "KSK", "")); }
-        [TestMethod] public void Metaphone3Test372() { Assert.IsTrue(Metaphone3Test("winterizing", "ANTRSNK", "")); }
+        [TestMethod] public void Metaphone3Test372() { Assert.IsTrue(Metaphone3Test("winterizing", "ANTRSNK", "FNTRSNK")); }
         [TestMethod] public void Metaphone3Test373() { Assert.IsTrue(Metaphone3Test("referate", "RFRT", "")); }
-        [TestMethod] public void Metaphone3Test374() { Assert.IsTrue(Metaphone3Test("nuxone", "NKSN", "")); }
+        [TestMethod] public void Metaphone3Test374() { Assert.IsTrue(Metaphone3Test("nuxone", "NKS", "")); }
         [TestMethod] public void Metaphone3Test375() { Assert.IsTrue(Metaphone3Test("Racheal", "RKL", "")); }
         [TestMethod] public void Metaphone3Test376() { Assert.IsTrue(Metaphone3Test("bizben", "PSPN", "")); }
         [TestMethod] public void Metaphone3Test377() { Assert.IsTrue(Metaphone3Test("musictalk", "MSKTLK", "")); }
-        [TestMethod] public void Metaphone3Test378() { Assert.IsTrue(Metaphone3Test("ogoal", "A", "")); }
+        [TestMethod] public void Metaphone3Test378() { Assert.IsTrue(Metaphone3Test("ogoal", "AKL", "")); }
         [TestMethod] public void Metaphone3Test379() { Assert.IsTrue(Metaphone3Test("Skoff", "SKF", "")); }
         [TestMethod] public void Metaphone3Test380() { Assert.IsTrue(Metaphone3Test("Seehusen", "SHSN", "")); }
         [TestMethod] public void Metaphone3Test381() { Assert.IsTrue(Metaphone3Test("Reim", "RM", "")); }
         [TestMethod] public void Metaphone3Test382() { Assert.IsTrue(Metaphone3Test("Yoh", "A", "")); }
         [TestMethod] public void Metaphone3Test383() { Assert.IsTrue(Metaphone3Test("gapi", "KP", "")); }
         [TestMethod] public void Metaphone3Test384() { Assert.IsTrue(Metaphone3Test("Brightbill", "PRTPL", "")); }
-        [TestMethod] public void Metaphone3Test385() { Assert.IsTrue(Metaphone3Test("shuey", "S", "")); }
+        [TestMethod] public void Metaphone3Test385() { Assert.IsTrue(Metaphone3Test("shuey", "X", "")); }
         [TestMethod] public void Metaphone3Test386() { Assert.IsTrue(Metaphone3Test("posium", "PSM", "")); }
         [TestMethod] public void Metaphone3Test387() { Assert.IsTrue(Metaphone3Test("Falknor", "FLKNR", "")); }
-        [TestMethod] public void Metaphone3Test388() { Assert.IsTrue(Metaphone3Test("ucat", "A", "")); }
+        [TestMethod] public void Metaphone3Test388() { Assert.IsTrue(Metaphone3Test("ucat", "AKT", "")); }
         [TestMethod] public void Metaphone3Test389() { Assert.IsTrue(Metaphone3Test("properspace", "PRPRSPK", "")); }
-        [TestMethod] public void Metaphone3Test390() { Assert.IsTrue(Metaphone3Test("showimg", "SMK", "")); }
+        [TestMethod] public void Metaphone3Test390() { Assert.IsTrue(Metaphone3Test("showimg", "XMK", "")); }
         [TestMethod] public void Metaphone3Test391() { Assert.IsTrue(Metaphone3Test("Montecillo", "MNTKL", "")); }
         [TestMethod] public void Metaphone3Test392() { Assert.IsTrue(Metaphone3Test("sajak", "SJK", "")); }
         [TestMethod] public void Metaphone3Test393() { Assert.IsTrue(Metaphone3Test("maturbation", "MTRPTN", "")); }
@@ -412,8 +412,8 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void Metaphone3Test397() { Assert.IsTrue(Metaphone3Test("matp", "MTP", "")); }
         [TestMethod] public void Metaphone3Test398() { Assert.IsTrue(Metaphone3Test("mervtormel", "MRFTRML", "")); }
         [TestMethod] public void Metaphone3Test399() { Assert.IsTrue(Metaphone3Test("guanahani", "KNHN", "")); }
-        [TestMethod] public void Metaphone3Test400() { Assert.IsTrue(Metaphone3Test("citement", "KTMNT", "")); }
-        [TestMethod] public void Metaphone3Test401() { Assert.IsTrue(Metaphone3Test("immu", "A", "")); }
+        [TestMethod] public void Metaphone3Test400() { Assert.IsTrue(Metaphone3Test("citement", "STMNT", "")); }
+        [TestMethod] public void Metaphone3Test401() { Assert.IsTrue(Metaphone3Test("immu", "AM", "")); }
         [TestMethod] public void Metaphone3Test402() { Assert.IsTrue(Metaphone3Test("virulence", "FRLNK", "")); }
         [TestMethod] public void Metaphone3Test403() { Assert.IsTrue(Metaphone3Test("kussa", "KSS", "")); }
         [TestMethod] public void Metaphone3Test404() { Assert.IsTrue(Metaphone3Test("gso", "KS", "")); }
@@ -426,11 +426,11 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void Metaphone3Test411() { Assert.IsTrue(Metaphone3Test("Vanis", "FNS", "")); }
         [TestMethod] public void Metaphone3Test412() { Assert.IsTrue(Metaphone3Test("Buena", "PN", "")); }
         [TestMethod] public void Metaphone3Test413() { Assert.IsTrue(Metaphone3Test("Tauares", "TRS", "")); }
-        [TestMethod] public void Metaphone3Test414() { Assert.IsTrue(Metaphone3Test("ikus", "A", "")); }
-        [TestMethod] public void Metaphone3Test415() { Assert.IsTrue(Metaphone3Test("genrebox", "JNRPKS", "")); }
+        [TestMethod] public void Metaphone3Test414() { Assert.IsTrue(Metaphone3Test("ikus", "AKS", "")); }
+        [TestMethod] public void Metaphone3Test415() { Assert.IsTrue(Metaphone3Test("genrebox", "KNRPKS", "JNRPKS")); }
         [TestMethod] public void Metaphone3Test416() { Assert.IsTrue(Metaphone3Test("rth", "RT", "")); }
         [TestMethod] public void Metaphone3Test417() { Assert.IsTrue(Metaphone3Test("Spaun", "SPN", "")); }
-        [TestMethod] public void Metaphone3Test418() { Assert.IsTrue(Metaphone3Test("wiersbe", "ARSP", "")); }
+        [TestMethod] public void Metaphone3Test418() { Assert.IsTrue(Metaphone3Test("wiersbe", "ARSP", "FRSP")); }
         [TestMethod] public void Metaphone3Test419() { Assert.IsTrue(Metaphone3Test("dad", "TT", "")); }
         [TestMethod] public void Metaphone3Test420() { Assert.IsTrue(Metaphone3Test("tus", "TS", "")); }
         [TestMethod] public void Metaphone3Test421() { Assert.IsTrue(Metaphone3Test("Weidert", "ATRT", "")); }
@@ -441,41 +441,41 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void Metaphone3Test426() { Assert.IsTrue(Metaphone3Test("Hollendonner", "HLNTNR", "")); }
         [TestMethod] public void Metaphone3Test427() { Assert.IsTrue(Metaphone3Test("Huitzacua", "HTSK", "")); }
         [TestMethod] public void Metaphone3Test428() { Assert.IsTrue(Metaphone3Test("subjunctive", "SPJNKTF", "")); }
-        [TestMethod] public void Metaphone3Test429() { Assert.IsTrue(Metaphone3Test("implored", "A", "")); }
+        [TestMethod] public void Metaphone3Test429() { Assert.IsTrue(Metaphone3Test("implored", "AMPLRT", "")); }
         [TestMethod] public void Metaphone3Test430() { Assert.IsTrue(Metaphone3Test("pompeius", "PMPS", "")); }
-        [TestMethod] public void Metaphone3Test431() { Assert.IsTrue(Metaphone3Test("afleet", "A", "")); }
-        [TestMethod] public void Metaphone3Test432() { Assert.IsTrue(Metaphone3Test("iacc", "A", "")); }
+        [TestMethod] public void Metaphone3Test431() { Assert.IsTrue(Metaphone3Test("afleet", "AFLT", "")); }
+        [TestMethod] public void Metaphone3Test432() { Assert.IsTrue(Metaphone3Test("iacc", "AKK", "")); }
         [TestMethod] public void Metaphone3Test433() { Assert.IsTrue(Metaphone3Test("sabalos", "SPLS", "")); }
-        [TestMethod] public void Metaphone3Test434() { Assert.IsTrue(Metaphone3Test("Abdi", "A", "")); }
+        [TestMethod] public void Metaphone3Test434() { Assert.IsTrue(Metaphone3Test("Abdi", "APT", "")); }
         [TestMethod] public void Metaphone3Test435() { Assert.IsTrue(Metaphone3Test("microinsurance", "MKRNSRNK", "")); }
-        [TestMethod] public void Metaphone3Test436() { Assert.IsTrue(Metaphone3Test("audiobook", "A", "")); }
+        [TestMethod] public void Metaphone3Test436() { Assert.IsTrue(Metaphone3Test("audiobook", "ATPK", "")); }
         [TestMethod] public void Metaphone3Test437() { Assert.IsTrue(Metaphone3Test("fulpmes", "FLPMS", "")); }
         [TestMethod] public void Metaphone3Test438() { Assert.IsTrue(Metaphone3Test("registreren", "RKSTRRN", "")); }
         [TestMethod] public void Metaphone3Test439() { Assert.IsTrue(Metaphone3Test("megapath", "MKPT", "")); }
-        [TestMethod] public void Metaphone3Test440() { Assert.IsTrue(Metaphone3Test("prestidigitation", "PRSTTKTTN", "")); }
+        [TestMethod] public void Metaphone3Test440() { Assert.IsTrue(Metaphone3Test("prestidigitation", "PRSTTKTT", "")); }
         [TestMethod] public void Metaphone3Test441() { Assert.IsTrue(Metaphone3Test("wby", "P", "")); }
         [TestMethod] public void Metaphone3Test442() { Assert.IsTrue(Metaphone3Test("vorschau", "FRSK", "")); }
-        [TestMethod] public void Metaphone3Test443() { Assert.IsTrue(Metaphone3Test("Albertha", "A", "")); }
-        [TestMethod] public void Metaphone3Test444() { Assert.IsTrue(Metaphone3Test("aspalpha", "A", "")); }
+        [TestMethod] public void Metaphone3Test443() { Assert.IsTrue(Metaphone3Test("Albertha", "ALPRT", "")); }
+        [TestMethod] public void Metaphone3Test444() { Assert.IsTrue(Metaphone3Test("aspalpha", "ASPLF", "")); }
         [TestMethod] public void Metaphone3Test445() { Assert.IsTrue(Metaphone3Test("Belden", "PLTN", "")); }
         [TestMethod] public void Metaphone3Test446() { Assert.IsTrue(Metaphone3Test("deterministic", "TTRMNSTK", "")); }
         [TestMethod] public void Metaphone3Test447() { Assert.IsTrue(Metaphone3Test("philosophique", "FLSFK", "")); }
         [TestMethod] public void Metaphone3Test448() { Assert.IsTrue(Metaphone3Test("kleinen", "KLNN", "")); }
         [TestMethod] public void Metaphone3Test449() { Assert.IsTrue(Metaphone3Test("logouri", "LKR", "")); }
         [TestMethod] public void Metaphone3Test450() { Assert.IsTrue(Metaphone3Test("xbl", "SPL", "")); }
-        [TestMethod] public void Metaphone3Test451() { Assert.IsTrue(Metaphone3Test("iz", "A", "")); }
-        [TestMethod] public void Metaphone3Test452() { Assert.IsTrue(Metaphone3Test("throckmorton", "TRKKMRTN", "")); }
+        [TestMethod] public void Metaphone3Test451() { Assert.IsTrue(Metaphone3Test("iz", "AS", "")); }
+        [TestMethod] public void Metaphone3Test452() { Assert.IsTrue(Metaphone3Test("throckmorton", "0RKKMRTN", "")); }
         [TestMethod] public void Metaphone3Test453() { Assert.IsTrue(Metaphone3Test("condesa", "KNTS", "")); }
         [TestMethod] public void Metaphone3Test454() { Assert.IsTrue(Metaphone3Test("Mook", "MK", "")); }
         [TestMethod] public void Metaphone3Test455() { Assert.IsTrue(Metaphone3Test("medseek", "MTSK", "")); }
-        [TestMethod] public void Metaphone3Test456() { Assert.IsTrue(Metaphone3Test("chugalug", "KKLK", "")); }
-        [TestMethod] public void Metaphone3Test457() { Assert.IsTrue(Metaphone3Test("olms", "A", "")); }
+        [TestMethod] public void Metaphone3Test456() { Assert.IsTrue(Metaphone3Test("chugalug", "XKLK", "")); }
+        [TestMethod] public void Metaphone3Test457() { Assert.IsTrue(Metaphone3Test("olms", "ALMS", "")); }
         [TestMethod] public void Metaphone3Test458() { Assert.IsTrue(Metaphone3Test("bogo", "PK", "")); }
-        [TestMethod] public void Metaphone3Test459() { Assert.IsTrue(Metaphone3Test("essing", "A", "")); }
+        [TestMethod] public void Metaphone3Test459() { Assert.IsTrue(Metaphone3Test("essing", "ASSNK", "")); }
         [TestMethod] public void Metaphone3Test460() { Assert.IsTrue(Metaphone3Test("rarden", "RRTN", "")); }
         [TestMethod] public void Metaphone3Test461() { Assert.IsTrue(Metaphone3Test("mittlere", "MTTLR", "")); }
         [TestMethod] public void Metaphone3Test462() { Assert.IsTrue(Metaphone3Test("Borsa", "PRS", "")); }
-        [TestMethod] public void Metaphone3Test463() { Assert.IsTrue(Metaphone3Test("Ainslie", "A", "")); }
+        [TestMethod] public void Metaphone3Test463() { Assert.IsTrue(Metaphone3Test("Ainslie", "ANSL", "")); }
         [TestMethod] public void Metaphone3Test464() { Assert.IsTrue(Metaphone3Test("Ganska", "KNSK", "")); }
         [TestMethod] public void Metaphone3Test465() { Assert.IsTrue(Metaphone3Test("miv", "MF", "")); }
         [TestMethod] public void Metaphone3Test466() { Assert.IsTrue(Metaphone3Test("concessions", "KNKSSNS", "")); }
@@ -483,7 +483,7 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void Metaphone3Test468() { Assert.IsTrue(Metaphone3Test("cano", "KN", "")); }
         [TestMethod] public void Metaphone3Test469() { Assert.IsTrue(Metaphone3Test("plumper", "PLMPR", "")); }
         [TestMethod] public void Metaphone3Test470() { Assert.IsTrue(Metaphone3Test("mindoro", "MNTR", "")); }
-        [TestMethod] public void Metaphone3Test471() { Assert.IsTrue(Metaphone3Test("cephalopod", "KFLPT", "")); }
+        [TestMethod] public void Metaphone3Test471() { Assert.IsTrue(Metaphone3Test("cephalopod", "SFLPT", "")); }
         [TestMethod] public void Metaphone3Test472() { Assert.IsTrue(Metaphone3Test("Klunk", "KLNK", "")); }
         [TestMethod] public void Metaphone3Test473() { Assert.IsTrue(Metaphone3Test("Bumbrey", "PMPR", "")); }
         [TestMethod] public void Metaphone3Test474() { Assert.IsTrue(Metaphone3Test("causeless", "KSLSS", "")); }
@@ -491,7 +491,7 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void Metaphone3Test476() { Assert.IsTrue(Metaphone3Test("bodystyles", "PTSTLS", "")); }
         [TestMethod] public void Metaphone3Test477() { Assert.IsTrue(Metaphone3Test("beaatiality", "PTLT", "")); }
         [TestMethod] public void Metaphone3Test478() { Assert.IsTrue(Metaphone3Test("Bobrowski", "PPRSK", "")); }
-        [TestMethod] public void Metaphone3Test479() { Assert.IsTrue(Metaphone3Test("erudition", "A", "")); }
+        [TestMethod] public void Metaphone3Test479() { Assert.IsTrue(Metaphone3Test("erudition", "ARTTN", "")); }
         [TestMethod] public void Metaphone3Test480() { Assert.IsTrue(Metaphone3Test("huttner", "HTTNR", "")); }
         [TestMethod] public void Metaphone3Test481() { Assert.IsTrue(Metaphone3Test("wwwaskjeevescom", "SKJFSKM", "")); }
         [TestMethod] public void Metaphone3Test482() { Assert.IsTrue(Metaphone3Test("Duross", "TRSS", "")); }
@@ -503,16 +503,17 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void Metaphone3Test488() { Assert.IsTrue(Metaphone3Test("jetplane", "JTPLN", "")); }
         [TestMethod] public void Metaphone3Test489() { Assert.IsTrue(Metaphone3Test("nswrl", "NSRL", "")); }
         [TestMethod] public void Metaphone3Test490() { Assert.IsTrue(Metaphone3Test("didates", "TTTS", "")); }
-        [TestMethod] public void Metaphone3Test491() { Assert.IsTrue(Metaphone3Test("Jena", "JN", "")); }
-        [TestMethod] public void Metaphone3Test492() { Assert.IsTrue(Metaphone3Test("kctu", "KKT", "")); }
+        [TestMethod] public void Metaphone3Test491() { Assert.IsTrue(Metaphone3Test("Jena", "JN", "AN")); }
+        [TestMethod] public void Metaphone3Test492() { Assert.IsTrue(Metaphone3Test("kctu", "KT", "")); }
         [TestMethod] public void Metaphone3Test493() { Assert.IsTrue(Metaphone3Test("cualquiera", "KLKR", "")); }
         [TestMethod] public void Metaphone3Test494() { Assert.IsTrue(Metaphone3Test("plutella", "PLTL", "")); }
         [TestMethod] public void Metaphone3Test495() { Assert.IsTrue(Metaphone3Test("Liebig", "LPK", "")); }
         [TestMethod] public void Metaphone3Test496() { Assert.IsTrue(Metaphone3Test("Llorens", "LRNS", "")); }
         [TestMethod] public void Metaphone3Test497() { Assert.IsTrue(Metaphone3Test("mraz", "MRS", "")); }
-        [TestMethod] public void Metaphone3Test498() { Assert.IsTrue(Metaphone3Test("shadyac", "STK", "")); }
-        [TestMethod] public void Metaphone3Test499() { Assert.IsTrue(Metaphone3Test("lossphentermine", "LSSFNTRMN", "")); }
+        [TestMethod] public void Metaphone3Test498() { Assert.IsTrue(Metaphone3Test("shadyac", "XTK", "")); }
+        [TestMethod] public void Metaphone3Test499() { Assert.IsTrue(Metaphone3Test("lossphentermine", "LSSFNTRM", "")); }
         [TestMethod] public void Metaphone3Test500() { Assert.IsTrue(Metaphone3Test("Dreith", "TRT", "")); }
+        [TestMethod] public void Metaphone3Test501() { Assert.IsTrue(Metaphone3Test("Windsor", "ANTSR", "")); }
 
     }
 }

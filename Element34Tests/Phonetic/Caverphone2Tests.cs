@@ -511,6 +511,7 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void Caverphone2Test498() { Assert.IsTrue(Caverphone2Test("shadyac", "STK1111111")); }
         [TestMethod] public void Caverphone2Test499() { Assert.IsTrue(Caverphone2Test("lossphentermine", "LSFNTMN111")); }
         [TestMethod] public void Caverphone2Test500() { Assert.IsTrue(Caverphone2Test("Dreith", "TRT1111111")); }
+        [TestMethod] public void Caverphone2Test501() { Assert.IsTrue(Caverphone2Test("Windsor", "WNTSA11111")); }
 
     }
 }

@@ -6,6 +6,17 @@
         private const char TH = '0';
         private string m_normalized;
         private int m_index;
+        private int m_length;
+        private int m_tokenLength = 4;
+
+        public bool Compare(string value1, string value2)
+        {
+            Metaphone mph = new Metaphone();
+            value1 = mph.Encode(value1);
+            value2 = mph.Encode(value2);
+
+            return value1.Equals(value2);
+        }
 
         /**
          * Get the phonetics according to the original Metaphone algorithm from a value.
@@ -22,8 +33,11 @@
             }
 
             m_normalized = value.ToUpper();
+            m_length = m_normalized.Length;
 
-            string phonized = string.Empty;
+            string token = string.Empty;
+            int skip;
+
             char? next = atFactory(1);
             char? current = atFactory(0);
             char? previous = atFactory(-1);
@@ -40,13 +54,13 @@
                     // AE becomes E
                     if (next == 'E')
                     {
-                        phonized += 'E';
+                        token += 'E';
                         m_index += 2;
                     }
                     else
                     {
                         // Remember, preserve vowels at the beginning
-                        phonized += 'A';
+                        token += 'A';
                         m_index++;
                     }
                     break;
@@ -57,7 +71,7 @@
                 case 'P':
                     if (next == 'N')
                     {
-                        phonized += 'N';
+                        token += 'N';
                         m_index += 2;
                     }
                     break;
@@ -66,24 +80,24 @@
                 case 'W':
                     if (next == 'R')
                     {
-                        phonized += next;
+                        token += next;
                         m_index += 2;
                     }
                     else if (next == 'H')
                     {
-                        phonized += current;
+                        token += current;
                         m_index += 2;
                     }
                     else if (vowel(next))
                     {
-                        phonized += 'W';
+                        token += 'W';
                         m_index += 2;
                     }
                     break;
 
                 // X becomes S
                 case 'X':
-                    phonized += 'S';
+                    token += 'S';
                     m_index++;
                     break;
 
@@ -92,7 +106,7 @@
                 case 'I':
                 case 'O':
                 case 'U':
-                    phonized += current;
+                    token += current;
                     m_index++;
                     break;
 
@@ -102,11 +116,15 @@
             }
 
             // On to the metaphoning
-            while (current != null)
+            while (current != null && token.Length < m_tokenLength)
             {
                 // How many letters to skip because an earlier encoding handled multiple
                 // letters
-                int skip = 1;
+                next = atFactory(1);
+                current = atFactory(0);
+                previous = atFactory(-1);
+
+                skip = 1;
 
                 // Ignore non-alphas
                 if (!alpha(current) || (current == previous && current != 'C'))
@@ -121,7 +139,7 @@
                     case 'B':
                         if (previous != 'M')
                         {
-                            phonized += 'B';
+                            token += 'B';
                         }
                         break;
 
@@ -135,22 +153,22 @@
                             if (next == 'I' && at(2) == 'A')
                             {
                                 // CIA
-                                phonized += SH;
+                                token += SH;
                             }
                             else if (previous != 'S')
                             {
-                                phonized += 'S';
+                                token += 'S';
                             }
                         }
                         else if (next == 'H')
                         {
-                            phonized += SH;
+                            token += SH;
                             skip++;
                         }
                         else
                         {
                             // C
-                            phonized += 'K';
+                            token += 'K';
                         }
                         break;
 
@@ -158,12 +176,12 @@
                     case 'D':
                         if (next == 'G' && soft(at(2)))
                         {
-                            phonized += 'J';
+                            token += 'J';
                             skip++;
                         }
                         else
                         {
-                            phonized += 'T';
+                            token += 'T';
                         }
                         break;
 
@@ -177,7 +195,7 @@
                         {
                             if (!(noGhToF(at(-3)) || at(-4) == 'H'))
                             {
-                                phonized += 'F';
+                                token += 'F';
                                 skip++;
                             }
                         }
@@ -185,16 +203,16 @@
                         {
                             if (!(!alpha(at(2)) || (at(2) == 'E' && at(3) == 'D')))
                             {
-                                phonized += 'K';
+                                token += 'K';
                             }
                         }
                         else if (soft(next) && previous != 'G')
                         {
-                            phonized += 'J';
+                            token += 'J';
                         }
                         else
                         {
-                            phonized += 'K';
+                            token += 'K';
                         }
                         break;
 
@@ -202,7 +220,7 @@
                     case 'H':
                         if (vowel(next) && !dipthongH(previous))
                         {
-                            phonized += 'H';
+                            token += 'H';
                         }
                         break;
 
@@ -210,34 +228,34 @@
                     case 'K':
                         if (previous != 'C')
                         {
-                            phonized += 'K';
+                            token += 'K';
                         }
                         break;
 
                     // F if before H, else P
                     case 'P':
-                        phonized += (next == 'H') ? 'F' : 'P';
+                        token += (next == 'H') ? 'F' : 'P';
                         break;
 
                     // K
                     case 'Q':
-                        phonized += 'K';
+                        token += 'K';
                         break;
 
                     // 'sh' in -SH-, -SIO- or -SIA- or -SCHW-, else S
                     case 'S':
                         if (next == 'I' && (at(2) == 'O' || at(2) == 'A'))
                         {
-                            phonized += SH;
+                            token += SH;
                         }
                         else if (next == 'H')
                         {
-                            phonized += SH;
+                            token += SH;
                             skip++;
                         }
                         else
                         {
-                            phonized += 'S';
+                            token += 'S';
                         }
                         break;
 
@@ -245,46 +263,46 @@
                     case 'T':
                         if (next == 'I' && (at(2) == 'O' || at(2) == 'A'))
                         {
-                            phonized += SH;
+                            token += SH;
                         }
                         else if (next == 'H')
                         {
-                            phonized += TH;
+                            token += TH;
                             skip++;
                         }
                         else if (!(next == 'C' && at(2) == 'H'))
                         {
-                            phonized += 'T';
+                            token += 'T';
                         }
                         break;
 
                     // F
                     case 'V':
-                        phonized += 'F';
+                        token += 'F';
                         break;
                     case 'W':
                         if (vowel(next))
                         {
-                            phonized += 'W';
+                            token += 'W';
                         }
                         break;
 
                     // KS
                     case 'X':
-                        phonized += "KS";
+                        token += "KS";
                         break;
 
                     // Y if followed by a vowel
                     case 'Y':
                         if (vowel(next))
                         {
-                            phonized += 'Y';
+                            token += 'Y';
                         }
                         break;
 
                     // S
                     case 'Z':
-                        phonized += 'S';
+                        token += 'S';
                         break;
 
                     // No transformation
@@ -294,21 +312,21 @@
                     case 'M':
                     case 'N':
                     case 'R':
-                        phonized += current;
+                        token += current;
                         break;
                 }
 
                 m_index += skip;
             }
 
-            return phonized;
+            return token;
         }
 
         /**
          * Create an 'at' function with a bound 'offset'.
          * @param {number} offset
          */
-        private char atFactory(int offset)
+        private char? atFactory(int offset)
         {
             return at(offset);
         }
@@ -317,9 +335,14 @@
          * Get the character offset by 'offset' from the current character.
          * @param {number} offset
          */
-        private char at(int offset)
+        private char? at(int offset)
         {
-            return m_normalized[m_index + offset];
+            if ((m_index + offset) < 0)
+                return null;
+            else if ((m_index + offset) > (m_length - 1))
+                return null;
+            else
+                return m_normalized[m_index + offset];
         }
 
         /**
@@ -327,7 +350,7 @@
          * @param {string} character
          * @returns {boolean}
          */
-        private bool noGhToF(char character)
+        private bool noGhToF(char? character)
         {
             return character == 'B' || character == 'D' || character == 'H';
         }
@@ -381,13 +404,12 @@
          */
         private bool alpha(char? character)
         {
+            if(character == null)
+                return false;
+
             int code = (int)character;
             return code >= 65 && code <= 90;
         }
 
-        public bool Compare(string value1, string value2)
-        {
-            throw new System.NotImplementedException();
-        }
     }
 }

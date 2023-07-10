@@ -83,7 +83,7 @@ namespace Element34.StringMetrics
         {
             get
             {
-                return m_hasAlternate ? m_alternateKeyString : null;
+                return m_hasAlternate ? m_alternateKeyString : string.Empty;
             }
         }
 
@@ -282,8 +282,7 @@ namespace Element34.StringMetrics
             }
 
             ///////////main loop//////////////////////////
-            while ((m_primaryKeyLength < METAPHONE_KEY_LENGTH)
-                   || (m_alternateKeyLength < METAPHONE_KEY_LENGTH))
+            while ((m_primaryKeyLength < METAPHONE_KEY_LENGTH) || (m_alternateKeyLength < METAPHONE_KEY_LENGTH))
             {
                 if (current >= m_length)
                 {
@@ -1106,8 +1105,7 @@ namespace Element34.StringMetrics
                             break;
                         }
 
-                        if (areStringsAt((current + 1), 2, "ZO", "ZI", "ZA")
-                            || (isWordSlavoGermanic() && ((current > 0) && m_word[current - 1] != 'T')))
+                        if (areStringsAt((current + 1), 2, "ZO", "ZI", "ZA") || (isWordSlavoGermanic() && ((current > 0) && m_word[current - 1] != 'T')))
                         {
                             addMetaphoneCharacter("S", "TS");
                         }
@@ -1166,10 +1164,12 @@ namespace Element34.StringMetrics
 
         private bool isWordSlavoGermanic()
         {
-            return (m_word.IndexOf("W", StringComparison.Ordinal) != -1)
-                   || (m_word.IndexOf("K", StringComparison.Ordinal) != -1)
-                   || (m_word.IndexOf("CZ", StringComparison.Ordinal) != -1)
-                   || (m_word.IndexOf("WITZ", StringComparison.Ordinal) != -1);
+            bool blnResult = (m_word.IndexOf("W", StringComparison.Ordinal) != -1);
+            blnResult |= (m_word.IndexOf("K", StringComparison.Ordinal) != -1);
+            blnResult |= (m_word.IndexOf("CZ", StringComparison.Ordinal) != -1);
+            blnResult |= (m_word.IndexOf("WITZ", StringComparison.Ordinal) != -1);
+
+            return blnResult;
         }
     }
 }

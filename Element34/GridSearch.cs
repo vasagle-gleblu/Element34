@@ -11,7 +11,7 @@ namespace Element34
     // Reorganization of this class suggested by u/Slypenslyde of Reddit.
     public abstract class ControlType
     {
-        public abstract void Choose(ReadOnlyCollection<IWebElement> cells, int iColumn);
+        public abstract void Choose(ReadOnlyCollection<IWebElement> cells, int iColumn, string value);
     }
 
     public abstract class SelectionType

@@ -50,7 +50,7 @@ namespace Element34.StringMetrics
         {
             get
             {
-                return m_hasAlternate ? m_secondary.ToString() : null;
+                return m_hasAlternate ? m_secondary.ToString() : string.Empty;
             }
         }
 
@@ -370,12 +370,7 @@ namespace Element34.StringMetrics
         private bool StringAt(int start, int length, params string[] comparestrings)
         {
             //  check substring bounds
-            if (((start < 0)
-                        || ((start
-                        > (m_length - 1))
-                        || ((start
-                        + (length - 1))
-                        > (m_length - 1)))))
+            if ((start < 0) || ((start > (m_length - 1))) || ((start + (length - 1)) > (m_length - 1)) || (start + start + length) > (m_inWord.Length - 1))
             {
                 return false;
             }
@@ -887,8 +882,7 @@ namespace Element34.StringMetrics
             // 'M', altho it should really be handled here...
             MetaphAddExactApprox("B", "P");
 
-            if ((CharAt(m_current + 1) == 'B')
-                    || ((CharAt(m_current + 1) == 'P') && ((m_current + 1 < m_last) && (CharAt(m_current + 2) != 'H'))))
+            if ((CharAt(m_current + 1) == 'B') || ((CharAt(m_current + 1) == 'P') && ((m_current + 1 < m_last) && (CharAt(m_current + 2) != 'H'))))
             {
                 m_current += 2;
             }
@@ -903,7 +897,8 @@ namespace Element34.StringMetrics
             // 'debt', 'doubt', 'subtle'
             if ((StringAt((m_current - 2), 4, "DEBT", "")
                         || (StringAt((m_current - 2), 5, "SUBTL", "")
-                        || (StringAt((m_current - 2), 6, "SUBTIL", "") || StringAt((m_current - 3), 5, "DOUBT", "")))))
+                        || (StringAt((m_current - 2), 6, "SUBTIL", "")
+                        || StringAt((m_current - 3), 5, "DOUBT", "")))))
             {
                 MetaphAdd("T");
                 m_current += 2;

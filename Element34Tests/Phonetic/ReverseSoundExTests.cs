@@ -511,6 +511,7 @@ namespace Element34Tests.Phonetic
         [TestMethod] public void ReverseSoundExTest498() { Assert.IsTrue(ReverseSoundExTest("shadyac", "C320")); }
         [TestMethod] public void ReverseSoundExTest499() { Assert.IsTrue(ReverseSoundExTest("lossphentermine", "E215")); }
         [TestMethod] public void ReverseSoundExTest500() { Assert.IsTrue(ReverseSoundExTest("Dreith", "H630")); }
+        [TestMethod] public void ReverseSoundExTest501() { Assert.IsTrue(ReverseSoundExTest("Windsor", "R532")); }
 
     }
 }

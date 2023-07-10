@@ -8,8 +8,7 @@ namespace Element34.StringMetrics
     {
         public static double Compute(string source, string target)
         {
-            return 2 * Convert.ToDouble(source.Intersect(target).Count()) /
-                   Convert.ToDouble(source.Length + target.Length);
+            return 2 * Convert.ToDouble(source.Intersect(target).Count()) / Convert.ToDouble(source.Length + target.Length);
         }
     }
 }
