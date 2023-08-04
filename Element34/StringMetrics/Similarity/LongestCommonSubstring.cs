@@ -1,11 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
 
 namespace Element34.StringMetrics.Similarity
 {
+    /// <summary>
+    /// Longest Common Substring: In computer science, a longest common substring of two or 
+    /// more strings is a longest string that is a substring of all of them.There may be more 
+    /// than one longest common substring. Applications include data deduplication and 
+    /// plagiarism detection.
+    /// 
+    /// <a href="https://en.wikipedia.org/wiki/Longest_common_substring" />
+    /// </summary>
     public class LongestCommonSubstring
     {
         public string Compute(string source, string target)

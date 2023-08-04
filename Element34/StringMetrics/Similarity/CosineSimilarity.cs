@@ -18,7 +18,7 @@ namespace Element34.StringMetrics.Similarity
     /// </summary>
 
 
-    public class CosineSimilarity
+    public class CosineSimilarity :StringComparison<string>, IStringEncoder<string>
     {
         /// <summary>
         /// The cosine similarity is a measure of similarity between two words.

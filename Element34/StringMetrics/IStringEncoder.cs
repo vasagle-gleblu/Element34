@@ -1,20 +1,18 @@
-﻿using System.Text;
-
-namespace Element34.StringMetrics
+﻿namespace Element34.StringMetrics
 {
-    public interface IStringEncoder
+    public interface IStringMetaphoneEncoder<A>
     {
-        string Encode(string source);
+        void Encode (A source);
+
+        A PrimaryKey { get; }
+
+        A AlternateKey { get; }
+
+        A Word { get; }
     }
 
-    public interface IStringMetaphoneEncoder
+    public interface IStringEncoder<A>
     {
-        void Encode(string source);
-
-        string PrimaryKey { get; }
-
-        string AlternateKey { get; }
-
-        string Word { get; }
+        A Encode(A source);
     }
 }

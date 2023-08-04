@@ -1,5 +1,15 @@
-﻿namespace Element34.StringMetrics
+﻿using static Element34.StringMetrics.Alphabets;
+
+namespace Element34.StringMetrics.Phonetic
 {
+    /// <summary>
+    /// Metaphone is a phonetic algorithm, published by Lawrence Phillips in 1990, for indexing words by their
+    /// English pronunciation. It fundamentally improves on the Soundex algorithm by using information about 
+    /// variations and inconsistencies in English spelling and pronunciation to produce a more accurate encoding, 
+    /// which does a better job of matching words and names which sound similar.
+    /// <a href="https://en.wikipedia.org/wiki/Metaphone" />
+    /// </summary>
+
     public class Metaphone : IStringEncoder, IStringComparison
     {
         private const char SH = 'X';
@@ -9,22 +19,16 @@
         private int m_length;
         private int m_tokenLength = 4;
 
-        public bool Compare(string value1, string value2)
+        public char[] Encode(char[] buffer)
         {
-            Metaphone mph = new Metaphone();
-            value1 = mph.Encode(value1);
-            value2 = mph.Encode(value2);
-
-            return value1.Equals(value2);
+            return Encode(buffer.ToString()).ToCharArray();
         }
 
-        /**
-         * Get the phonetics according to the original Metaphone algorithm from a value.
-         * @param {string} value
-         *   Value to use.
-         * @returns {string}
-         *   Metaphone code for 'value'.
-         */
+        /// <summary>
+        /// Encodes a string with the original Metaphone specification.
+        /// </summary>
+        /// <param name="source">The source string.</param>
+        /// <returns>The encoded string.</returns>
         public string Encode(string value)
         {
             if (value == null)
@@ -88,7 +92,7 @@
                         token += current;
                         m_index += 2;
                     }
-                    else if (vowel(next))
+                    else if (isVowel(next))
                     {
                         token += 'W';
                         m_index += 2;
@@ -218,7 +222,7 @@
 
                     // H if before a vowel and not after C,G,P,S,T
                     case 'H':
-                        if (vowel(next) && !dipthongH(previous))
+                        if (isVowel(next) && !dipthongH(previous))
                         {
                             token += 'H';
                         }
@@ -281,7 +285,7 @@
                         token += 'F';
                         break;
                     case 'W':
-                        if (vowel(next))
+                        if (isVowel(next))
                         {
                             token += 'W';
                         }
@@ -294,7 +298,7 @@
 
                     // Y if followed by a vowel
                     case 'Y':
-                        if (vowel(next))
+                        if (isVowel(next))
                         {
                             token += 'Y';
                         }
@@ -322,19 +326,36 @@
             return token;
         }
 
-        /**
-         * Create an 'at' function with a bound 'offset'.
-         * @param {number} offset
-         */
+        /// <summary>
+        /// Compares the specified values using original Metaphone algorithm.
+        /// </summary>
+        /// <param name="value1">string A</param>
+        /// <param name="value2">string B</param>
+        /// <returns>Results in true if the encoded input strings match.</returns>
+        public bool Compare(string value1, string value2)
+        {
+            Metaphone mph = new Metaphone();
+            value1 = mph.Encode(value1);
+            value2 = mph.Encode(value2);
+
+            return value1.Equals(value2);
+        }
+
+        /// <summary>
+        /// Create an 'at' function with a bound 'offset'.
+        /// </summary>
+        /// <param name="offset">The offset.</param>
+        /// <returns>nullable char</returns>
         private char? atFactory(int offset)
         {
             return at(offset);
         }
 
-        /**
-         * Get the character offset by 'offset' from the current character.
-         * @param {number} offset
-         */
+        /// <summary>
+        /// Get the character offset by 'offset' from the current character.
+        /// </summary>
+        /// <param name="offset">The offset.</param>
+        /// <returns>nullable char</returns>
         private char? at(int offset)
         {
             if ((m_index + offset) < 0)
@@ -345,70 +366,57 @@
                 return m_normalized[m_index + offset];
         }
 
-        /**
-         * Check whether 'character' would make 'GH' an 'F'
-         * @param {string} character
-         * @returns {boolean}
-         */
+        /// <summary>
+        /// Check whether 'character' would make 'GH' an 'F'
+        /// </summary>
+        /// <param name="character">The character.</param>
+        /// <returns>Boolean</returns>
         private bool noGhToF(char? character)
         {
             return character == 'B' || character == 'D' || character == 'H';
         }
 
-        /**
-         * Check whether 'character' would make a 'C' or 'G' soft
-         * @param {string} character
-         * @returns {boolean}
-         */
+        /// <summary>
+        /// Check whether 'character' would make a 'C' or 'G' soft
+        /// </summary>
+        /// <param name="character">The character.</param>
+        /// <returns>Boolean</returns>
         private bool soft(char? character)
         {
             return character == 'E' || character == 'I' || character == 'Y';
         }
 
-        /**
-         * Check whether 'character' is a vowel
-         * @param {string} character
-         * @returns {boolean}
-         */
-        private bool vowel(char? character)
+        /// <summary>
+        /// Check whether 'character' is a vowel.
+        /// </summary>
+        /// <param name="character">The character.</param>
+        /// <returns>Boolean</returns>
+        private bool isVowel(char? character)
         {
-            return (
-              character == 'A' ||
-              character == 'E' ||
-              character == 'I' ||
-              character == 'O' ||
-              character == 'U'
-            );
+            return UppercaseVowel.IsContained((char)character);
         }
 
-        /**
-         * Check whether 'character' forms a dipthong when preceding H
-         * @param {string} character
-         * @returns {boolean}
-         */
+        /// <summary>
+        /// Check whether 'character' forms a dipthong when preceding H.
+        /// </summary>
+        /// <param name="character">The character.</param>
+        /// <returns>Boolean</returns>
         private bool dipthongH(char? character)
         {
-            return (
-              character == 'C' ||
-              character == 'G' ||
-              character == 'P' ||
-              character == 'S' ||
-              character == 'T'
-            );
+            return UppercaseDipthongH.IsContained((char)character);
         }
 
-        /**
-         * Check whether 'character' is in the alphabet
-         * @param {string} character
-         * @returns {boolean}
-         */
+        /// <summary>
+        /// Check whether 'character' is in the alphabet.
+        /// </summary>
+        /// <param name="character">The character.</param>
+        /// <returns></returns>
         private bool alpha(char? character)
         {
-            if(character == null)
+            if (character == null)
                 return false;
 
-            int code = (int)character;
-            return code >= 65 && code <= 90;
+            return UppercaseAlpha.IsContained((char)character);
         }
 
     }

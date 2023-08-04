@@ -1,22 +1,29 @@
-﻿using OfficeOpenXml.FormulaParsing.Excel.Functions.Information;
-using OfficeOpenXml.FormulaParsing.Excel.Functions.Text;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
-namespace Element34.StringMetrics
+namespace Element34.StringMetrics.Phonetic
 {
+    /// <summary>
+    /// The New York State Identification and Intelligence System Phonetic Code, commonly known as
+    /// NYSIIS, is a phonetic algorithm devised in 1970 as part of the New York State Identification
+    /// and Intelligence System. It features an accuracy increase of 2.7% over the traditional
+    /// Soundex algorithm.
+    /// 
+    /// <a href="https://en.wikipedia.org/wiki/New_York_State_Identification_and_Intelligence_System" />
+    /// </summary>
     public class NYSIIS : IStringEncoder, IStringComparison
     {
         const int tokenLength = 6;
 
-        public bool Compare(string value1, string value2)
+        public char[] Encode(char[] buffer)
         {
-            NYSIIS nYSIIS = new NYSIIS();
-            value1 = nYSIIS.Encode(value1);
-            value2 = nYSIIS.Encode(value2);
-
-            return value1.Equals(value2);
+            return Encode(buffer.ToString()).ToCharArray();
         }
 
+        /// <summary>
+        /// Encodes a string with the NYSIIS specification.
+        /// </summary>
+        /// <param name="source">The source string.</param>
+        /// <returns>The encoded string.</returns>
         public string Encode(string source)
         {
             string key = source.ToUpper();
@@ -145,7 +152,20 @@ namespace Element34.StringMetrics
 
             return key;
         }
+
+        /// <summary>
+        /// Compares the specified values using NYSIIS algorithm.
+        /// </summary>
+        /// <param name="value1">string A</param>
+        /// <param name="value2">string B</param>
+        /// <returns>Results in true if the encoded input strings match.</returns>
+        public bool Compare(string value1, string value2)
+        {
+            NYSIIS nYSIIS = new NYSIIS();
+            value1 = nYSIIS.Encode(value1);
+            value2 = nYSIIS.Encode(value2);
+
+            return value1.Equals(value2);
+        }
     }
-
-
 }

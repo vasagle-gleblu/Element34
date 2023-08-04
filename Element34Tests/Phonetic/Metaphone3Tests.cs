@@ -1,4 +1,4 @@
-using Element34.StringMetrics;
+using Element34.StringMetrics.Phonetic;
 
 namespace Element34Tests.Phonetic
 {
@@ -7,10 +7,8 @@ namespace Element34Tests.Phonetic
     {
         private bool Metaphone3Test(string sInput, string sExpected1, string sExpected2)
         {
-            Metaphone3 metaphone3 = new Metaphone3();
-            metaphone3.Encode(sInput);
-
-            return (metaphone3.PrimaryKey == sExpected1 && metaphone3.AlternateKey == sExpected2);
+            Metaphone3 mp = new Metaphone3();
+            return mp.Compare(sInput, sExpected1, sExpected2);
         }
 
         [TestMethod] public void Metaphone3Test001() { Assert.IsTrue(Metaphone3Test("communication", "KMNKTN", "")); }

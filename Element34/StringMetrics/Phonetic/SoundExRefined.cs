@@ -1,8 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Element34.StringMetrics
+namespace Element34.StringMetrics.Phonetic
 {
+    /// <summary>
+    /// The Refined Soundex: 
+    /// Also known as the Modified Soundex or American Soundex, is an improvement over the original 
+    /// Soundex algorithm. It was introduced to address some of the limitations and drawbacks of 
+    /// the original Soundex method and to provide better phonetic encoding for names and 
+    /// words. Developed by Morten M.Lynge and implemented by Gary Smith in 1985, the Refined 
+    /// Soundex algorithm is specifically designed to be more accurate for indexing and searching 
+    /// English names.It aims to produce more distinct codes for names that have different pronunciations 
+    /// but may be mapped to the same Soundex code in the original algorithm.
+    /// </summary>
     public class SoundExRefined : IStringEncoder, IStringComparison
     {
         private const int tokenLength = 4;
@@ -12,6 +22,12 @@ namespace Element34.StringMetrics
             { 'S', '3'},{ 'G', '4'},{ 'J', '4'},{ 'Q', '5'},{ 'X', '5'},{ 'Z', '5'},
             { 'D', '6'},{ 'T', '6'},{ 'L', '7'},{ 'M', '8'},{ 'N', '8'},{ 'R', '9'}};
 
+        /// <summary>
+        /// Compares the specified values using Refined SoundEx algorithm.
+        /// </summary>
+        /// <param name="value1">string A</param>
+        /// <param name="value2">string B</param>
+        /// <returns>Results in true if the encoded input strings match.</returns>
         public bool Compare(string value1, string value2)
         {
             SoundExRefined sdx = new SoundExRefined();
@@ -21,6 +37,16 @@ namespace Element34.StringMetrics
             return value1.Equals(value2);
         }
 
+        public char[] Encode(char[] buffer)
+        {
+            return Encode(buffer.ToString()).ToCharArray();
+        }
+
+        /// <summary>
+        /// Encodes a string with the Refined SoundEx specification.
+        /// </summary>
+        /// <param name="source">The source string.</param>
+        /// <returns>The encoded string.</returns>
         public string Encode(string source)
         {
             source = source.ToUpper().Trim();

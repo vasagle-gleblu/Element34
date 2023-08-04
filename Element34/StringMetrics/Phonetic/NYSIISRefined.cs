@@ -1,13 +1,20 @@
-﻿using OfficeOpenXml.FormulaParsing.Excel.Functions.Information;
-using OfficeOpenXml.FormulaParsing.Excel.Functions.Text;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
-namespace Element34.StringMetrics
+namespace Element34.StringMetrics.Phonetic
 {
+    /// <summary>
+    /// An enhanced version of the NYSIIS algorithm.
+    /// </summary>
     public class NYSIISRefined : IStringEncoder, IStringComparison
     {
         const int tokenLength = 6;
 
+        /// <summary>
+        /// Compares the specified values using NYSIIS algorithm.
+        /// </summary>
+        /// <param name="value1">string A</param>
+        /// <param name="value2">string B</param>
+        /// <returns>Results in true if the encoded input strings match.</returns>
         public bool Compare(string value1, string value2)
         {
             NYSIISRefined nYSIIS = new NYSIISRefined();
@@ -17,6 +24,16 @@ namespace Element34.StringMetrics
             return value1.Equals(value2);
         }
 
+        public char[] Encode(char[] buffer)
+        {
+            return Encode(buffer.ToString()).ToCharArray();
+        }
+
+        /// <summary>
+        /// Encodes a string with the Refined NYSIIS specification.
+        /// </summary>
+        /// <param name="source">The source string.</param>
+        /// <returns>The encoded string.</returns>
         public string Encode(string source)
         {
             string key = source.ToUpper();

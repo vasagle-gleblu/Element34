@@ -1,4 +1,4 @@
-using Element34.StringMetrics;
+using Element34.StringMetrics.Phonetic;
 
 namespace Element34Tests.Phonetic
 {

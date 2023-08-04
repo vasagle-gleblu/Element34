@@ -1,4 +1,4 @@
-using Element34.StringMetrics;
+using Element34.StringMetrics.Phonetic;
 
 namespace Element34Tests.Phonetic
 {
@@ -7,10 +7,8 @@ namespace Element34Tests.Phonetic
     {
         private bool DoubleMetaphoneTest(string sInput, string sExpected1, string sExpected2)
         {
-            DoubleMetaphone doubleMetaphone = new DoubleMetaphone();
-            doubleMetaphone.Encode(sInput);
-
-            return (doubleMetaphone.PrimaryKey == sExpected1 && doubleMetaphone.AlternateKey == sExpected2);
+            DoubleMetaphone mp = new DoubleMetaphone();
+            return mp.Compare(sInput, sExpected1, sExpected2);
         }
 
         [TestMethod] public void Metaphone2Test001() { Assert.IsTrue(DoubleMetaphoneTest("communication", "KMNK", "")); }

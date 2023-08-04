@@ -1,61 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Element34.StringMetrics
 {
-    public class Alphabet
+    public static class Alphabet
     {
-        private string _name { get; set; }
-        private object _chars { get; set; }
+        public static readonly char[] LowercaseConsonant = new char[] { 'b', 'c', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'z' };
+        public static readonly char[] UppercaseConsonant = new char[] { 'B', 'C', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Z' };
+        public static readonly char[] Consonant = LowercaseConsonant.Concat(UppercaseConsonant).ToArray();
+        public static readonly char[] LowercaseVowel = new char[] { 'a', 'e', 'i', 'o', 'u' };
+        public static readonly char[] UppercaseVowel = new char[] { 'A', 'E', 'I', 'O', 'U' };
+        public static readonly char[] Vowel = LowercaseVowel.Concat(UppercaseVowel).ToArray();
+        public static readonly char[] LowercaseY = new char[] { 'y' };
+        public static readonly char[] UppercaseY = new char[] { 'Y' };
+        public static readonly char[] Y = LowercaseY.Concat(UppercaseY).ToArray();
+        public static readonly char[] LowercaseAlpha = LowercaseConsonant.Concat(LowercaseVowel).Concat(LowercaseY).ToArray();
+        public static readonly char[] UppercaseAlpha = UppercaseConsonant.Concat(UppercaseVowel).Concat(UppercaseY).ToArray();
+        public static readonly char[] Alpha = LowercaseAlpha.Concat(UppercaseAlpha).ToArray();
 
-        public Alphabet(string name, params char[] arr)
-        {
-            _name = name;
-            _chars = arr;
-        }
-
-        public Alphabet(string name, Dictionary<char, char> dictionary)
-        {
-            this._name = name;
-            this._chars = dictionary;
-        }
-
-        public Alphabet(params char[] arr)
-        {
-            if ((arr == null))
-            {
-                throw new ArgumentNullException("Chars cannot be null.");
-            }
-
-            _chars = arr;
-        }
-
-        public Alphabet(Dictionary<char, char> dictionary)
-        {
-            if ((dictionary == null))
-            {
-                throw new ArgumentNullException("Chars cannot be null.");
-            }
-
-            _chars = dictionary;
-        }
-
-        public string getName()
-        {
-            return _name;
-        }
-
-        public object getChars()
-        {
-            return _chars;
-        }
-    }
-
-    public static class AlphabetSoup
-    {
-        public static Alphabet Consonants = new Alphabet("Consonants", new char[] { 'b', 'c', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'z' });
-        public static Alphabet Vowels = new Alphabet("Vowels", new char[] { 'a', 'e', 'i', 'o', 'u' });
-        public static Alphabet Foldings = new Alphabet("Foldings", new Dictionary<char, char>() {
+    public static Dictionary<char, char> Foldings = (new Dictionary<char, char>() {
             { 'à', 'a' }, { 'À', 'A' },
             { 'á', 'a' }, { 'Á', 'A' },
             { 'â', 'a' }, { 'Â', 'A' },
@@ -93,6 +57,12 @@ namespace Element34.StringMetrics
             { 'ß', 's' }, { 'ẞ', 'S' },
             { 'ś', 's' }, { 'Ś', 'S' },
             { 'ż', 'z' }, { 'Ż', 'Z' },
-            { 'ź', 'z' }, { 'Ź', 'Z' }});
+            { 'ź', 'z' }, { 'Ź', 'Z' }
+        });
+
+        public static bool IsSuperset(this char[] set, char c)
+        {
+            return Array.IndexOf(set, c) != -1;
+        }
     }
 }

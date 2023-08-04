@@ -1,8 +1,14 @@
 ﻿using System.Text;
 
-namespace Element34.StringMetrics
+namespace Element34.StringMetrics.Phonetic
 {
-    public class Metaphone3 : IStringMetaphoneEncoder, IStringComparison
+    /// <summary>
+    /// Metaphone 3 is the latest generation of the Metaphone family of 'phonetic encoding' algorithms. A phonetic 
+    /// encoding algorithm takes a word, spelled correctly or incorrectly, or a name, and returns a 'phoneticised' 
+    /// key value that should be the same for all words that are pronounced similarly.
+    /// </summary>
+ 
+    public class Metaphone3 : IStringMetaphoneEncoder, IStringMetaphoneComparison
     {
 
         #region Fields
@@ -21,9 +27,11 @@ namespace Element34.StringMetrics
         private const int DEFAULT_MAX_KEY_LENGTH = 8;
         #endregion
 
-        /// /////////////////////////////////////////////////////////////////////////////
-        //  Metaphone3 class definition
-        /// /////////////////////////////////////////////////////////////////////////////
+        #region [Public methods]
+        /// <summary>
+        /// Default constructor, initializes by computing the keys of an empty string,
+        /// which are empty string builders
+        /// </summary>
         public Metaphone3()
         {
             m_primary = new StringBuilder();
@@ -33,11 +41,20 @@ namespace Element34.StringMetrics
             m_encodeExact = false;
         }
 
+        /// <summary>
+        /// Constructs a new Metaphone3 distance object, and initializes it with
+        /// the metaphone keys for a given word
+        /// </summary>
+        /// <param name="sInput">
+        /// Word which to initialize the object.  Computes the metaphone keys
+        /// of this word.
+        /// </param>
         public Metaphone3(string sInput) : this()
         {
             Encode(sInput);
         }
 
+        /// <summary>The primary metaphone key for the current word</summary>
         public string PrimaryKey
         {
             get
@@ -46,6 +63,10 @@ namespace Element34.StringMetrics
             }
         }
 
+        /// <summary>
+        /// The alternate metaphone key for the current word, or null if the current
+        /// word does not have an alternate key by Metaphone3.
+        /// </summary>
         public string AlternateKey
         {
             get
@@ -54,6 +75,7 @@ namespace Element34.StringMetrics
             }
         }
 
+        /// <summary>Original word for which the keys were computed</summary>
         public string Word
         {
             get
@@ -62,6 +84,230 @@ namespace Element34.StringMetrics
             }
         }
 
+        /// <summary>
+        /// Compares the specified values using Metaphone3 algorithm.
+        /// </summary>
+        /// <param name="word">New word to set to be encrypted.</param>
+        /// <param name="sValue1">Expected value for primary metaphone key</param>
+        /// <param name="sValue2">Expected value for alternate metaphone key</param>
+        /// <returns>Results in true if the encoded input strings match.</returns>
+        public bool Compare(string word, string sValue1, string sValue2)
+        {
+            Metaphone3 mp = new Metaphone3(word);
+            return (mp.PrimaryKey == sValue1 && mp.AlternateKey == sValue2);
+        }
+
+        public void Encode(char[] buffer)
+        {
+            Encode(buffer.ToString());
+        }
+
+        /// <summary>
+        /// Sets a new current word for the instance, computing the new word's metaphone keys.
+        /// </summary>
+        /// <param name="sInput">New word to set to be encrypted.  Discards previous metaphone keys,
+        ///     and computes new keys for this word</param>
+        public void Encode(string sInput)
+        {
+            m_inWord = sInput.ToUpper();
+            m_length = m_inWord.Length;
+
+            flag_AL_inversion = false;
+
+            m_current = 0;
+
+            m_primary.Length = 0;
+            m_secondary.Length = 0;
+
+            m_hasAlternate = false;
+
+            if (m_length < 1)
+            {
+                return;
+            }
+
+            // zero based index
+            m_last = m_length - 1;
+
+            /////////// main loop//////////////////////////
+            while (m_primary.Length <= m_metaphLength || m_secondary.Length <= m_metaphLength)
+            {
+                if (m_current >= m_length)
+                {
+                    break;
+                }
+                char c = CharAt(m_current);
+
+                switch (c)
+                {
+                    case 'B':
+
+                        Encode_B();
+                        break;
+
+                    case 'ß':
+                    case 'Ç':
+
+                        MetaphAdd("S");
+                        m_current++;
+                        break;
+
+                    case 'C':
+
+                        Encode_C();
+                        break;
+
+                    case 'D':
+
+                        Encode_D();
+                        break;
+
+                    case 'F':
+
+                        Encode_F();
+                        break;
+
+                    case 'G':
+
+                        Encode_G();
+                        break;
+
+                    case 'H':
+
+                        Encode_H();
+                        break;
+
+                    case 'J':
+
+                        Encode_J();
+                        break;
+
+                    case 'K':
+
+                        Encode_K();
+                        break;
+
+                    case 'L':
+
+                        Encode_L();
+                        break;
+
+                    case 'M':
+
+                        Encode_M();
+                        break;
+
+                    case 'N':
+
+                        Encode_N();
+                        break;
+
+                    case 'Ñ':
+
+                        MetaphAdd("N");
+                        m_current++;
+                        break;
+
+                    case 'P':
+
+                        Encode_P();
+                        break;
+
+                    case 'Q':
+
+                        Encode_Q();
+                        break;
+
+                    case 'R':
+
+                        Encode_R();
+                        break;
+
+                    case 'S':
+
+                        Encode_S();
+                        break;
+
+                    case 'T':
+
+                        Encode_T();
+                        break;
+
+                    case 'Ð': // eth
+                    case 'Þ': // thorn
+
+                        MetaphAdd("0");
+                        m_current++;
+                        break;
+
+                    case 'V':
+
+                        Encode_V();
+                        break;
+
+                    case 'W':
+
+                        Encode_W();
+                        break;
+
+                    case 'X':
+
+                        Encode_X();
+                        break;
+
+                    case '':
+
+                        MetaphAdd("X");
+                        m_current++;
+                        break;
+
+                    case '':
+
+                        MetaphAdd("S");
+                        m_current++;
+                        break;
+
+                    case 'Z':
+
+                        Encode_Z();
+                        break;
+
+                    default:
+
+                        if (IsVowel(CharAt(m_current)))
+                        {
+                            Encode_Vowels();
+                        }
+                        else
+                        {
+                            m_current++;
+                        }
+                        break;
+                }
+            }
+
+            // only give back m_metaphLength number of chars in m_metaph
+            if (m_primary.Length > m_metaphLength)
+            {
+                m_primary.Length = m_metaphLength;
+            }
+
+            if (m_secondary.Length > m_metaphLength)
+            {
+                m_secondary.Length = m_metaphLength;
+            }
+
+            // it is possible for the two metaphs to be the same
+            // after truncation. lose the second one if so
+            if ((m_primary.ToString()).Equals(m_secondary.ToString()))
+            {
+                m_hasAlternate = false;
+                m_secondary.Length = 0;
+            }
+        }
+        #endregion
+
+        #region [Private methods]
         private bool SetKeyLength(int inKeyLength)
         {
             if ((inKeyLength < 1))
@@ -143,46 +389,6 @@ namespace Element34.StringMetrics
             {
                 MetaphAdd(main);
             }
-        }
-
-        private int GetKeyLength()
-        {
-            return m_metaphLength;
-        }
-
-        private int GetMaximumKeyLength()
-        {
-            return MAX_KEY_ALLOCATION;
-        }
-
-        private void SetEncodeVowels(bool inEncodeVowels)
-        {
-            m_encodeVowels = inEncodeVowels;
-        }
-
-        private bool GetEncodeVowels()
-        {
-            return m_encodeVowels;
-        }
-
-        private void SetEncodeExact(bool inEncodeExact)
-        {
-            m_encodeExact = inEncodeExact;
-        }
-
-        private bool GetEncodeExact()
-        {
-            return m_encodeExact;
-        }
-
-        string GetMetaph()
-        {
-            return m_primary.ToString();
-        }
-
-        string GetAlternateMetaph()
-        {
-            return m_secondary.ToString();
         }
 
         private bool Front_Vowel(int at)
@@ -386,205 +592,6 @@ namespace Element34.StringMetrics
             }
 
             return false;
-        }
-
-        public void Encode(string sInput)
-        {
-            m_inWord = sInput.ToUpper();
-            m_length = m_inWord.Length;
-
-            flag_AL_inversion = false;
-
-            m_current = 0;
-
-            m_primary.Length = 0;
-            m_secondary.Length = 0;
-
-            m_hasAlternate = false;
-
-            if (m_length < 1)
-            {
-                return;
-            }
-
-            // zero based index
-            m_last = m_length - 1;
-
-            /////////// main loop//////////////////////////
-            while (m_primary.Length <= m_metaphLength || m_secondary.Length <= m_metaphLength)
-            {
-                if (m_current >= m_length)
-                {
-                    break;
-                }
-                char c = CharAt(m_current);
-
-                switch (c)
-                {
-                    case 'B':
-
-                        Encode_B();
-                        break;
-
-                    case 'ß':
-                    case 'Ç':
-
-                        MetaphAdd("S");
-                        m_current++;
-                        break;
-
-                    case 'C':
-
-                        Encode_C();
-                        break;
-
-                    case 'D':
-
-                        Encode_D();
-                        break;
-
-                    case 'F':
-
-                        Encode_F();
-                        break;
-
-                    case 'G':
-
-                        Encode_G();
-                        break;
-
-                    case 'H':
-
-                        Encode_H();
-                        break;
-
-                    case 'J':
-
-                        Encode_J();
-                        break;
-
-                    case 'K':
-
-                        Encode_K();
-                        break;
-
-                    case 'L':
-
-                        Encode_L();
-                        break;
-
-                    case 'M':
-
-                        Encode_M();
-                        break;
-
-                    case 'N':
-
-                        Encode_N();
-                        break;
-
-                    case 'Ñ':
-
-                        MetaphAdd("N");
-                        m_current++;
-                        break;
-
-                    case 'P':
-
-                        Encode_P();
-                        break;
-
-                    case 'Q':
-
-                        Encode_Q();
-                        break;
-
-                    case 'R':
-
-                        Encode_R();
-                        break;
-
-                    case 'S':
-
-                        Encode_S();
-                        break;
-
-                    case 'T':
-
-                        Encode_T();
-                        break;
-
-                    case 'Ð': // eth
-                    case 'Þ': // thorn
-
-                        MetaphAdd("0");
-                        m_current++;
-                        break;
-
-                    case 'V':
-
-                        Encode_V();
-                        break;
-
-                    case 'W':
-
-                        Encode_W();
-                        break;
-
-                    case 'X':
-
-                        Encode_X();
-                        break;
-
-                    case '':
-
-                        MetaphAdd("X");
-                        m_current++;
-                        break;
-
-                    case '':
-
-                        MetaphAdd("S");
-                        m_current++;
-                        break;
-
-                    case 'Z':
-
-                        Encode_Z();
-                        break;
-
-                    default:
-
-                        if (IsVowel(CharAt(m_current)))
-                        {
-                            Encode_Vowels();
-                        }
-                        else
-                        {
-                            m_current++;
-                        }
-                        break;
-                }
-            }
-
-            // only give back m_metaphLength number of chars in m_metaph
-            if (m_primary.Length > m_metaphLength)
-            {
-                m_primary.Length = m_metaphLength;
-            }
-
-            if (m_secondary.Length > m_metaphLength)
-            {
-                m_secondary.Length = m_metaphLength;
-            }
-
-            // it is possible for the two metaphs to be the same
-            // after truncation. lose the second one if so
-            if ((m_primary.ToString()).Equals(m_secondary.ToString()))
-            {
-                m_hasAlternate = false;
-                m_secondary.Length = 0;
-            }
         }
 
         private void Encode_Vowels()
@@ -1383,7 +1390,6 @@ namespace Element34.StringMetrics
 
             return false;
         }
-
 
         private bool Encode_CK_CG_CQ()
         {
@@ -3063,7 +3069,6 @@ namespace Element34.StringMetrics
             return false;
         }
 
-
         private void Encode_L()
         {
             //  logic below needs to know this
@@ -3351,7 +3356,6 @@ namespace Element34.StringMetrics
 
             return false;
         }
-
 
         private bool Encode_Vowel_Preserve_Vowel_After_L(int save_current)
         {
@@ -4374,7 +4378,6 @@ namespace Element34.StringMetrics
             return false;
         }
 
-
         private bool Encode_SCH()
         {
             // these words were combining forms many centuries ago
@@ -4427,7 +4430,6 @@ namespace Element34.StringMetrics
 
             return false;
         }
-
 
         private bool Encode_SUR()
         {
@@ -4706,7 +4708,7 @@ namespace Element34.StringMetrics
             return false;
         }
 
-        void Encode_T()
+        private void Encode_T()
         {
             if ((Encode_T_Initial()
                         || (Encode_TCH()
@@ -5091,7 +5093,7 @@ namespace Element34.StringMetrics
             return false;
         }
 
-        void Encode_V()
+        private void Encode_V()
         {
             //  eat redundant 'V'
             if ((CharAt((m_current + 1)) == 'V'))
@@ -5106,7 +5108,7 @@ namespace Element34.StringMetrics
             MetaphAddExactApprox("V", "F");
         }
 
-        void Encode_W()
+        private void Encode_W()
         {
             if ((Encode_Silent_W_At_Beginning()
                         || (Encode_WITZ_WICZ()
@@ -5284,7 +5286,7 @@ namespace Element34.StringMetrics
             return false;
         }
 
-        void Encode_X()
+        private void Encode_X()
         {
             if ((Encode_Initial_X()
                         || (Encode_Greek_X()
@@ -5400,7 +5402,7 @@ namespace Element34.StringMetrics
             return false;
         }
 
-        void Encode_Z()
+        private void Encode_Z()
         {
             if ((Encode_ZZ()
                         || (Encode_ZU_ZIER_ZS()
@@ -5584,16 +5586,7 @@ namespace Element34.StringMetrics
 
             return false;
         }
-
-        void IStringMetaphoneEncoder.Encode(string source)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public bool Compare(string value1, string value2)
-        {
-            throw new System.NotImplementedException();
-        }
+        #endregion
 
         ////  example code
         //Metaphone3 m3 = new Metaphone3();

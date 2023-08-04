@@ -1,15 +1,20 @@
 ﻿using System;
 using System.Linq;
 using System.Text;
+using static Element34.StringMetrics.Alphabets;
 
-namespace Element34.StringMetrics
+namespace Element34.StringMetrics.Phonetic
 {
-    ///<summary>Implements the Double Metaphone phonetic matching algorithm published
-    ///     by Lawrence Phillips in June 2000 C/C++ Users Journal. 
-    /// 
+    ///<summary>Phillips later produced a new version of the algorithm, which he 
+    ///named Double Metaphone. Contrary to the original algorithm whose application 
+    ///is limited to English only, this version takes into account spelling peculiarities
+    ///of a number of other languages.
+    ///
+    /// <a href="https://en.wikipedia.org/wiki/Metaphone" />
     ///     Optimized and ported to C# by Adam Nelson (anelson@nullpointer.net)
     ///</summary>
-    public class DoubleMetaphone : IStringMetaphoneEncoder, IStringComparison
+
+    public class DoubleMetaphone : IStringMetaphoneEncoder, IStringMetaphoneComparison
     {
         #region Fields
         //The length of the metaphone keys produced.  4 is sweet spot
@@ -49,20 +54,25 @@ namespace Element34.StringMetrics
         private string m_word;
         #endregion
 
-        /// <summary>Default ctor, initializes by computing the keys of an empty string,
-        ///     which are both empty strings</summary>
+        /// <summary>
+        /// Default constructor, initializes by computing the keys of an empty string,
+        /// which are both empty strings
+        /// </summary>
         public DoubleMetaphone()
         {
-            //Leave room at the end for writing a bit beyond the length; keys are chopped at the end anyway
+            //Leaves room at the end for writing a bit beyond the length; keys are chopped at the end
             m_primaryKey = new StringBuilder(METAPHONE_KEY_LENGTH + 2);
             m_alternateKey = new StringBuilder(METAPHONE_KEY_LENGTH + 2);
         }
 
-        /// <summary>Constructs a new DoubleMetaphoneDistance object, and initializes it with
-        ///     the metaphone keys for a given word</summary>
-        /// 
-        /// <param name="word">Word with which to initialize the object.  Computes the metaphone keys
-        ///     of this word.</param>
+        /// <summary>
+        /// Constructs a new DoubleMetaphone distance object, and initializes it with
+        /// the metaphone keys for a given word
+        /// </summary>
+        /// <param name="word">
+        /// Word with which to initialize the object.  Computes the metaphone keys
+        /// of this word.
+        /// </param>
         public DoubleMetaphone(string word) : this()
         {
             Encode(word);
@@ -77,8 +87,10 @@ namespace Element34.StringMetrics
             }
         }
 
-        /// <summary>The alternate metaphone key for the current word, or null if the current
-        ///     word does not have an alternate key by Double Metaphone</summary>
+        /// <summary>
+        /// The alternate metaphone key for the current word, or null if the current
+        /// word does not have an alternate key by Double Metaphone
+        /// </summary>
         public string AlternateKey
         {
             get
@@ -96,30 +108,44 @@ namespace Element34.StringMetrics
             }
         }
 
-        /// <summary>Static wrapper around the class, enables computation of metaphone keys
-        ///     without instantiating a class.</summary>
-        /// 
+        /// <summary>
+        /// Static wrapper around the class, enables computation of metaphone keys
+        /// without instantiating a class.
+        /// </summary>
         /// <param name="word">Word whose metaphone keys are to be computed</param>
         /// <param name="primaryKey">Ref to var to receive primary metaphone key</param>
         /// <param name="alternateKey">Ref to var to receive alternate metaphone key, or be set to null if
         ///     word has no alternate key by double metaphone</param>
         public static void doubleMetaphone(string word, out string primaryKey, out string alternateKey)
         {
-            var mp = new DoubleMetaphone(word);
+            DoubleMetaphone dMPH = new DoubleMetaphone(word);
 
-            primaryKey = mp.PrimaryKey;
-            alternateKey = mp.AlternateKey;
+            primaryKey = dMPH.PrimaryKey;
+            alternateKey = dMPH.AlternateKey;
         }
 
-        public bool Compare(string value1, string value2)
+        /// <summary>
+        /// Compares the specified values using Double Metaphone algorithm.
+        /// </summary>
+        /// <param name="word">New word to set to be encrypted.</param>
+        /// <param name="sExpected1">Expected value for primary metaphone key</param>
+        /// <param name="sExpected2">Expected value for alternate metaphone key</param>
+        /// <returns>Results in true if the encoded input strings match.</returns>
+        public bool Compare(string word, string sExpected1, string sExpected2)
         {
-            throw new NotImplementedException();
+            DoubleMetaphone mp = new DoubleMetaphone(word);
+            return (mp.PrimaryKey == sExpected1 && mp.AlternateKey == sExpected2);
         }
 
-        /// <summary>Sets a new current word for the instance, computing the new word's metaphone
-        ///     keys</summary>
-        /// 
-        /// <param name="word">New word to set to current word.  Discards previous metaphone keys,
+        public void Encode(char[] buffer)
+        {
+            Encode(buffer.ToString());
+        }
+
+        /// <summary>
+        /// Sets a new current word for the instance, computing the new word's metaphone keys.
+        /// </summary>
+        /// <param name="word">New word to set to be encrypted.  Discards previous metaphone keys,
         ///     and computes new keys for this word</param>
         public void Encode(string word)
         {
@@ -153,30 +179,14 @@ namespace Element34.StringMetrics
             buildMetaphoneKeys();
         }
 
-        /**
-         * Internal impl of double metaphone algorithm.  Populates m_primaryKey and m_alternateKey.  Modified copy-past of
-         * Phillips' original code
-         */
-
-        /**
-         * Appends the given metaphone character to the primary and alternate keys
-         * 
-         * @param primaryCharacter
-         *               Character to append
-         */
-
-        /**
-         * Appends a metaphone character to the primary, and a possibly different alternate,
-         * metaphone keys for the word.
-         * 
-         * @param primaryCharacter
-         *               Primary character to append to primary key, and, if no alternate char is present,
-         *               the alternate key as well
-         * @param alternateCharacter
-         *               Alternate character to append to alternate key.  May be null or a zero-length string,
-         *               in which case the primary character will be appended to the alternate key instead
-         */
-
+        /// <summary>
+        /// Appends a metaphone character to the primary, and a possibly different alternate,
+        /// metaphone keys for the word.
+        /// </summary>
+        /// <param name="primaryCharacter">Primary character to append to primary key, and, if no alternate char is present,
+        /// the alternate key as well.</param>
+        /// <param name="alternateCharacter">Alternate character to append to alternate key.  May be null or a zero-length 
+        /// string, in which case the primary character will be appended to the alternate key instead.</param>
         private void addMetaphoneCharacter(string primaryCharacter, string alternateCharacter = null)
         {
             //Is the primary character valid?
@@ -234,18 +244,13 @@ namespace Element34.StringMetrics
             }
         }
 
-        /**
-         * Tests if any of the strings passed as variable arguments are at the given start position and
-         * length within word
-         * 
-         * @param start   - Start position in m_word
-         * @param length  - Length of substring starting at start in m_word to compare to the given strings
-         * @param strings - params array of zero or more strings for which to search in m_word
-         * 
-         * @return true if any one string in the strings array was found in m_word at the given position
-         *         and length
-         */
-
+        /// <summary>
+        /// Tests if any of the strings passed as variable arguments are at the given start position and length within word.
+        /// </summary>
+        /// <param name="start">Start position in m_word.</param>
+        /// <param name="length">Length of substring starting at start in m_word to compare to the given strings.</param>
+        /// <param name="strings">params array of zero or more strings for which to search in m_word.</param>
+        /// <returns>true if any one string in the strings array was found in m_word at the given position and length</returns>
         private bool areStringsAt(int start, int length, params string[] strings)
         {
             if (start < 0)
@@ -260,6 +265,9 @@ namespace Element34.StringMetrics
             return strings.Any(t => t == target);
         }
 
+        /// <summary>
+        /// Builds the metaphone keys.
+        /// </summary>
         private void buildMetaphoneKeys()
         {
             int current = 0;
@@ -1145,6 +1153,11 @@ namespace Element34.StringMetrics
             m_alternateKeyString = m_alternateKey.ToString();
         }
 
+        /// <summary>
+        /// Verifies if character at position within m_word is a vowel.
+        /// </summary>
+        /// <param name="pos">The position within m_word.</param>
+        /// <returns>Boolean</returns>
         private bool isVowel(int pos)
         {
             if ((pos < 0) || (pos >= m_length))
@@ -1154,14 +1167,13 @@ namespace Element34.StringMetrics
 
             char it = m_word[pos];
 
-            if ((it == 'E') || (it == 'A') || (it == 'I') || (it == 'O') || (it == 'U') || (it == 'Y'))
-            {
-                return true;
-            }
-
-            return false;
+            return UppercaseVowel.IsContained(it);
         }
 
+        /// <summary>
+        /// Verifies if word is Slavo-Germanic.
+        /// </summary>
+        /// <returns>Boolean</returns>
         private bool isWordSlavoGermanic()
         {
             bool blnResult = (m_word.IndexOf("W", StringComparison.Ordinal) != -1);

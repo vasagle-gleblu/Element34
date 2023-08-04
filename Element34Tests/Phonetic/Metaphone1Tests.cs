@@ -1,4 +1,4 @@
-using Element34.StringMetrics;
+using Element34.StringMetrics.Phonetic;
 
 namespace Element34Tests.Phonetic
 {
@@ -10,6 +10,7 @@ namespace Element34Tests.Phonetic
             Metaphone metaphone = new Metaphone();
             return metaphone.Encode(sInput) == sExpected;
         }
+
         [TestMethod] public void MetaphoneTest001() { Assert.IsTrue(MetaphoneTest("communication", "KMNK")); }
         [TestMethod] public void MetaphoneTest002() { Assert.IsTrue(MetaphoneTest("worships", "WRXP")); }
         [TestMethod] public void MetaphoneTest003() { Assert.IsTrue(MetaphoneTest("televisionhome", "TLFX")); }

@@ -32,6 +32,35 @@ namespace Element34.DataManager
         #endregion
 
         #region [Public Functions]
+        #region [MS-SQL Server Support]
+        public static DataSet DataSetFromMsSql(string sqlConn, string sqlQuery, Dictionary<string, object> paramList = null)
+        {
+            DataSet result = new DataSet();
+            using (SqlConnection connection = new SqlConnection(sqlConn))
+            {
+                using (SqlCommand command = new SqlCommand(sqlQuery, connection))
+                {
+                    if (paramList != null)
+                    {
+                        command.Parameters.Clear();
+                        foreach (var param in paramList)
+                        {
+                            command.Parameters.AddWithValue(param.Key, param.Value);
+                        }
+                    }
+
+                    using (SqlDataAdapter sda = new SqlDataAdapter(command))
+                    {
+                        connection.Open();
+                        sda.Fill(result);
+                        connection.Close();
+                    }
+                }
+            }
+
+            return result;
+        }
+        
         public static DataTable DataTableFromMsSql(string sqlConn, string sqlQuery, Dictionary<string, object> paramList = null)
         {
             DataTable result = new DataTable();
@@ -59,6 +88,7 @@ namespace Element34.DataManager
 
             return result;
         }
+        #endregion
 
         #region [MS Access File Support]
         public static DataSet DataSetFromMDB(string connString)
@@ -66,7 +96,7 @@ namespace Element34.DataManager
             DataSet result = new DataSet();
 
             // For convenience, the DataSet is identified by the name of the loaded file (without extension).
-            string fileName = (new SqlConnectionStringBuilder(connString).DataSource);
+            string fileName = (new OleDbConnection(connString).DataSource);
             result.DataSetName = Path.GetFileNameWithoutExtension(fileName).Replace(" ", "_");
 
             // Opening the Access connection
@@ -255,11 +285,7 @@ namespace Element34.DataManager
 
                     while ((line = reader.ReadLine()) != null)
                     {
-                        foreach (KeyValuePair<char, char> fold in (Dictionary<char, char>)AlphabetSoup.Foldings.getChars())
-                        {
-                            line = line.Replace(fold.Key, fold.Value);
-                            line = line.Replace(Char.ToUpper(fold.Key), Char.ToUpper(fold.Value));
-                        }
+                        line = Transforms.FoldToASCII(line.ToCharArray()).ToString();
 
                         lines.Add(line);
                     }

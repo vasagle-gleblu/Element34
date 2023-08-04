@@ -63,9 +63,9 @@ namespace Element34.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] empty2000 {
+        internal static byte[] Access2000 {
             get {
-                object obj = ResourceManager.GetObject("empty2000", resourceCulture);
+                object obj = ResourceManager.GetObject("Access2000", resourceCulture);
                 return ((byte[])(obj));
             }
         }
@@ -73,9 +73,9 @@ namespace Element34.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] empty2003 {
+        internal static byte[] Access2003 {
             get {
-                object obj = ResourceManager.GetObject("empty2003", resourceCulture);
+                object obj = ResourceManager.GetObject("Access2003", resourceCulture);
                 return ((byte[])(obj));
             }
         }
@@ -83,9 +83,9 @@ namespace Element34.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] empty2007 {
+        internal static byte[] Access2007 {
             get {
-                object obj = ResourceManager.GetObject("empty2007", resourceCulture);
+                object obj = ResourceManager.GetObject("Access2007", resourceCulture);
                 return ((byte[])(obj));
             }
         }
@@ -93,9 +93,9 @@ namespace Element34.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] empty2010 {
+        internal static byte[] Access2010 {
             get {
-                object obj = ResourceManager.GetObject("empty2010", resourceCulture);
+                object obj = ResourceManager.GetObject("Access2010", resourceCulture);
                 return ((byte[])(obj));
             }
         }
@@ -103,9 +103,9 @@ namespace Element34.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] empty2016 {
+        internal static byte[] Access2016 {
             get {
-                object obj = ResourceManager.GetObject("empty2016", resourceCulture);
+                object obj = ResourceManager.GetObject("Access2016", resourceCulture);
                 return ((byte[])(obj));
             }
         }
@@ -113,19 +113,41 @@ namespace Element34.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] empty2019 {
+        internal static byte[] Access2019 {
             get {
-                object obj = ResourceManager.GetObject("empty2019", resourceCulture);
+                object obj = ResourceManager.GetObject("Access2019", resourceCulture);
                 return ((byte[])(obj));
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to String1.
+        ///   Looks up a localized string similar to // Format
+        ///// &quot;pattern&quot; &quot;replacement at start of word&quot; &quot;replacement before a vowel&quot; &quot;replacement in other cases&quot;
+        ///
+        ///// Vowels
+        ///
+        ///&quot;a&quot; &quot;0&quot; &quot;&quot; &quot;&quot;
+        ///&quot;e&quot; &quot;0&quot; &quot;&quot; &quot;&quot;
+        ///&quot;i&quot; &quot;0&quot; &quot;&quot; &quot;&quot;
+        ///&quot;o&quot; &quot;0&quot; &quot;&quot; &quot;&quot;
+        ///&quot;u&quot; &quot;0&quot; &quot;&quot; &quot;&quot;
+        ///
+        ///// Consonants
+        ///
+        ///&quot;b&quot; &quot;7&quot; &quot;7&quot; &quot;7&quot;
+        ///&quot;d&quot; &quot;3&quot; &quot;3&quot; &quot;3&quot;
+        ///&quot;f&quot; &quot;7&quot; &quot;7&quot; &quot;7&quot;
+        ///&quot;g&quot; &quot;5&quot; &quot;5&quot; &quot;5&quot;
+        ///&quot;h&quot; &quot;5&quot; &quot;5&quot; &quot;&quot;
+        ///&quot;k&quot; &quot;5&quot; &quot;5&quot; &quot;5&quot;
+        ///&quot;l&quot; &quot;8&quot; &quot;8&quot; &quot;8&quot;
+        ///&quot;m&quot; &quot;6&quot; &quot;6&quot; &quot;6&quot;
+        ///&quot;n&quot; &quot;6&quot; &quot;6&quot; &quot;6&quot;
+        ///&quot;p&quot; &quot;7&quot; &quot;7&quot; &quo....
         /// </summary>
-        internal static string String1 {
+        internal static string DMrules {
             get {
-                return ResourceManager.GetString("String1", resourceCulture);
+                return ResourceManager.GetString("DMrules", resourceCulture);
             }
         }
     }

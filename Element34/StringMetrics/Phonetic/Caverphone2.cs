@@ -1,12 +1,22 @@
 ﻿using System.Text.RegularExpressions;
 
-namespace Element34.StringMetrics
+namespace Element34.StringMetrics.Phonetic
 {
+    /// <summary>
+    /// A C# implementation of the Caverphone 2.0 (aka Caverphone Revised) phonetic matching algorithm.
+    /// </summary>
+    /// 
     public class Caverphone2 : IStringEncoder, IStringComparison
     {
         const string SIX_1 = "111111";
         const int tokenLength = 10;
 
+        /// <summary>
+        /// Compares the specified values using Caverphone 2.0 algorithm.
+        /// </summary>
+        /// <param name="value1">string A</param>
+        /// <param name="value2">string B</param>
+        /// <returns>Results in true if the encoded input strings match.</returns>
         public bool Compare(string value1, string value2)
         {
             Caverphone2 cav2 = new Caverphone2();
@@ -16,6 +26,16 @@ namespace Element34.StringMetrics
             return value1.Equals(value2);
         }
 
+        public char[] Encode(char[] buffer)
+        {
+            return Encode(buffer.ToString()).ToCharArray();
+        }
+
+        /// <summary>
+        /// Encodes a string with the Caverphone 2.0 specification.
+        /// </summary>
+        /// <param name="source">The source string.</param>
+        /// <returns>The encoded string.</returns>
         public string Encode(string source)
         {
             if (source == null || source.Length == 0)
@@ -107,12 +127,37 @@ namespace Element34.StringMetrics
             return txt.Substring(0, tokenLength); // 1.0 truncates to 6
         }
 
+        /// <summary>
+        /// The input string, replaces a specified maximum number of strings that match a regular expression 
+        /// pattern with a specified replacement string.  This method is useful for replacing a regular expression match 
+        /// if any of the following conditions is true:         
+        /// - The replacement string cannot readily be specified by a regular expression replacement pattern.         
+        /// - The replacement string results from some processing done on the matched string.     
+        /// - The replacement string results from conditional processing.
+        /// </summary>
+        /// <param name="input">The input string.</param>
+        /// <param name="pattern">The search pattern.</param>
+        /// <param name="substitution">The substitution.</param>
+        /// <param name="N">The specified maximum.</param>
+        /// <returns>The substitution string</returns>
         private string RegexReplaceN(string input, string pattern, string substitution, int N)
         {
             Regex regex = new Regex(pattern);
             return regex.Replace(input, substitution, N);
         }
 
+        /// <summary>
+        /// The input string, replaces all strings that match a regular expression pattern with a specified 
+        /// replacement string.  This method is useful for replacing a regular expression match if any of the following 
+        /// conditions is true:         
+        /// - The replacement string cannot readily be specified by a regular expression replacement pattern.         
+        /// - The replacement string results from some processing done on the matched string.     
+        /// - The replacement string results from conditional processing.
+        /// </summary>
+        /// <param name="input">The input string.</param>
+        /// <param name="pattern">The search pattern.</param>
+        /// <param name="substitution">The substitution.</param>
+        /// <returns>The substitution string</returns>
         private string RegexReplaceG(string input, string pattern, string substitution)
         {
             Regex regex = new Regex(pattern);
