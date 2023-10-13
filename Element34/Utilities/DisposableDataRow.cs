@@ -3,7 +3,7 @@ using System.Data;
 
 namespace Element34.Utilities
 {
-    internal class DisposableDataRow : IDisposable
+    public class DisposableDataRow : IDisposable
     {
         private DataRow _dr;
         protected bool disposed;

@@ -1,9 +1,9 @@
-﻿using Element34;
-using static Element34.WebDriverExtensions;
+﻿using Element34.Utilities;
 using OpenQA.Selenium;
 using System.Collections.Generic;
-using System.Linq;
 using System.Collections.ObjectModel;
+using System.Linq;
+using static Element34.WebDriverExtensions;
 
 namespace SeleniumTest
 {

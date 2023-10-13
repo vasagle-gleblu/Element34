@@ -8,22 +8,22 @@ namespace Element34.StringMetrics.Similarity
     [Flags]
     public enum StringComparisonOption
     {
-        UseDamerauLevenshteinDistance,
-        UseHammingDistance,
-        UseJaccardDistance,
-        UseJaroDistance,
-        UseJaroWinklerDistance,
-        UseLevenshteinDistance,
-        UseLongestCommonSubsequence,
-        UseLongestCommonSubstring,
-        UseNGramDistance,
-        UseNormalizedLevenshteinDistance,
-        UseOverlapCoefficient,
-        UseRatcliffObershelpSimilarity,
-        UseSorensenDiceCoefficient,
-        UseTanimotoCoefficient,
-        UseWeightedLevenshteinDistance,
-        CaseSensitive
+        UseCosineSimilarity                         = 2^0,
+        UseDamerauLevenshteinDistance               = 2^1,
+        UseHammingDistance                          = 2^2,
+        UseJaccardDistance                          = 2^3,
+        UseJaroDistance                             = 2^4,
+        UseJaroWinklerDistance                      = 2^5,
+        UseLongestCommonSubsequence                 = 2^6,
+        UseLongestCommonSubstring                   = 2^7,
+        UseNormalizedLevenshteinDistance            = 2^8,
+        UseNGramDistance                            = 2^9,
+        UseOverlapCoefficient                       = 2^10,
+        UseRatcliffObershelpSimilarity              = 2^11,
+        UseSorensenDiceDistance                     = 2^12,
+        UseTanimotoCoefficient                      = 2^13,
+        UseWeightedLevenshteinDistance              = 2^14,
+        CaseSensitive                               = 2^15
     }
 
     public enum StringComparisonTolerance
@@ -41,16 +41,13 @@ namespace Element34.StringMetrics.Similarity
 
     public static class CheckSimilarity
     {
-        private static HammingMetric m_hamDist = new HammingMetric();
-        private static JaroMetric m_jaroDist = new JaroMetric();
-        private static JaccardMetric m_jaccardIndex = new JaccardMetric();
-        private static JaroWinklerMetric m_jaroWinklerDist = new JaroWinklerMetric();
-        private static LevenshteinMetric m_levenshteinDist = new LevenshteinMetric();
-        private static LongestCommonSubsequence m_longestCommonSeq = new LongestCommonSubsequence();
+        private static HammingDistance m_hamDist = new HammingDistance();
+        private static JaroDistance m_jaroDist = new JaroDistance();
+        private static JaccardIndex m_jaccardIndex = new JaccardIndex();
+        private static JaroWinklerDistance m_jaroWinklerDist = new JaroWinklerDistance();
+        private static LevenshteinDistance m_levenshteinDist = new LevenshteinDistance();
+        private static LongestCommonSequence m_longestCommonSeq = new LongestCommonSequence();
         private static LongestCommonSubstring m_longestCommonSub = new LongestCommonSubstring();
-        private static OverlapMetric m_overlapMetric = new OverlapMetric();
-        private static RatcliffObershelpMetric m_ratcliffObershelpMetric = new RatcliffObershelpMetric();
-        private static SorensenDiceMetric m_sorensenDiceIndex = new SorensenDiceMetric();
 
 
         public static bool IsSimilar(string source, string target, StringComparisonTolerance tolerance, StringComparisonOption options)
@@ -82,12 +79,12 @@ namespace Element34.StringMetrics.Similarity
             }
         }
 
-        public static double? DiffPercent(string source, string target, StringComparisonOption options)
+        public static double DiffPercent(string source, string target, StringComparisonOption options)
         {
             if (string.IsNullOrEmpty(source) || string.IsNullOrEmpty(target))
                 return 1;
 
-            var comparisonResults = new List<double?>();
+            var comparisonResults = new List<double>();
 
             if (!options.HasFlag(StringComparisonOption.CaseSensitive))
             {
@@ -116,34 +113,37 @@ namespace Element34.StringMetrics.Similarity
             // Min: LevenshteinDistanceLowerBounds    Max: LevenshteinDistanceUpperBounds
             if (options.HasFlag(StringComparisonOption.UseNormalizedLevenshteinDistance))
                 comparisonResults.Add(Convert.ToDouble(m_levenshteinDist.Normalized(source, target)) /
-                                      Convert.ToDouble(Math.Max(source.Length, target.Length) - m_levenshteinDist.LowerBounds(source, target)));
+                                      Convert.ToDouble(Math.Max(source.Length, target.Length) -
+                                                       m_levenshteinDist.LowerBounds(source, target)));
             else if (options.HasFlag(StringComparisonOption.UseNormalizedLevenshteinDistance))
                 comparisonResults.Add(1 - m_levenshteinDist.Percentage(source, target));
 
             if (options.HasFlag(StringComparisonOption.UseLongestCommonSubsequence))
-                comparisonResults.Add(1 - Convert.ToDouble(m_longestCommonSeq.Compute(source, target).Length /
+                comparisonResults.Add(1 -
+                                      Convert.ToDouble(m_longestCommonSeq.Compute(source, target).Length /
                                                        Convert.ToDouble(Math.Min(source.Length, target.Length))));
 
             if (options.HasFlag(StringComparisonOption.UseLongestCommonSubstring))
-                comparisonResults.Add(1 - Convert.ToDouble(m_longestCommonSub.Compute(source, target).Length /
+                comparisonResults.Add(1 -
+                                      Convert.ToDouble(m_longestCommonSub.Compute(source, target).Length /
                                                        Convert.ToDouble(Math.Min(source.Length, target.Length))));
 
             // Min: 0    Max: 1
-            if (options.HasFlag(StringComparisonOption.UseSorensenDiceCoefficient))
-                comparisonResults.Add(m_sorensenDiceIndex.Compute(source, target));
+            if (options.HasFlag(StringComparisonOption.UseSorensenDiceDistance))
+                comparisonResults.Add(SorensenDiceDistance.Compute(source, target));
 
             // Min: 0    Max: 1
             if (options.HasFlag(StringComparisonOption.UseOverlapCoefficient))
-                comparisonResults.Add(1 - m_overlapMetric.Compute(source, target));
+                comparisonResults.Add(1 - OverlapCoefficient.Compute(source, target));
 
             // Min: 0    Max: 1
             if (options.HasFlag(StringComparisonOption.UseRatcliffObershelpSimilarity))
-                comparisonResults.Add(1 - m_ratcliffObershelpMetric.Compute(source, target));
+                comparisonResults.Add(1 - RatcliffObershelpSimilarity.Compute(source, target));
 
             return comparisonResults.Average();
         }
 
-        public static double? Similarity(string source, string target, StringComparisonOption options)
+        public static double Similarity(string source, string target, StringComparisonOption options)
         {
             return 1 - DiffPercent(source, target, options);
         }

@@ -1,7 +1,6 @@
-﻿using CsvHelper;
-using CsvHelper.Configuration;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using OfficeOpenXml;
+using OfficeOpenXml.FormulaParsing.Excel.Functions.RefAndLookup;
 using OfficeOpenXml.Style;
 using System;
 using System.Data;
@@ -10,8 +9,9 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Serialization;
 using System.Text;
-using System.Xml.Serialization;
+using System.Xml;
 
 namespace Element34.DataManager
 {
@@ -20,13 +20,7 @@ namespace Element34.DataManager
         #region [Fields]
         static readonly Encoding enc = Encoding.Default;
         static readonly CultureInfo culture = CultureInfo.CurrentCulture;
-        static readonly CsvConfiguration config = new CsvConfiguration(culture)
-        {
-            Delimiter = ",",
-            Encoding = enc,
-            Mode = CsvMode.RFC4180,
-            ShouldSkipRecord = args => args.Row.Parser.Record.All(string.IsNullOrWhiteSpace)
-        };
+        const int MAXNVARCHAR = 4000;
 
         public enum MDBType
         {
@@ -49,17 +43,17 @@ namespace Element34.DataManager
             ADOX.Catalog cat = new ADOX.Catalog();
             OleDbConnection con = new OleDbConnection(connString);
             string fileName = con.DataSource;
-            
+
             if (File.Exists(fileName))
                 File.Delete(fileName);
-            
+
             cat.Create(connString);
 
             foreach (DataTable dt in ds.Tables)
             {
                 ADOX.Table tbl = DefineADOXTable(dt);
                 cat.Tables.Append(tbl);
-                AddDataTableToMDB(cat, dt);
+                AddDataTableToMDBwithADOX(cat, dt);
             }
 
             con = cat.ActiveConnection as OleDbConnection;
@@ -77,7 +71,7 @@ namespace Element34.DataManager
 
             foreach (DataTable dt in ds.Tables)
             {
-                //something, something
+                AddDataTableToMDB(dt, con);
             }
         }
 
@@ -186,8 +180,8 @@ namespace Element34.DataManager
             if (File.Exists(sFilename))
                 File.Delete(sFilename);
 
-            FileInfo newFile = new FileInfo(sFilename);
-            DataRow row; int offset = 1;
+            DataRow row = null;
+            int offset = 1; // Environment.Version;
             string tmp;
 
             if (sheetName == string.Empty)
@@ -195,9 +189,57 @@ namespace Element34.DataManager
             else
                 tmp = sheetName;
 
-            using (ExcelPackage pkg = new ExcelPackage(newFile))
+            using (ExcelPackage pkg = new ExcelPackage(new FileInfo(sFilename)))
             {
                 ExcelWorksheet wksht = pkg.Workbook.Worksheets.Add(tmp);
+
+                wksht.TabColor = System.Drawing.Color.Black;
+                wksht.DefaultRowHeight = 12;
+
+                // Write columns names
+                wksht.Row(1).Height = 20;
+                wksht.Row(1).Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                wksht.Row(1).Style.Font.Bold = true;
+
+                for (int i = 0; i < dt.Columns.Count; i++)
+                {
+                    DataColumn column = dt.Columns[i];
+                    wksht.Cells[1, i + 1].Value = column.ColumnName;
+                }
+
+                // Write out rows
+                for (int recordIndex = 0; recordIndex < dt.Rows.Count; recordIndex++)
+                {
+                    row = dt.Rows[recordIndex];
+
+                    for (int j = 0; j < dt.Columns.Count; j++)
+                    {
+                        tmp = row[j].ToString();
+                        tmp = tmp.Replace(Environment.NewLine, "\r\n");  // OS dependent
+
+                        wksht.Cells[recordIndex + offset + 1, j + 1].Value = tmp;
+                    }
+                }
+
+                pkg.Save();
+            }
+        }
+
+        public static void UpdateWkshtXLS(string sFilename, DataTable dt, string sheetName = "")
+        {
+            DataRow row = null;
+            int offset = 1; // Environment.Version;
+            string tmp;
+
+            if (sheetName == string.Empty)
+                tmp = (dt.TableName == string.Empty) ? Path.GetFileNameWithoutExtension(Path.GetFileName(sFilename)) : dt.TableName.Replace("$", string.Empty);
+            else
+                tmp = sheetName;
+
+            using (ExcelPackage pkg = new ExcelPackage(new FileInfo(sFilename)))
+            {
+                ExcelWorksheet wksht = pkg.Workbook.Worksheets[tmp];
+                wksht.Cells.Clear();
 
                 wksht.TabColor = System.Drawing.Color.Black;
                 wksht.DefaultRowHeight = 12;
@@ -238,37 +280,49 @@ namespace Element34.DataManager
                 dt.Columns.Add(fieldName, dataType);
 
                 // Update table layout
-                CreateXLS(sFile, dt, sheetName);
+                UpdateWkshtXLS(sFile, dt, sheetName);
             }
         }
 
         public static void UpdateXLS_MapEvents(DataTable dt, FileInfo oFile, string sheetName)
         {
-            dt.RowChanged += (sender, e) => UpdateXLS_RowChanged(sender, e, oFile, sheetName);
-            dt.RowDeleted += (sender, e) => UpdateXLS_RowDeleted(sender, e, oFile, sheetName);
+            dt.RowChanged += (sender, e) => UpdateXLS_HandleRowAdded(sender, e, oFile, sheetName);
+            dt.RowChanged += (sender, e) => UpdateXLS_HandleRowChanged(sender, e, oFile, sheetName);
+            dt.RowDeleted += (sender, e) => UpdateXLS_HandleRowDeleted(sender, e, oFile, sheetName);
         }
 
-        public static void UpdateXLS_RowDeleted(object sender, DataRowChangeEventArgs e, FileInfo oFile, string sheetName, bool hasHeader = true)
+        private static void UpdateXLS_HandleRowAdded(object sender, DataRowChangeEventArgs e, FileInfo oFile, string sheetName, bool hasHeader = true)
         {
-            if (e.Action == DataRowAction.Delete)
-            {
-                DataTable dt = (DataTable)sender;
-                int recordIndex = dt.Rows.IndexOf(e.Row);
-                string tmp; int offset = (hasHeader) ? 1 : 0;
+            DataTable dt = (DataTable)sender;
+            int offset = (hasHeader) ? 1 : 0;
+            int recordIndex = dt.Rows.IndexOf(e.Row) + offset + 1;
+            DataRow row;
 
+            if (e.Row.RowState == DataRowState.Added)
+            {
                 // Open file
                 using (ExcelPackage pkg = new ExcelPackage(oFile))
                 using (ExcelWorkbook wkbk = pkg.Workbook)
                 using (ExcelWorksheet wksht = wkbk.Worksheets[sheetName])
                 {
-                    // Build updated row
+                    // Build added row
                     for (int i = 0; i < dt.Columns.Count; i++)
                     {
                         // Cell values
-                        tmp = e.Row[i].ToString();
-                        tmp = tmp.Replace(Environment.NewLine, "\r\n");  // OS dependent
+                        wksht.Cells[recordIndex, i + 1].Value = Normalize(e.Row[i].ToString());
+                    }
 
-                        wksht.Cells[recordIndex + offset + 1, i + 1].Value = tmp;
+                    // Write the rest of the data offset by new row
+                    for (int j = recordIndex + 1; j < dt.Rows.Count; j++)
+                    {
+                        row = dt.Rows[j];
+
+                        // Build updated row
+                        for (int i = 0; i < dt.Columns.Count; i++)
+                        {
+                            // Cell values
+                            wksht.Cells[j + offset + 1, i + 1].Value = Normalize(row[i].ToString());
+                        }
                     }
 
                     pkg.Save();
@@ -276,15 +330,15 @@ namespace Element34.DataManager
             }
         }
 
-        public static void UpdateXLS_RowChanged(object sender, DataRowChangeEventArgs e, FileInfo oFile, string sheetName, bool hasHeader = true)
+        public static void UpdateXLS_HandleRowDeleted(object sender, DataRowChangeEventArgs e, FileInfo oFile, string sheetName, bool hasHeader = true)
         {
-            if ((e.Action == DataRowAction.Change) || (e.Row.RowState == DataRowState.Added))
-            {
-                DataTable dt = (DataTable)sender;
-                int recordIndex = dt.Rows.IndexOf(e.Row);
-                string tmp; int offset = (hasHeader) ? 1 : 0;
-                DataRow row;
+            DataTable dt = (DataTable)sender;
+            int recordIndex = dt.Rows.IndexOf(e.Row);
+            int offset = (hasHeader) ? 1 : 0;
+            DataRow row;
 
+            if (e.Action == DataRowAction.Delete)
+            {
                 // Open file
                 using (ExcelPackage pkg = new ExcelPackage(oFile))
                 using (ExcelWorkbook wkbk = pkg.Workbook)
@@ -300,11 +354,33 @@ namespace Element34.DataManager
                         for (int i = 0; i < dt.Columns.Count; i++)
                         {
                             // Cell values
-                            tmp = row[i].ToString();
-                            tmp = tmp.Replace(Environment.NewLine, "\r\n");  // OS dependent
-
-                            wksht.Cells[recordIndex + offset + 1, i + 1].Value = tmp;
+                            wksht.Cells[recordIndex + offset + 1, i + 1].Value = Normalize(row[i].ToString());
                         }
+                    }
+
+                    pkg.Save();
+                }
+            }
+        }
+
+        public static void UpdateXLS_HandleRowChanged(object sender, DataRowChangeEventArgs e, FileInfo oFile, string sheetName, bool hasHeader = true)
+        {
+            DataTable dt = (DataTable)sender;
+            int offset = (hasHeader) ? 1 : 0;
+            int recordIndex = dt.Rows.IndexOf(e.Row) + offset + 1;
+
+            if (e.Action == DataRowAction.Change)
+            {
+                // Open file
+                using (ExcelPackage pkg = new ExcelPackage(oFile))
+                using (ExcelWorkbook wkbk = pkg.Workbook)
+                using (ExcelWorksheet wksht = wkbk.Worksheets[sheetName])
+                {
+                    // Build updated row
+                    for (int i = 0; i < dt.Columns.Count; i++)
+                    {
+                        // Cell values
+                        wksht.Cells[recordIndex, i + 1].Value = Normalize(e.Row[i].ToString());
                     }
 
                     pkg.Save();
@@ -330,27 +406,52 @@ namespace Element34.DataManager
 
         public static void CreateCSV(string sFile, DataTable dt)
         {
-            using (StreamWriter textWriter = File.CreateText(sFile))
-            using (CsvWriter csvWriter = new CsvWriter(textWriter, culture))
-            {
-                // Write columns names
-                foreach (DataColumn column in dt.Columns)
-                {
-                    csvWriter.WriteField(column.ColumnName);
-                }
-                csvWriter.NextRecord();
+            string tmp;
+            StringBuilder sb = new StringBuilder();
 
-                // Write out rows
+            using (StreamWriter sw = new StreamWriter(sFile))
+            {
+                // Write column headers
+                for (int i = 0; i < dt.Columns.Count; i++)
+                {
+                    sw.Write(dt.Columns[i].ColumnName);
+                    if (i < dt.Columns.Count - 1)
+                    {
+                        sw.Write(",");
+                    }
+                }
+                sw.WriteLine(); // Newline after headers
+
+                // Write data rows
                 foreach (DataRow row in dt.Rows)
                 {
-                    for (var i = 0; i < dt.Columns.Count; i++)
-                    {
-                        csvWriter.WriteField(row[i]);
-                    }
-                    csvWriter.NextRecord();
-                }
+                    sb.Clear();
 
-                textWriter.Flush();
+                    // Build updated row
+                    for (int i = 0; i < dt.Columns.Count; i++)
+                    {
+                        // Cell values
+                        tmp = row[i].ToString();
+                        tmp = tmp.Replace(Environment.NewLine, "\r\n");  // OS dependent
+
+                        if (i < (dt.Columns.Count - 1))
+                        {
+                            if (!tmp.Contains(','))
+                                sb.Append(tmp + ',');
+                            else
+                                sb.AppendFormat("\"{0}\"", tmp + ',');
+                        }
+                        else
+                        {
+                            if (!tmp.Contains(','))
+                                sb.Append(tmp);
+                            else
+                                sb.AppendFormat("\"{0}\"", tmp);
+                        }
+                    }
+
+                    sw.WriteLine(sb.ToString());
+                }
             }
         }
 
@@ -367,132 +468,111 @@ namespace Element34.DataManager
 
         public static void UpdateCSV_MapEvents(DataTable dt, FileInfo oFile)
         {
-            dt.RowChanged += (sender, e) => UpdateCSV_RowChanged(sender, e, oFile);
-            dt.RowDeleted += (sender, e) => UpdateCSV_RowDeleted(sender, e, oFile);
+            dt.RowChanged += (sender, e) => UpdateCSV_HandleRowAdded(sender, e, oFile);
+            dt.RowChanged += (sender, e) => UpdateCSV_HandleRowChanged(sender, e, oFile);
+            dt.RowDeleted += (sender, e) => UpdateCSV_HandleRowDeleted(sender, e, oFile);
         }
 
-        public static void UpdateCSV_RowDeleted(object sender, DataRowChangeEventArgs e, FileInfo oFile)
+        public static void UpdateCSV_HandleRowAdded(object sender, DataRowChangeEventArgs e, FileInfo oFile)
         {
-            if (e.Action == DataRowAction.Delete)
+            if (e.Action == DataRowAction.Add)
             {
                 DataTable dt = (DataTable)sender;
-                DataRow row; string tmp;
-                long iSeekAhead = 0;
                 int iRowIndex = dt.Rows.IndexOf(e.Row);
-                StringBuilder sb = new StringBuilder();
+                int lineNumber = (iRowIndex + 1);  // Additional offset for CSV header
 
-                // Open file
-                using (FileStream fsFile = new FileStream(oFile.FullName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None))
-                using (StreamReader sr = new StreamReader(fsFile, enc))
-                using (StreamWriter sw = new StreamWriter(fsFile, enc))
-                using (CsvReader csvReader = new CsvReader(sr, culture))
-                using (CsvDataReader csvDataReader = new CsvDataReader(csvReader))
-                using (CsvWriter csvWriter = new CsvWriter(sw, culture))
+                // Use the BuildCsvRow method to format the new row
+                string newRowCsv = BuildCsvRow(e.Row);
+
+                // Save the changes to the CSV file here
+                long targetLineBytePosition = 0; // Initialize to zero
+
+                using (FileStream fs = new FileStream(oFile.FullName, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite))
                 {
-                    // Calculate how far to skip ahead to deleted row
-                    int lineNumber = (csvWriter.Configuration.HasHeaderRecord) ? (iRowIndex + 1) : iRowIndex;
-
-                    // Set current position to the beginning
-                    fsFile.Position = 0;
-
-                    // Calculate how far to skip ahead to modified row
-                    for (int j = 0; j < lineNumber; j++)
+                    // Calculate how far to skip ahead to the target line
+                    for (int i = 0; i < lineNumber; i++)
                     {
-                        iSeekAhead += enc.GetByteCount(sr.ReadLine() + Environment.NewLine);
+                        targetLineBytePosition += enc.GetByteCount(fs.ReadLine() + Environment.NewLine);
                     }
 
-                    //  Overwrite deleted row and write out remaining rows
-                    for (int j = lineNumber; j < dt.Rows.Count; j++)
+                    // Reset the stream to the calculated position
+                    fs.Seek(targetLineBytePosition, SeekOrigin.Begin);
+
+                    // Add the line with the new row
+                    fs.WriteLine(newRowCsv, enc);
+
+                    // Write the remainder of the datatable to CSV file
+                    for (int j = (lineNumber - 1); j < dt.Rows.Count; j++)
                     {
-                        row = dt.Rows[j];
-                        sb.Clear();
-
-                        for (int i = 0; i < dt.Columns.Count; i++)
-                        {
-                            // Cell values
-                            tmp = e.Row[i].ToString();
-                            tmp = tmp.Replace(Environment.NewLine, "\r\n");
-
-                            if (i < (dt.Columns.Count - 1))
-                            {
-                                if (!tmp.Contains(','))
-                                    sb.Append(tmp + csvWriter.Configuration.Delimiter);
-                                else
-                                    sb.AppendFormat("\"{0}\"", tmp + csvWriter.Configuration.Delimiter);
-                            }
-                            else
-                            {
-                                if (!tmp.Contains(','))
-                                    sb.Append(tmp);
-                                else
-                                    sb.AppendFormat("\"{0}\"", tmp);
-                            }
-                        }
-
-                        fsFile.Seek(iSeekAhead, SeekOrigin.Begin);
-                        sw.WriteLine(sb.ToString());
-
-                        // Calculate how far to move the current position for the next write.
-                        iSeekAhead = enc.GetByteCount(sr.ReadLine() + Environment.NewLine);
+                        fs.WriteLine(BuildCsvRow(dt.Rows[j]), enc);
                     }
                 }
             }
         }
 
-        public static void UpdateCSV_RowChanged(object sender, DataRowChangeEventArgs e, FileInfo oFile)
+        public static void UpdateCSV_HandleRowDeleted(object sender, DataRowChangeEventArgs e, FileInfo oFile)
         {
-            if ((e.Action == DataRowAction.Change) || (e.Row.RowState == DataRowState.Added))
+            // Delete the specific row from the CSV file
+            if (e.Action == DataRowAction.Delete)
             {
                 DataTable dt = (DataTable)sender;
                 int iRowIndex = dt.Rows.IndexOf(e.Row);
-                long iSeekAhead = 0;
-                StringBuilder sb = new StringBuilder();
-                string tmp;
+                int lineNumber = (iRowIndex + 1);  // Additional offset for CSV header
 
-                // Open file
-                using (FileStream fsFile = new FileStream(oFile.FullName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None))
-                using (StreamReader sr = new StreamReader(fsFile, enc))
-                using (StreamWriter sw = new StreamWriter(fsFile, enc))
-                using (CsvReader csvReader = new CsvReader(sr, culture))
-                using (CsvDataReader csvDataReader = new CsvDataReader(csvReader))
-                using (CsvWriter csvWriter = new CsvWriter(sw, culture))
+                long targetLineBytePosition = 0; // Initialize to zero
+
+                using (FileStream fs = new FileStream(oFile.FullName, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite))
                 {
-                    int lineNumber = (csvWriter.Configuration.HasHeaderRecord) ? (iRowIndex + 1) : iRowIndex;
-
-                    // Set current position to the beginning
-                    fsFile.Position = 0;
-
-                    // Calculate how far to skip ahead to modified row
-                    for (int j = 0; j < lineNumber; j++)
+                    // Calculate how far to skip ahead to the target line
+                    for (int i = 0; i < lineNumber; i++)
                     {
-                        iSeekAhead += enc.GetByteCount(sr.ReadLine() + Environment.NewLine);
+                        targetLineBytePosition += enc.GetByteCount(fs.ReadLine() + Environment.NewLine);
                     }
 
-                    // Build updated row
-                    for (int i = 0; i < dt.Columns.Count; i++)
-                    {
-                        // Cell values
-                        tmp = e.Row[i].ToString();
-                        tmp = tmp.Replace(Environment.NewLine, "\r\n");  // OS dependent
+                    // Reset the stream to the calculated position
+                    fs.Seek(targetLineBytePosition, SeekOrigin.Begin);
 
-                        if (i < (dt.Columns.Count - 1))
-                        {
-                            if (!tmp.Contains(','))
-                                sb.Append(tmp + csvWriter.Configuration.Delimiter);
-                            else
-                                sb.AppendFormat("\"{0}\"", tmp + csvWriter.Configuration.Delimiter);
-                        }
-                        else
-                        {
-                            if (!tmp.Contains(','))
-                                sb.Append(tmp);
-                            else
-                                sb.AppendFormat("\"{0}\"", tmp);
-                        }
+                    // Write the remainder of the datatable to CSV file
+                    for (int j = lineNumber; j < dt.Rows.Count; j++)
+                    {
+                        fs.WriteLine(BuildCsvRow(dt.Rows[j]), enc);
+                    }
+                }
+            }
+        }
+
+        public static void UpdateCSV_HandleRowChanged(object sender, DataRowChangeEventArgs e, FileInfo oFile)
+        {
+            // Update the specific row in the CSV file
+            if (e.Action == DataRowAction.Change)
+            {
+                DataTable dt = (DataTable)sender;
+                int iRowIndex = dt.Rows.IndexOf(e.Row);
+                int lineNumber = (iRowIndex + 1);  // Additional offset for CSV header 
+
+                // Build the updated row
+                string updatedRow = BuildCsvRow(e.Row);
+                long targetLineBytePosition = 0; // Initialize to zero
+
+                using (FileStream fs = new FileStream(oFile.FullName, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite))
+                {
+                    // Calculate how far to skip ahead to the target line
+                    for (int i = 0; i < lineNumber; i++)
+                    {
+                        targetLineBytePosition += enc.GetByteCount(fs.ReadLine() + Environment.NewLine);
                     }
 
-                    fsFile.Seek(iSeekAhead, SeekOrigin.Begin);
-                    sw.WriteLine(sb.ToString());
+                    // Reset the stream to the calculated position
+                    fs.Seek(targetLineBytePosition, SeekOrigin.Begin);
+
+                    // Replace the line with the updated row
+                    fs.WriteLine(updatedRow, enc);
+
+                    // Write the remainder of the datatable to CSV file
+                    for (int j = lineNumber; j < dt.Rows.Count; j++)
+                    {
+                        fs.WriteLine(BuildCsvRow(dt.Rows[j]), enc);
+                    }
                 }
             }
         }
@@ -501,40 +581,24 @@ namespace Element34.DataManager
         #region [XML File Support]
         public static string ExportToXml(DataSet ds)
         {
-            using (var memoryStream = new MemoryStream())
-            {
-                using (TextWriter streamWriter = new StreamWriter(memoryStream))
-                {
-                    var xmlSerializer = new XmlSerializer(typeof(DataSet));
-                    xmlSerializer.Serialize(streamWriter, ds);
-                    return enc.GetString(memoryStream.ToArray());
-                }
-            }
+            return ds.SerializeToXML();
         }
 
         public static string ExportToXml(DataTable dt)
         {
-            using (var memoryStream = new MemoryStream())
-            {
-                using (TextWriter streamWriter = new StreamWriter(memoryStream))
-                {
-                    var xmlSerializer = new XmlSerializer(typeof(DataTable));
-                    xmlSerializer.Serialize(streamWriter, dt);
-                    return enc.GetString(memoryStream.ToArray());
-                }
-            }
+            return dt.SerializeToXML();
         }
         #endregion
 
         #region [JSON File Support]
         public static string ExportToJSON(DataSet ds)
         {
-            return ds.SerializeDataSetToJSON();
+            return ds.SerializeToJSON();
         }
 
         public static string ExportToJSON(DataTable dt)
         {
-            return dt.SerializeDataTableToJSON();
+            return dt.SerializeToJSON();
         }
         #endregion
         #endregion
@@ -751,70 +815,85 @@ namespace Element34.DataManager
 
         private static ADOX.DataTypeEnum TranslateToADOXType(DataColumn column)
         {
-            switch (column.DataType.Name)
+            Type type = column.GetType();
+            TypeCode typeCode = Type.GetTypeCode(type);
+
+            switch (typeCode)
             {
-                case nameof(System.Guid):
-                    return ADOX.DataTypeEnum.adGUID;
-
-                case nameof(System.Boolean):
-                    return ADOX.DataTypeEnum.adBoolean;
-
-                case nameof(System.Byte):
-                    return ADOX.DataTypeEnum.adUnsignedTinyInt;
-
-                case nameof(System.Char):
-                    return ADOX.DataTypeEnum.adWChar;
-
-                case nameof(System.DateTime):
-                    return ADOX.DataTypeEnum.adDate;
-
-                case nameof(System.Decimal):                    
-                    return ADOX.DataTypeEnum.adDecimal;
-
-                case nameof(System.Double):
-                    return ADOX.DataTypeEnum.adDouble;
-
-                case nameof(System.Int16):
-                    return ADOX.DataTypeEnum.adSmallInt;
-
-                case nameof(System.Int32):
-                    return ADOX.DataTypeEnum.adInteger;
-
-                case nameof(System.Int64):
-                    return ADOX.DataTypeEnum.adBigInt;
-
-                case nameof(System.SByte):
-                    return ADOX.DataTypeEnum.adTinyInt;
-
-                case nameof(System.Single):
-                    return ADOX.DataTypeEnum.adSingle;
-
-                case nameof(System.String):
-                    if (column.MaxLength > 4000)
+                case TypeCode.String:
+                    if (column.MaxLength > MAXNVARCHAR)
                         return ADOX.DataTypeEnum.adLongVarWChar;
                     else
                         return ADOX.DataTypeEnum.adVarWChar;
-
-                case nameof(System.Object):
-                    return ADOX.DataTypeEnum.adLongVarBinary;
-
-                case nameof(System.TimeSpan):
+                case TypeCode.Int16:
+                    return ADOX.DataTypeEnum.adSmallInt;
+                case TypeCode.Int32:
+                    return ADOX.DataTypeEnum.adInteger;
+                case TypeCode.Int64:
                     return ADOX.DataTypeEnum.adBigInt;
-
-                case nameof(System.UInt16):
+                case TypeCode.Byte:
+                    return ADOX.DataTypeEnum.adUnsignedTinyInt;
+                case TypeCode.SByte:
+                    return ADOX.DataTypeEnum.adTinyInt;
+                case TypeCode.UInt16:
                     return ADOX.DataTypeEnum.adUnsignedSmallInt;
-
-                case nameof(System.UInt32):
+                case TypeCode.UInt32:
                     return ADOX.DataTypeEnum.adUnsignedInt;
-
-                case nameof(System.UInt64):
+                case TypeCode.UInt64:
                     return ADOX.DataTypeEnum.adUnsignedBigInt;
+                case TypeCode.Char:
+                    return ADOX.DataTypeEnum.adChar;
+                case TypeCode.Single:
+                    return ADOX.DataTypeEnum.adSingle;
+                case TypeCode.Double:
+                    return ADOX.DataTypeEnum.adDouble;
+                case TypeCode.Decimal:
+                    return ADOX.DataTypeEnum.adDecimal;
+                case TypeCode.DateTime:
+                    return ADOX.DataTypeEnum.adDate;
+                case TypeCode.Boolean:
+                    return ADOX.DataTypeEnum.adBoolean;
+                case TypeCode.Object:
+                    if (type == typeof(Guid))
+                        return ADOX.DataTypeEnum.adGUID;
+                    else if (type == typeof(byte[]))
+                        return ADOX.DataTypeEnum.adBinary;
+                    else if (type == typeof(TimeSpan))
+                        return ADOX.DataTypeEnum.adDBTime;
+                    else if (type == typeof(DateTimeOffset))
+                        return ADOX.DataTypeEnum.adDBTimeStamp;
+                    else if (type == typeof(byte[]))
+                        return ADOX.DataTypeEnum.adVarBinary;
+                    else if (type == typeof(char[]))
+                        return ADOX.DataTypeEnum.adVarChar;
+                    else if (type == typeof(short?))
+                        return ADOX.DataTypeEnum.adSmallInt;
+                    else if (type == typeof(int?))
+                        return ADOX.DataTypeEnum.adInteger;
+                    else if (type == typeof(long?))
+                        return ADOX.DataTypeEnum.adBigInt;
+                    else if (type == typeof(float?))
+                        return ADOX.DataTypeEnum.adSingle;
+                    else if (type == typeof(double?))
+                        return ADOX.DataTypeEnum.adDouble;
+                    else if (type == typeof(decimal?))
+                        return ADOX.DataTypeEnum.adDecimal;
+                    else if (type == typeof(bool?))
+                        return ADOX.DataTypeEnum.adBoolean;
+                    else if (type == typeof(Guid?))
+                        return ADOX.DataTypeEnum.adGUID;
+                    break;
+                case TypeCode.DBNull:
+                    return ADOX.DataTypeEnum.adEmpty;
+                default:
+                    return ADOX.DataTypeEnum.adVariant; // Default to OleDbType.Variant for unknown types
             }
 
+            // Default to OleDbType.Variant for unsupported types
             return ADOX.DataTypeEnum.adVariant;
         }
 
-        private static void AddDataTableToMDB(ADOX.Catalog cat, DataTable inTable)
+        private static void AddDataTableToMDBwithADOX(ADOX.Catalog cat, DataTable inTable)
         {
             ADODB.Recordset rs = new ADODB.Recordset();
             rs.CursorLocation = ADODB.CursorLocationEnum.adUseClient;
@@ -870,96 +949,254 @@ namespace Element34.DataManager
 
         private static ADODB.DataTypeEnum TranslateToADODBType(DataColumn column)
         {
-            switch (column.DataType.Name.ToLower())
+            Type type = column.GetType();
+            TypeCode typeCode = Type.GetTypeCode(type);
+
+            switch (typeCode)
             {
-                case "guid":
-                    return ADODB.DataTypeEnum.adVariant;
-
-                case "boolean":
-                    return ADODB.DataTypeEnum.adBoolean;
-
-                case "bool":
-                    return ADODB.DataTypeEnum.adBoolean;
-
-                case "byte":
-                    return ADODB.DataTypeEnum.adUnsignedTinyInt;
-
-                case "char":
-                    return ADODB.DataTypeEnum.adWChar;
-
-                case "datetime":
-                    return ADODB.DataTypeEnum.adDate;
-
-                case "decimal":
-                    return ADODB.DataTypeEnum.adDecimal;
-
-                case "double":
-                    return ADODB.DataTypeEnum.adDouble;
-
-                case "int16":
-                    return ADODB.DataTypeEnum.adSmallInt;
-
-                case "int32":
-                    return ADODB.DataTypeEnum.adInteger;
-
-                case "int64":
-                    return ADODB.DataTypeEnum.adBigInt;
-
-                case "sbyte":
-                    return ADODB.DataTypeEnum.adTinyInt;
-
-                case "single":
-                    return ADODB.DataTypeEnum.adSingle;
-
-                case "string":
-                    if (column.MaxLength > 4000)
+                case TypeCode.String:
+                    if (column.MaxLength > MAXNVARCHAR)
                         return ADODB.DataTypeEnum.adLongVarWChar;
                     else
                         return ADODB.DataTypeEnum.adVarWChar;
-
-                case "timespan":
+                case TypeCode.Int16:
+                    return ADODB.DataTypeEnum.adSmallInt;
+                case TypeCode.Int32:
+                    return ADODB.DataTypeEnum.adInteger;
+                case TypeCode.Int64:
                     return ADODB.DataTypeEnum.adBigInt;
-
-                case "uint16":
+                case TypeCode.Byte:
+                    return ADODB.DataTypeEnum.adUnsignedTinyInt;
+                case TypeCode.SByte:
+                    return ADODB.DataTypeEnum.adTinyInt;
+                case TypeCode.UInt16:
                     return ADODB.DataTypeEnum.adUnsignedSmallInt;
-
-                case "uint32":
+                case TypeCode.UInt32:
                     return ADODB.DataTypeEnum.adUnsignedInt;
-
-                case "uint64":
+                case TypeCode.UInt64:
                     return ADODB.DataTypeEnum.adUnsignedBigInt;
+                case TypeCode.Char:
+                    return ADODB.DataTypeEnum.adChar;
+                case TypeCode.Single:
+                    return ADODB.DataTypeEnum.adSingle;
+                case TypeCode.Double:
+                    return ADODB.DataTypeEnum.adDouble;
+                case TypeCode.Decimal:
+                    return ADODB.DataTypeEnum.adDecimal;
+                case TypeCode.DateTime:
+                    return ADODB.DataTypeEnum.adDate;
+                case TypeCode.Boolean:
+                    return ADODB.DataTypeEnum.adBoolean;
+                case TypeCode.Object:
+                    if (type == typeof(Guid))
+                        return ADODB.DataTypeEnum.adGUID;
+                    else if (type == typeof(byte[]))
+                        return ADODB.DataTypeEnum.adBinary;
+                    else if (type == typeof(TimeSpan))
+                        return ADODB.DataTypeEnum.adDBTime;
+                    else if (type == typeof(DateTimeOffset))
+                        return ADODB.DataTypeEnum.adDBTimeStamp;
+                    else if (type == typeof(byte[]))
+                        return ADODB.DataTypeEnum.adVarBinary;
+                    else if (type == typeof(char[]))
+                        return ADODB.DataTypeEnum.adVarChar;
+                    else if (type == typeof(short?))
+                        return ADODB.DataTypeEnum.adSmallInt;
+                    else if (type == typeof(int?))
+                        return ADODB.DataTypeEnum.adInteger;
+                    else if (type == typeof(long?))
+                        return ADODB.DataTypeEnum.adBigInt;
+                    else if (type == typeof(float?))
+                        return ADODB.DataTypeEnum.adSingle;
+                    else if (type == typeof(double?))
+                        return ADODB.DataTypeEnum.adDouble;
+                    else if (type == typeof(decimal?))
+                        return ADODB.DataTypeEnum.adDecimal;
+                    else if (type == typeof(bool?))
+                        return ADODB.DataTypeEnum.adBoolean;
+                    else if (type == typeof(Guid?))
+                        return ADODB.DataTypeEnum.adGUID;
+                    break;
+                case TypeCode.DBNull:
+                    return ADODB.DataTypeEnum.adEmpty;
+                default:
+                    return ADODB.DataTypeEnum.adVariant; // Default to OleDbType.Variant for unknown types
             }
 
+            // Default to OleDbType.Variant for unsupported types
             return ADODB.DataTypeEnum.adVariant;
         }
 
-        private static void UpdateCSV_WriteHeader(object sender, DataRowChangeEventArgs e, FileInfo oFile)
+        private static OleDbType TranslateToOleDbType(DataColumn column)
         {
-            DataTable dt = (DataTable)sender;
+            Type type = column.GetType();
+            TypeCode typeCode = Type.GetTypeCode(type);
 
-            // Open file
-            using (FileStream fsFile = new FileStream(oFile.FullName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None))
-            using (StreamWriter sw = new StreamWriter(fsFile))
-            using (CsvWriter csvWriter = new CsvWriter(sw, config))
+            switch (typeCode)
             {
-                // Write columns names
-                foreach (DataColumn column in dt.Columns)
-                {
-                    csvWriter.WriteField(column.ColumnName);
-                }
-                csvWriter.NextRecord();
+                case TypeCode.String:
+                    if (column.MaxLength > MAXNVARCHAR)
+                        return OleDbType.LongVarWChar;
+                    else
+                        return OleDbType.VarWChar;
+                case TypeCode.Int16:
+                    return OleDbType.SmallInt;
+                case TypeCode.Int32:
+                    return OleDbType.Integer;
+                case TypeCode.Int64:
+                    return OleDbType.BigInt;
+                case TypeCode.Byte:
+                    return OleDbType.UnsignedTinyInt;
+                case TypeCode.SByte:
+                    return OleDbType.TinyInt;
+                case TypeCode.UInt16:
+                    return OleDbType.UnsignedSmallInt;
+                case TypeCode.UInt32:
+                    return OleDbType.UnsignedInt;
+                case TypeCode.UInt64:
+                    return OleDbType.UnsignedBigInt;
+                case TypeCode.Char:
+                    return OleDbType.Char;
+                case TypeCode.Single:
+                    return OleDbType.Single;
+                case TypeCode.Double:
+                    return OleDbType.Double;
+                case TypeCode.Decimal:
+                    return OleDbType.Decimal;
+                case TypeCode.DateTime:
+                    return OleDbType.Date;
+                case TypeCode.Boolean:
+                    return OleDbType.Boolean;
+                case TypeCode.Object:
+                    if (type == typeof(Guid))
+                        return OleDbType.Guid;
+                    else if (type == typeof(byte[]))
+                        return OleDbType.Binary;
+                    else if (type == typeof(TimeSpan))
+                        return OleDbType.DBTime;
+                    else if (type == typeof(DateTimeOffset))
+                        return OleDbType.DBTimeStamp;
+                    else if (type == typeof(byte[]))
+                        return OleDbType.VarBinary;
+                    else if (type == typeof(char[]))
+                        return OleDbType.VarChar;
+                    else if (type == typeof(short?))
+                        return OleDbType.SmallInt;
+                    else if (type == typeof(int?))
+                        return OleDbType.Integer;
+                    else if (type == typeof(long?))
+                        return OleDbType.BigInt;
+                    else if (type == typeof(float?))
+                        return OleDbType.Single;
+                    else if (type == typeof(double?))
+                        return OleDbType.Double;
+                    else if (type == typeof(decimal?))
+                        return OleDbType.Decimal;
+                    else if (type == typeof(bool?))
+                        return OleDbType.Boolean;
+                    else if (type == typeof(Guid?))
+                        return OleDbType.Guid;
+                    break;
+                case TypeCode.DBNull:
+                    return OleDbType.Empty;
+                default:
+                    return OleDbType.Variant; // Default to OleDbType.Variant for unknown types
             }
+
+            // Default to OleDbType.Variant for unsupported types
+            return OleDbType.Variant;
         }
 
-        private static string SerializeDataTableToJSON(this DataTable dt)
+        private static void AddDataTableToMDB(DataTable inTable, OleDbConnection conn)
         {
-            return JsonConvert.SerializeObject(dt);
+            StringBuilder sqlStmt;
+            conn.Open();
+
+            using (OleDbCommand cmd = new OleDbCommand())
+            {
+                sqlStmt = new StringBuilder();
+                sqlStmt.Append("CREATE TABLE [" + inTable.TableName + "] (");
+                foreach (DataColumn inColumn in inTable.Columns)
+                {
+                    sqlStmt.Append("[" + inColumn.ColumnName + "] " + TranslateToOleDbType(inColumn) + ",");
+                }
+
+                // remove last comma
+                sqlStmt.Length = sqlStmt.Length - 1;
+                sqlStmt.Append(");");
+
+                cmd.CommandText = sqlStmt.ToString();
+                cmd.ExecuteNonQuery();
+            }
+
+            using (OleDbDataAdapter oledbDataAdapter = new OleDbDataAdapter("SELECT * FROM [" + inTable.TableName + "];", conn))
+            {
+                OleDbCommandBuilder oledbCmdBuilder = new OleDbCommandBuilder(oledbDataAdapter);
+                oledbDataAdapter.InsertCommand = oledbCmdBuilder.GetInsertCommand();
+                oledbDataAdapter.UpdateCommand = oledbCmdBuilder.GetUpdateCommand();
+
+                using (DataTable accDataTable = inTable.Copy())
+                {
+                    // Set the RowState to added to ensure an Insert is performed
+                    foreach (DataRow row in accDataTable.Rows)
+                    {
+                        if (row.RowState == DataRowState.Added || row.RowState == DataRowState.Unchanged)
+                        {
+                            row.SetAdded();
+                        }
+                    }
+
+                    oledbDataAdapter.Update(accDataTable);
+                }
+            }
+            conn.Close();
         }
 
-        private static string SerializeDataSetToJSON(this DataSet ds)
+        private static string SerializeToJSON(this object item)
         {
-            return JsonConvert.SerializeObject(ds);
+            return JsonConvert.SerializeObject(item);
         }
+
+        private static string SerializeToXML(this object item)
+        {
+            StringBuilder result = new StringBuilder();
+            DataContractSerializer serializer = new DataContractSerializer(item.GetType());
+            using (StringWriter strWriter = new StringWriter(result))
+            using (XmlWriter xmlWriter = XmlWriter.Create(strWriter))
+            {
+                serializer.WriteObject(xmlWriter, item);
+            }
+
+            return result.ToString();
+        }
+
+        private static string BuildCsvRow(DataRow row)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            for (int i = 0; i < row.Table.Columns.Count; i++)
+            {
+                sb.Append(Normalize(row[i].ToString(), true));
+
+                if (i < row.Table.Columns.Count - 1)
+                {
+                    sb.Append(",");
+                }
+            }
+
+            return sb.ToString();
+        }
+
+        private static string Normalize(string sInput, bool isCSV = false, bool isSQL = false)
+        {
+            sInput = sInput.Replace(Environment.NewLine, "\r\n");  // OS dependent
+            sInput = (isCSV) ? sInput.Replace(",", "\",\"") : sInput;
+            sInput = (isSQL) ? sInput.Replace("'", "''") : sInput;
+            sInput = sInput.Replace("\"", "\"\"\"");
+
+            return sInput;
+        }
+
         #endregion
     }
 }

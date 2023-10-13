@@ -150,5 +150,29 @@ namespace Element34.Properties {
                 return ResourceManager.GetString("DMrules", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
+        internal static System.Drawing.Icon Element34 {
+            get {
+                object obj = ResourceManager.GetObject("Element34", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-16&quot;?&gt;
+        ///&lt;ArrayOfanyType xmlns:i=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; xmlns=&quot;http://schemas.microsoft.com/2003/10/Serialization/Arrays&quot;&gt;
+        ///	&lt;anyType xmlns:d2p1=&quot;http://www.w3.org/2001/XMLSchema&quot; i:type=&quot;d2p1:string&quot;&gt;a&lt;/anyType&gt;
+        ///	&lt;anyType xmlns:d2p1=&quot;http://www.w3.org/2001/XMLSchema&quot; i:type=&quot;d2p1:string&quot;&gt;abaft&lt;/anyType&gt;
+        ///	&lt;anyType xmlns:d2p1=&quot;http://www.w3.org/2001/XMLSchema&quot; i:type=&quot;d2p1:string&quot;&gt;abafter&lt;/anyType&gt;
+        ///	&lt;anyType xmlns:d2p1=&quot;http://www.w3.org/2001/XMLSchema&quot; [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string stopWordList {
+            get {
+                return ResourceManager.GetString("stopWordList", resourceCulture);
+            }
+        }
     }
 }
