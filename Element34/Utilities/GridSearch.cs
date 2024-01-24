@@ -1,4 +1,5 @@
-﻿using OpenQA.Selenium;
+﻿using Element34.ExtensionClasses;
+using OpenQA.Selenium;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -14,22 +15,27 @@ namespace Element34.Utilities
         public abstract void Choose(ReadOnlyCollection<IWebElement> cells, int iColumn, string value);
     }
 
-    public abstract class SelectionType
+    public interface ISelectionType
+    {
+        void Select(IEnumerable<IWebElement> table, int iRow);
+    }
+
+    public abstract class SelectionType : ISelectionType
     {
         public abstract void Select(IEnumerable<IWebElement> table, int iRow);
     }
 
     public interface IGridType
     {
-        bool GridSearch(IWebDriver driver, Dictionary<string, By> Locators, SelectionType oSelectType, List<string> criteria, bool blnAllTrue);
+        bool GridSearch(IWebDriver driver, Dictionary<string, By> Locators, ISelectionType oSelectType, List<string> criteria, bool blnAllTrue);
         int findRow(IEnumerable<IWebElement> tableRows, List<string> criteria, bool blnAllTrue = true, bool blnExactMatch = false);
-        void RowSelect(ReadOnlyCollection<IWebElement> tableRows, SelectionType oSelectType, int iRowFound);
+        void RowSelect(ReadOnlyCollection<IWebElement> tableRows, ISelectionType oSelectType, int iRowFound);
     }
 
     public abstract class GridType : IGridType
     {
-        private static readonly int _defaultTimeSpan = 1;
-        private static readonly int _timeDelay = 1500;
+        protected static readonly int _defaultTimeSpan = 1;
+        protected static readonly int _timeDelay = 1500;
 
         ///<summary>
         ///Grid Search:
@@ -40,7 +46,7 @@ namespace Element34.Utilities
         ///<param name="oSelectType">A derived selection type.</param>
         ///<param name="criteria">Criteria to find in a table row</param>
         ///<param name="blnAllTrue">all criteria must match if true, any one of criteria can match if false</param>
-        public bool GridSearch(IWebDriver driver, Dictionary<string, By> Locators, SelectionType oSelectType, List<string> criteria, bool blnAllTrue)
+        public bool GridSearch(IWebDriver driver, Dictionary<string, By> Locators, ISelectionType oSelectType, List<string> criteria, bool blnAllTrue)
         {
             int iRowFound = 0;
             bool blnKeepSearching = true;
@@ -152,8 +158,20 @@ namespace Element34.Utilities
 
             for (int iRow = 0, rowLength = tableRows.Count(); iRow < rowLength; iRow++)
             {
-                IWebElement row = tableRows.ElementAt(iRow);
-                IEnumerable<IWebElement> rowCells = row.FindElements(By.TagName("td"));
+                IWebElement row = null;
+                IEnumerable<IWebElement> rowCells = null;
+
+                // Common place for StaleElementReferenceException
+                try
+                {
+                    row = tableRows.ElementAt(iRow);
+                    rowCells = row.FindElements(By.TagName("td"));
+                }
+                catch (StaleElementReferenceException)
+                {
+                    row = tableRows.ElementAt(iRow);
+                    rowCells = row.FindElements(By.TagName("td"));
+                }
 
                 // This can cause a slowdown for tables with lots of columns where the criteria matches early columns.
                 // If that's the case, one can create an array of strings with null-values and initialize each cell on
@@ -197,7 +215,7 @@ namespace Element34.Utilities
         /// <param name="tableRows">ReadOnlyCollection of HTML "tr" objects as IWebElements.</param>
         /// <param name="oSelectType">A selection type derived from the SelectionType abstract class.</param>
         /// <param name="iRowFound">Index of the table row.</param>
-        public void RowSelect(ReadOnlyCollection<IWebElement> tableRows, SelectionType oSelectType, int iRowFound)
+        public void RowSelect(ReadOnlyCollection<IWebElement> tableRows, ISelectionType oSelectType, int iRowFound)
         {
             if (iRowFound > 0)
             {

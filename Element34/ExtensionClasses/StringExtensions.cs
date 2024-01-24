@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace Element34.ExtensionClasses
 {
@@ -40,7 +39,7 @@ namespace Element34.ExtensionClasses
         }
 
         /// <summary>
-        ///     A string extension method that replace first occurrence.
+        ///A string extension method that replace first occurrence.
         /// </summary>
         /// <param name="this">The @this to act on.</param>
         /// <param name="oldValue">The old value.</param>
@@ -59,7 +58,7 @@ namespace Element34.ExtensionClasses
         }
 
         /// <summary>
-        ///     A string extension method that replace first number of occurrences.
+        ///A string extension method that replace first number of occurrences.
         /// </summary>
         /// <param name="this">The @this to act on.</param>
         /// <param name="number">Number of.</param>
@@ -78,11 +77,23 @@ namespace Element34.ExtensionClasses
                    string.Join(oldValue, listEnd);
         }
 
-        public static string[] Split(this string @this, string delimiter) 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="this"></param>
+        /// <param name="delimiter"></param>
+        /// <returns></returns>
+        public static string[] Split(this string @this, string delimiter)
         {
             return Regex.Split(@this, delimiter);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="this"></param>
+        /// <param name="delimiters"></param>
+        /// <returns></returns>
         public static string[] Split(this string @this, string[] delimiters)
         {
             return Regex.Split(@this, string.Join("|", delimiters));

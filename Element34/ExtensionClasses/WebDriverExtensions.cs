@@ -1,4 +1,3 @@
-using Element34.ExtensionClasses;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Chromium;
@@ -7,38 +6,31 @@ using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.IE;
 using OpenQA.Selenium.Interactions;
 using OpenQA.Selenium.Support.UI;
+using SeleniumExtras.WaitHelpers;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data;
 using System.Diagnostics;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using Keys = OpenQA.Selenium.Keys;
 
 
-namespace Element34
+namespace Element34.ExtensionClasses
 {
     public static class WebDriverExtensions
     {
         #region Fields
         private static bool _acceptNextAlert = true;
         private const int _defaultTimeSpan = 45;
-        public const int timeDelay = 1500;
+        const int timeDelay = 1500;
         //private static Logger _logger;
         #endregion
-
-        public enum browserType
-        {
-            Chrome,
-            Firefox,
-            Edge,
-            IE
-        }
 
         public static string[] positiveResponse = new string[] { "y", "yes", "t", "true", "1", "+", "affirmative", "positive" };
         public static string[] negativeResponse = new string[] { "n", "no", "f", "false", "0", "-", "negative" };
@@ -115,6 +107,21 @@ namespace Element34
             IWebDriver driver = ((IWrapsDriver)selectElement).WrappedDriver;
             IJavaScriptExecutor js = (IJavaScriptExecutor)driver;
             return (T)js.ExecuteScript(script, args);
+        }
+
+        public static string InnerText(this IWebElement element)
+        {
+            return element.GetAttribute("innerText");
+        }
+
+        public static string InnerHTML(this IWebElement element)
+        {
+            return element.GetAttribute("innerHTML");
+        }
+
+        public static string Value(this IWebElement element)
+        {
+            return element.GetAttribute("value");
         }
 
         public static void actionClick(this IWebDriver driver, IWebElement element)
@@ -317,6 +324,127 @@ namespace Element34
             return (size == limit);
         }
 
+        public static By GetCssSelectLocator(this IWebElement element)
+        {// Experimental
+            string cssSelector = GetCssSelectText(element);
+            return By.CssSelector(cssSelector);
+        }
+
+        public static string GetCssSelectText(this IWebElement element)
+        {
+            // Use JavaScript to obtain the full XPath
+            IWebDriver driver = ((IWrapsDriver)element).WrappedDriver;
+            IJavaScriptExecutor executor = (IJavaScriptExecutor)driver;
+
+            string script =
+            "    var el = arguments[0];" +
+            "    if (!(el instanceof Element)) return;" +
+            "    var path = [];" +
+            "    while (el.nodeType === Node.ELEMENT_NODE) {" +
+            "        var selector = el.nodeName.toLowerCase();" +
+            "        if (el.id) {" +
+            "            selector += '#' + el.id;" +
+            "            path.unshift(selector);" +
+            "            break;" +
+            "        } else {" +
+            "            var sibling = el;" +
+            "            var nth = 1;" +
+            "            while (sibling = sibling.previousElementSibling) {" +
+            "                if (sibling.nodeName.toLowerCase() == selector) {" +
+            "                    nth++;" +
+            "                }" +
+            "            }" +
+            "            if (nth != 1) {" +
+            "                selector += ':nth-of-type(' + nth + ')';" +
+            "            }" +
+            "        }" +
+            "        path.unshift(selector);" +
+            "        el = el.parentNode;" +
+            "    }" +
+            "    return path.join(' > ');";
+
+            string cssSelector = (string)executor.ExecuteScript(script, element);
+
+            if (cssSelector != string.Empty)
+            {
+                cssSelector = "." + cssSelector;
+            }
+            return cssSelector;
+        }
+
+        public static By GetXPathLocator(this IWebElement element)
+        {
+            return By.XPath(element.GetXPathText());
+        }
+
+        public static string GetXPathText(this IWebElement element)
+        {
+            // Use JavaScript to obtain the full XPath
+            IWebDriver driver = ((IWrapsDriver)element).WrappedDriver;
+            IJavaScriptExecutor executor = (IJavaScriptExecutor)driver;
+
+            string script =
+            "function getElementIdx(ele) {" +
+            "    var count = 1;" +
+            "    for (var sib = ele.previousSibling; sib ; sib = sib.previousSibling) {" +
+            "        if (sib.nodeType == 1 && sib.tagName == ele.tagName) count++;" +
+            "    }" +
+            "    return count;" +
+            "}" +
+            "    var path = '';" +
+            "    var ele = arguments[0];" +
+            "    for (; ele && ele.nodeType == 1; ele = ele.parentNode) {" +
+            "        var idx = getElementIdx(ele);" +
+            "        var xname = ele.tagName;" +
+            "        if (idx > 1) xname += '[' + idx + ']';" +
+            "        path = '/' + xname + path;" +
+            "    }" +
+            "    return path;";
+
+            string fullXPath = (string)executor.ExecuteScript(script, element);
+            return fullXPath.ToLower();
+        }
+
+        public static By GetLocatorFromElement(this IWebElement element)
+        {// Experimental
+            By locator = null;
+            string[] pathVariables = (element.ToString().Split("->"))[1].ReplaceFirst("(?s)(.*)\\]", "$1" + "").Split(":");
+
+            string selector = pathVariables[0].Trim();
+            string value = pathVariables[1].Trim();
+
+            switch (selector)
+            {
+                case "id":
+                    locator = By.Id(value);
+                    break;
+                case "className":
+                    locator = By.ClassName(value);
+                    break;
+                case "tagName":
+                    locator = By.TagName(value);
+                    break;
+                case "xpath":
+                    locator = By.XPath(value);
+                    break;
+                case "cssSelector":
+                    locator = By.CssSelector(value);
+                    break;
+                case "linkText":
+                    locator = By.LinkText(value);
+                    break;
+                case "name":
+                    locator = By.Name(value);
+                    break;
+                case "partialLinkText":
+                    locator = By.PartialLinkText(value);
+                    break;
+                default:
+                    throw new InvalidOperationException("locator : " + selector + " not found!!!");
+            }
+            return locator;
+        }
+
         ///<summary>
         ///Check:
         /// 1) Absolute selection state of control.
@@ -360,6 +488,51 @@ namespace Element34
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// If an element is present, returns true, else return false.
+        /// </summary>
+        /// <param name="driver"></param>
+        /// <param name="locator">Provides a mechanism which to find elements in a document.</param>
+        /// <returns>true if webElement is present, else false</returns>
+        public static bool IsElementPresent(this IWebDriver driver, By locator)
+        {
+            bool exists = false;
+            ReadOnlyCollection<IWebElement> list = null;
+            TimeSpan tmp = driver.Manage().Timeouts().ImplicitWait;
+
+            try
+            {
+                driver.Manage().Timeouts().ImplicitWait = TimeSpan.Zero;
+                list = driver.FindElements(locator);  // We can verify the presence using list.Count
+            }
+            catch
+            { }
+            finally
+            {
+                driver.Manage().Timeouts().ImplicitWait = tmp;
+            }
+
+            if (list != null)
+            {
+                if (list.Count > 0)
+                {
+                    exists = true;
+                }
+            }
+
+            return exists;
+        }
+
+        public static bool IsElementHidden(this IWebDriver driver, By locator)
+        { 
+            return driver.IsElementHidden(driver.FindElement(locator));
+        }
+
+        public static bool IsElementHidden(this IWebDriver driver, IWebElement element)
+        {
+            return driver.ExecuteJavaScript<bool>("const styles = window.getComputedStyle(arguments[0]); return styles.display === 'none' || styles.visibility === 'hidden';", element);
         }
 
         /// <summary>
@@ -413,139 +586,25 @@ namespace Element34
         {  // GoToUrl() and Maximize() window in given time span
             timeOut = (timeOut == null) ? TimeSpan.FromSeconds(_defaultTimeSpan) : timeOut.Value;     // default value for TimeSpan parameter
 
-            driver.Manage().Timeouts().ImplicitWait = (TimeSpan)timeOut;
+            driver.Manage().Timeouts().PageLoad = (TimeSpan)timeOut;
             driver.Navigate().GoToUrl(URL);
             driver.Manage().Window.Maximize();
         }
 
-        public static void basicHTTPAuthenticationURL(this IWebDriver driver, string URL, string username, string password)
-        {   // Experimental: Workaround for Selenium WebDriver's lack of support for Basic HTTP Authentication.
-            int doubleSlash = URL.IndexOf("//") + 2;
-            URL = URL.Substring(0, doubleSlash) + Uri.EscapeDataString(username) + ":" + Uri.EscapeDataString(password) + "@" + URL.Substring(doubleSlash, URL.Length - doubleSlash);
+        public static void OpenWithBasicAuthURL(this IWebDriver driver, string URL, string username, string password)
+        {   // Workaround for Selenium WebDriver's lack of support for Basic HTTP Authentication.
+            string sDoubleSlash = @"//";
+            int iDblSlashOffset = URL.IndexOf(sDoubleSlash) + sDoubleSlash.Length;
+            URL = URL.Substring(0, iDblSlashOffset) + Uri.EscapeDataString(username) + ":" + Uri.EscapeDataString(password) + "@" + URL.Substring(iDblSlashOffset, URL.Length - iDblSlashOffset);
             driver.OpenBrowser(URL);
         }
 
-        public static void basicHTTPAuthenticationXHR(this IWebDriver driver, string URL, string username, string password)
-        {   // Experimental: Workaround for Selenium WebDriver's lack of support for Basic HTTP Authentication.
-
-            // Basic Authentication with XMLHttpRequest object:
-            StringBuilder script = new StringBuilder();
-            script.AppendLine("var xhr = new XMLHttpRequest();");
-            script.AppendLine("xhr.open('GET', '" + URL + "', true);");
-            script.AppendLine("xhr.setRequestHeader('Authorization', 'Basic ' + btoa('" + username + "' + ':' + '" + password + "'));");
-            script.AppendLine("xhr.onreadystatechange = function() {");
-            script.AppendLine("	if (xhr.readyState == 4 && xhr.status == 200) {");
-            script.AppendLine("	   document.write(xhr.responseText);");
-            script.AppendLine("	}");
-            script.AppendLine("}");
-            script.AppendLine("xhr.send();");
-
-            // execute script:
-            ((IJavaScriptExecutor)driver).ExecuteScript(script.ToString());
-        }
-
-        public static void basicHTTPAuthenticaionEx1(this IWebDriver driver, string URL, string username, string password)
-        {// Experimental: Workaround for Selenium WebDriver's lack of support for Basic HTTP Authentication.
-            string script;
-
-            string encodedString = Convert.ToBase64String(Encoding.Default.GetBytes(username + ":" + password));
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(URL);
-            request.Method = "GET";
-            request.Headers["Authorization"] = "Basic " + encodedString;
-
-            using (WebResponse response = request.GetResponse())
-            {
-                using (Stream stream = response.GetResponseStream())
-                {
-                    byte[] buffer = new byte[4096];
-                    StringBuilder sb = new StringBuilder();
-                    long totalBytesRead = 0;
-                    int bytesRead;
-
-                    while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)
-                    {
-                        totalBytesRead += bytesRead;
-                        sb.Append(Encoding.Default.GetString(buffer, 0, bytesRead));
-                    }
-
-                    script = "document.write(" + sb.ToString() + ");";
-                }
-            }
-            ((IJavaScriptExecutor)driver).ExecuteScript(script);
-        }
-
-        public static void basicHTTPAuthenticaionEx2(this IWebDriver driver, string URL, string username, string password)
-        {// Experimental: Workaround for Selenium WebDriver's lack of support for Basic HTTP Authentication.
-            string script;
-            Uri uri = new Uri(URL);
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(uri);
-
-            NetworkCredential credentials = new NetworkCredential(username, password);
-            CredentialCache cache = new CredentialCache { { uri, "Basic", credentials } };
-
-            request.PreAuthenticate = true;
-            request.Credentials = cache;
-
-            using (WebResponse response = request.GetResponse())
-            {
-                using (Stream responseStream = response.GetResponseStream())
-                {
-                    StreamReader streamReader = new StreamReader(responseStream, Encoding.Default);
-                    script = "document.write(" + streamReader.ReadToEnd() + ");";
-                }
-            }
-            ((IJavaScriptExecutor)driver).ExecuteScript(script);
-        }
-
-        public static async Task<IWebDriver> BasicHTTPAuthenticationEx3(this IWebDriver driver, string URL, string username, string password)
-        {
-            // Experimental: Workaround for Selenium WebDriver's lack of support for Basic HTTP Authentication.
-            NetworkAuthenticationHandler handler = new NetworkAuthenticationHandler()
-            {
-                UriMatcher = (d) => true,
-                Credentials = new PasswordCredentials(username, password)
-            };
-
-            INetwork networkInterceptor = driver.Manage().Network;
-            networkInterceptor.AddAuthenticationHandler(handler);
-
-            await Task.Run(async () =>
-            {
-                await networkInterceptor.StartMonitoring();
-                driver.Navigate().GoToUrl(URL);
-                await networkInterceptor.StopMonitoring();
-            });
-
-            return driver;
-        }
-
-
-        public static void basicHTTPAuthenticationEx4(this IWebDriver driver, string URL, string username, string password)
-        {// Experimental: Workaround for Selenium WebDriver's lack of support for Basic HTTP Authentication.
-         // Create the authentication extension
-            SeleniumChromeAuthExtensionBuilder authBuilder = new SeleniumChromeAuthExtensionBuilder()
-                .WithBasicAuth(username, password)
-                .WithBaseUrl(URL);
-
-            FileInfo authExtensionFile = authBuilder.Build();
-
-            // Configure ChromeOptions to add the extension
-            ChromeOptions chromeOptions = new ChromeOptions();
-            chromeOptions.AddExtension(authExtensionFile.FullName);
-
-            // Initialize the ChromeDriver with ChromeOptions
-            IWebDriver webDriver = new ChromeDriver(chromeOptions);
-
-            // Delete the authentication extension file
-            authExtensionFile.Delete();
-
-        }
-
-        public static void basicHTTPAuthenticationEx5(this IWebDriver driver, string URL, string username, string password)
-        {// Experimental: Workaround for Selenium WebDriver's lack of support for Basic HTTP Authentication.
-
-            // Switch back to the main window or frame (if needed)
-            driver.SwitchTo().DefaultContent();
+        public static void OpenNewTabWithBasicAuthURL(this TabManager<IWebDriver> tabs, string URL, string username, string password)
+        {   // Workaround for Selenium WebDriver's lack of support for Basic HTTP Authentication.
+            string sDoubleSlash = @"//";
+            int iDblSlashOffset = URL.IndexOf(sDoubleSlash) + sDoubleSlash.Length;
+            URL = URL.Substring(0, iDblSlashOffset) + Uri.EscapeDataString(username) + ":" + Uri.EscapeDataString(password) + "@" + URL.Substring(iDblSlashOffset, URL.Length - iDblSlashOffset);
+            tabs.OpenNewTab(URL);
         }
 
         public static void clearCache(this IWebDriver driver)
@@ -564,7 +623,7 @@ namespace Element34
                     // This section navigates to Chrome's privacy and security section.
                     // It was updated with ShadowRoot elements to reach the Clear Data button.
                     driver.Navigate().GoToUrl("chrome://settings/clearBrowserData");
-                    ShadowRoot shadowRoot1 = driver.getShadowRootElement(By.CssSelector("settings-ui"));
+                    ShadowRoot shadowRoot1 = driver.getShadowRootElement(By.TagName("settings-ui"));
                     ShadowRoot shadowRoot2 = driver.getShadowRootElement(shadowRoot1.FindElement(By.CssSelector("settings-main")));
                     ShadowRoot shadowRoot3 = driver.getShadowRootElement(shadowRoot2.FindElement(By.CssSelector("settings-basic-page")));
                     ShadowRoot shadowRoot4 = driver.getShadowRootElement(shadowRoot3.FindElement(By.CssSelector("settings-section > settings-privacy-page")));
@@ -658,7 +717,7 @@ namespace Element34
             if (element == null)
                 throw new ArgumentNullException(nameof(element));
 
-            bool exists= false;
+            bool exists = false;
 
             //Save implicit timeout to reset it later 
             TimeSpan tmp = driver.Manage().Timeouts().ImplicitWait;
@@ -846,10 +905,19 @@ namespace Element34
             return new ReadOnlyCollection<string>(result);
         }
 
-        public static void TakeScreenshot(this IWebDriver driver, string sPath, ScreenshotImageFormat format = ScreenshotImageFormat.Jpeg)
+        public static void TakeScreenshot(this IWebDriver driver, string sPath, ImageFormat format = null)
         {  // Take snapshot of current web browser screen and save to specified file
             Screenshot ss = ((ITakesScreenshot)driver).GetScreenshot();
-            ss.SaveAsFile(sPath, format);
+
+            if (format == null)
+                format = ImageFormat.Jpeg;
+
+            using (MemoryStream imageStream = new MemoryStream(ss.AsByteArray))
+            using (FileStream fileStream = new FileStream(sPath, FileMode.Create))
+            using (Image screenshotImage = Image.FromStream(imageStream))
+            {
+                screenshotImage.Save(fileStream, format);
+            }
         }
 
         public static bool? determineResponse(string sInput)
@@ -900,40 +968,23 @@ namespace Element34
 
         public static void PauseOnBusyIndicator(this IWebDriver driver, By locator, TimeSpan? timeOut = null)
         {
-            timeOut = (timeOut == null) ? TimeSpan.FromSeconds(30) : timeOut.Value;     // default value for TimeSpan parameter
-            ReadOnlyCollection<IWebElement> busyIndicators;
-
+            timeOut = (timeOut == null) ? TimeSpan.FromSeconds(_defaultTimeSpan) : timeOut.Value;                   // default value for TimeSpan parameter
+            WebDriverWait wait = new WebDriverWait(driver, (TimeSpan)timeOut);
             try
             {
-                busyIndicators = driver.FindElements(locator);
+                wait.Until(ExpectedConditions.ElementIsVisible(locator));                                               //wait for the loader to appear
+                wait.Until(ExpectedConditions.InvisibilityOfElementLocated(locator));                                   //wait for the loader to disappear
             }
-            catch
-            {
-                return;
-            }
-
-            Task task = Task.Run(() =>
-            {
-                foreach (var indicator in busyIndicators)
-                {
-                    if (indicator != null)
-                    {
-                        while (driver.HasChildren(indicator))
-                        {
-                            driver.wait_A_Moment(timeDelay / 10);
-                        }
-                    }
-                }
-            });
-
-            task.Wait((TimeSpan)timeOut);
+            catch { }
+            driver.wait_A_Moment(timeDelay);
         }
 
-        public static void CloseProcesses(browserType browser)
+        public static void CloseProcesses(BrowserType browser)
         {  // Forcefully kill off old test processes from previous iteration(s)
             switch (browser)
             {
-                case browserType.Chrome:
+                case BrowserType.Chrome:
+                case BrowserType.Chromium:
                     foreach (Process p in Process.GetProcesses("."))
                     {
                         try
@@ -945,7 +996,7 @@ namespace Element34
                     }
                     break;
 
-                case browserType.Firefox:
+                case BrowserType.Firefox:
                     foreach (Process p in Process.GetProcesses("."))
                     {
                         try
@@ -957,7 +1008,7 @@ namespace Element34
                     }
                     break;
 
-                case browserType.Edge:
+                case BrowserType.Edge:
                     foreach (Process p in Process.GetProcesses("."))
                     {
                         try
@@ -969,7 +1020,7 @@ namespace Element34
                     }
                     break;
 
-                case browserType.IE:
+                case BrowserType.IE:
                     // Who the hell uses IE these days?!?
                     foreach (Process p in Process.GetProcesses("."))
                     {
@@ -987,11 +1038,11 @@ namespace Element34
             }
         }
 
-        public static void CloseBrowser(browserType browser)
+        public static void CloseBrowser(BrowserType browser)
         {  // Forcefully kill off old test processes from previous iteration(s)
             switch (browser)
             {
-                case browserType.Chrome:
+                case BrowserType.Chrome:
                     foreach (Process p in Process.GetProcesses("."))
                     {
                         try
@@ -1003,7 +1054,7 @@ namespace Element34
                     }
                     break;
 
-                case browserType.Firefox:
+                case BrowserType.Firefox:
                     foreach (Process p in Process.GetProcesses("."))
                     {
                         try
@@ -1015,7 +1066,7 @@ namespace Element34
                     }
                     break;
 
-                case browserType.Edge:
+                case BrowserType.Edge:
                     foreach (Process p in Process.GetProcesses("."))
                     {
                         try
@@ -1027,7 +1078,7 @@ namespace Element34
                     }
                     break;
 
-                case browserType.IE:
+                case BrowserType.IE:
                     // Who the hell uses IE these days?!?
                     foreach (Process p in Process.GetProcesses("."))
                     {
@@ -1168,13 +1219,13 @@ namespace Element34
             return driver.ExecuteJavaScript<ShadowRoot>("return arguments[0].shadowRoot", element);
         }
 
-        private static IWebDriver getDriver(browserType browser, string[] browserArguments = null)
+        private static IWebDriver getDriver(BrowserType browser, string[] browserArguments = null)
         {
             IWebDriver driver;
 
             switch (browser)
             {
-                case browserType.Chrome:
+                case BrowserType.Chrome:
                     if (browserArguments != null)
                     {
                         var options = new ChromeOptions();
@@ -1182,10 +1233,10 @@ namespace Element34
                         driver = new ChromeDriver(options);
                     }
                     else
-                        driver = new ChromeDriver();
+                        driver = WebDriverFactory.CreateChromeDriver();
                     break;
 
-                case browserType.Firefox:
+                case BrowserType.Firefox:
                     if (browserArguments != null)
                     {
                         var options = new FirefoxOptions();
@@ -1196,7 +1247,7 @@ namespace Element34
                         driver = new FirefoxDriver();
                     break;
 
-                case browserType.Edge:
+                case BrowserType.Edge:
                     if (browserArguments != null)
                     {
                         var options = new EdgeOptions();
@@ -1207,7 +1258,7 @@ namespace Element34
                         driver = new EdgeDriver();
                     break;
 
-                case browserType.IE:
+                case BrowserType.IE:
                     if (browserArguments != null)
                     {
                         var options = new InternetExplorerOptions();

@@ -3,7 +3,7 @@ using OpenQA.Selenium;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using static Element34.WebDriverExtensions;
+using static Element34.ExtensionClasses.WebDriverExtensions;
 
 namespace SeleniumTest
 {

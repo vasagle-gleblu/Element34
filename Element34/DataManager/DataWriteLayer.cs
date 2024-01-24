@@ -1,6 +1,5 @@
 ﻿using Newtonsoft.Json;
 using OfficeOpenXml;
-using OfficeOpenXml.FormulaParsing.Excel.Functions.RefAndLookup;
 using OfficeOpenXml.Style;
 using System;
 using System.Data;
@@ -225,6 +224,17 @@ namespace Element34.DataManager
             }
         }
 
+        public static void CreateBackupXLS(string sFilename)
+        {
+            using (ExcelPackage pkg = new ExcelPackage(new FileInfo(sFilename)))
+            {
+                string path = Path.Combine(Path.GetDirectoryName(sFilename), Path.GetFileNameWithoutExtension(sFilename) + "_bak", Path.GetExtension(sFilename));
+                Stream stream = File.Create(path);
+                pkg.SaveAs(stream);
+                stream.Close();
+            }
+        }
+
         public static void UpdateWkshtXLS(string sFilename, DataTable dt, string sheetName = "")
         {
             DataRow row = null;
@@ -235,6 +245,8 @@ namespace Element34.DataManager
                 tmp = (dt.TableName == string.Empty) ? Path.GetFileNameWithoutExtension(Path.GetFileName(sFilename)) : dt.TableName.Replace("$", string.Empty);
             else
                 tmp = sheetName;
+
+            CreateBackupXLS(sFilename);
 
             using (ExcelPackage pkg = new ExcelPackage(new FileInfo(sFilename)))
             {
@@ -323,6 +335,23 @@ namespace Element34.DataManager
                             // Cell values
                             wksht.Cells[j + offset + 1, i + 1].Value = Normalize(row[i].ToString());
                         }
+                    }
+
+                    pkg.Save();
+                }
+            }
+            else if (e.Action == DataRowAction.Change)
+            {
+                // Open file
+                using (ExcelPackage pkg = new ExcelPackage(oFile))
+                using (ExcelWorkbook wkbk = pkg.Workbook)
+                using (ExcelWorksheet wksht = wkbk.Worksheets[sheetName])
+                {
+                    // Build updated row
+                    for (int i = 0; i < dt.Columns.Count; i++)
+                    {
+                        // Cell values
+                        wksht.Cells[recordIndex, i + 1].Value = Normalize(e.Row[i].ToString());
                     }
 
                     pkg.Save();

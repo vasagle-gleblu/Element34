@@ -1,11 +1,11 @@
-﻿using System;
-using System.Text;
+﻿using Element34;
 using NUnit.Framework;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Support.Events;
-using OpenQA.Selenium.Support.UI;
-
+using System;
+using System.Threading;
+using static Element34.ExtensionClasses.WebDriverExtensions;
 
 namespace SeleniumTest
 {
@@ -15,13 +15,15 @@ namespace SeleniumTest
         private IWebDriver baseDriver;
         private EventFiringWebDriver driver;
         private string baseURL;
+        private readonly int timeDelay = 2000;
 
         [SetUp]
         public void SetupTest()
         {
+            CloseProcesses(BrowserType.Chrome);
             baseDriver = new ChromeDriver();
             driver = new EventFiringWebDriver(baseDriver);
-            baseURL = "https://www.SauceLabs.com";
+            baseURL = "https://accounts.saucelabs.com/am/XUI/#login/";
         }
 
         [TearDown]
@@ -37,16 +39,20 @@ namespace SeleniumTest
             }
         }
 
-        [Test(Description = "Check SauceLabs Homepage for Login Link")]
+        [Test(Description = "Check SauceLabs Homepage for Login page.")]
         public void theTest()
         {
             driver.Navigate().GoToUrl(baseURL);
 
-            WebDriverWait wait = new WebDriverWait(driver, System.TimeSpan.FromSeconds(15));
-            wait.Until(driver => driver.FindElement(By.XPath("//a[@href='/beta/login']")));
+            driver.Manage().Window.Maximize();
 
-            IWebElement element = driver.FindElement(By.XPath("//a[@href='/beta/login']"));
-            Assert.AreEqual("Sign In", element.GetAttribute("text"));
+            Thread.Sleep(timeDelay);
+            Thread.Yield();
+
+            By locator = By.XPath("//*[@id='content']/div/div/section[1]/div/h3");
+            IWebElement element = driver.FindElement(locator);
+
+            Assert.That("Sign in" == element.Text);
 
             driver.Close();
         }

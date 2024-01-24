@@ -34,12 +34,22 @@ namespace Element34.Utilities
 
         public static string searchUpForFolder(string sInput)
         {
+            if (String.IsNullOrEmpty(sInput))
+            {
+                throw new ArgumentException("Path not specified.");
+            }
+
             string currentFolder = AssemblyLocation;
             string[] list = Directory.GetDirectories(currentFolder, sInput);
 
             while (list.Length == 0)
             {
                 currentFolder = Path.GetFullPath(Path.Combine(currentFolder, ".."));
+                if (currentFolder == Path.GetPathRoot(currentFolder)) 
+                {
+                    throw new DirectoryNotFoundException();
+                }
+
                 list = Directory.GetDirectories(currentFolder, sInput);
             }
 

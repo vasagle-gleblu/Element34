@@ -16,21 +16,33 @@ A complementary framework for Selenium WebDriver in C#.
 
 ## Project Overview
 
-Selenium WebDriver is a tool used for automating web-based application testing.  However, the module leaves you with a bare bones API with no means of loading in test data or recording basic results.  This project is meant to bridge that gap by providing such a complementary framework to WebDriver in C#.
+Selenium WebDriver is a tool used for automating web-based application testing.  However, the module leaves you with a bare bones API with no means of loading in test data or recording basic results in a report.  This project is meant to bridge that gap by providing such a complementary framework to WebDriver in C#.
 
 ## Features
 
-List the key features of your project. Use bullet points to make it easy to read.
+With a focus on practicality, and scripting-centric design, this package integrates a range of features to elevate your scripting and deliver results.
 
-- Feature 1
-- Feature 2
-- ...
+- Integrated Test Data Loading Solution including support for:
+	- Excel files (XLS/XLSX)
+	- Comma Separated Value files (CSV)
+	- Access database files (MDB/ACCDB)
+	- MS-SQL Server
+	- Other databases?
+- Integrated Desktop Video Recording
+- Integration of WebDrivers for the following browsers:
+	- Google Chrome
+	- Mozilla Firefox
+	- Microsoft Edge
+	- Microsoft Internet Explorer
+- Something, something...
 
 ## Getting Started
 
-Explain how to get started with your project. This should include information about prerequisites, installation, and any initial setup that users need to perform.
+To get started you should clone the code from GitHub and download the required NuGet packages.
 
 ### Prerequisites
+- .NET Framework 4.8.1
+- other platforms?
 
 #### NuGet Packages:
 - DotNetSeleniumExtras.WaitHelpers by SeleniumExtras.WaitHelpers: This package provides an implementation of the ExpectedConditions class for use with WebDriverWait in .NET, replacing the implementation originally provided by the Selenium project.

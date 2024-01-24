@@ -163,21 +163,21 @@ namespace Element34.DataManager
             using (ExcelPackage pkg = new ExcelPackage(oFile))
             {
                 // Iterate through all worksheets in the Excel file
-                foreach (ExcelWorksheet wksht in pkg.Workbook.Worksheets)
+                foreach (ExcelWorksheet WkSht in pkg.Workbook.Worksheets)
                 {
                     // Create a DataTable for each worksheet
-                    DataTable dt = new DataTable(wksht.Name);
+                    DataTable dt = new DataTable(WkSht.Name);
 
                     // Add columns to the DataTable
-                    foreach (ExcelRangeBase headerCell in wksht.Cells[1, 1, 1, wksht.Dimension.End.Column])
+                    foreach (ExcelRangeBase headerCell in WkSht.Cells[1, 1, 1, WkSht.Dimension.End.Column])
                     {
                         dt.Columns.Add(headerCell.Text);
                     }
 
                     // Add rows to the DataTable
-                    for (int row = 2; row <= wksht.Dimension.End.Row; row++)
+                    for (int row = 2; row <= WkSht.Dimension.End.Row; row++)
                     {
-                        ExcelRange excelRow = wksht.Cells[row, 1, row, wksht.Dimension.End.Column];
+                        ExcelRange excelRow = WkSht.Cells[row, 1, row, WkSht.Dimension.End.Column];
                         DataRow newRow = dt.Rows.Add();
                         newRow.ItemArray = excelRow.Select(cell => cell.Text).ToArray();
                     }

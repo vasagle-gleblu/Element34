@@ -22,14 +22,12 @@ namespace Element34
         public void OpenNewTab(string url)
         {
             driver.SwitchTo().NewWindow(WindowType.Tab);
-            SwitchToLastTab();
             driver.Navigate().GoToUrl(url);
         }
 
         public void OpenNewTab()
         {
             driver.SwitchTo().NewWindow(WindowType.Tab);
-            SwitchToLastTab();
         }
 
         public void SwitchToTab(int tabIndex)
@@ -46,12 +44,12 @@ namespace Element34
 
         public void SwitchToLastTab()
         {
-            SwitchToTab(driver.WindowHandles.Count - 1);
+            driver.SwitchTo().Window(driver.WindowHandles[driver.WindowHandles.Count - 1]);
         }
 
         public void SwitchToFirstTab()
         {
-            SwitchToTab(0);
+            driver.SwitchTo().Window(driver.WindowHandles[0]);
         }
 
         public void CloseCurrentTab()

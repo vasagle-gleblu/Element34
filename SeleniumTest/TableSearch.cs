@@ -1,13 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using NUnit.Framework.Internal;
+﻿using Element34;
 using NUnit.Framework;
+using NUnit.Framework.Internal;
 using OpenQA.Selenium;
-using OpenQA.Selenium.Interactions;
 using OpenQA.Selenium.Chrome;
-using Element34;
-using static Element34.WebDriverExtensions;
-
+using OpenQA.Selenium.Interactions;
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using static Element34.ExtensionClasses.WebDriverExtensions;
 
 namespace SeleniumTest
 {
@@ -16,13 +16,14 @@ namespace SeleniumTest
         #region Fields
         private IWebDriver driver;
         private Actions action;
-        private readonly string name = "Table Search";
+        private readonly int timeDelay = 2000;
         #endregion
 
         [SetUp]
         public void SetupTest()
         {
-            CloseProcesses(browserType.Chrome);
+            CloseProcesses(BrowserType.Chrome);
+
             driver = new ChromeDriver();
             action = new Actions(driver);
         }
@@ -47,6 +48,7 @@ namespace SeleniumTest
             Gyupo9GridType grid = new Gyupo9GridType();
             Gyupo9GridType.NoneSelectionType noneSelectionType = new Gyupo9GridType.NoneSelectionType();
 
+            driver.clearCache();
             driver.OpenBrowser("https://gyupo9.sse.codesandbox.io/");
             driver.wait_A_Moment(timeDelay);
 
@@ -61,10 +63,13 @@ namespace SeleniumTest
 
             List<string> criteria = new List<string>
             {
-                "Antonietta",
-                "Grady",
+                "Berneice",
+                "Cummerata",
                 "single"
             };
+
+            Thread.Sleep(15000);
+            Thread.Yield();
 
             bool blnResult = grid.GridSearch(driver, Locators, noneSelectionType, criteria, true);
             driver.wait_A_Moment(timeDelay);
@@ -72,7 +77,7 @@ namespace SeleniumTest
             driver.Close();
 
             // Test Case test result
-            Assert.IsTrue(blnResult);
+            Assert.That(true == blnResult);
         }
 
         [Test(Description = "Search through paginated HTML table")]
@@ -81,6 +86,7 @@ namespace SeleniumTest
             MdbootstrapGridType grid = new MdbootstrapGridType();
             MdbootstrapGridType.NoneSelectionType noneSelectionType = new MdbootstrapGridType.NoneSelectionType();
 
+            driver.clearCache();
             driver.OpenBrowser("https://mdbootstrap.com/docs/b4/jquery/tables/pagination/");
             driver.wait_A_Moment(timeDelay);
 
@@ -105,7 +111,7 @@ namespace SeleniumTest
             driver.Close();
 
             // Test Case test result
-            Assert.IsTrue(blnResult);
+            Assert.That(true == blnResult);
         }
     }
 }
