@@ -5,7 +5,7 @@ using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Support.Events;
 using System;
 using System.Threading;
-using static Element34.ExtensionClasses.WebDriverExtensions;
+using static Element34.ExtensionClasses.WebDriverExtras;
 
 namespace SeleniumTest
 {

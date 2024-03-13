@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text;
 
 namespace Element34.StringMetrics.Similarity
 {
@@ -62,7 +61,7 @@ namespace Element34.StringMetrics.Similarity
                     if (ct.Item1[r - 1] == ct.Item2[c - 1])
                         matrix[r, c] = matrix[r - 1, c - 1];
                     else
-                        matrix[r, c] = MathExt.Min(matrix[r - 1, c] + w.Item1, matrix[r, c - 1] + w.Item2, matrix[r - 1, c - 1] + w.Item3);
+                        matrix[r, c] = MathExtensions.Min(matrix[r - 1, c] + w.Item1, matrix[r, c - 1] + w.Item2, matrix[r - 1, c - 1] + w.Item3);
                 }
             }
 

@@ -25,60 +25,163 @@ namespace Element34.DataManager
 
         #region [Public Functions]
         #region [MS-SQL Server Support]
-        public static DataSet DataSetFromMsSql(string sqlConn, string sqlQuery, Dictionary<string, object> paramList = null)
+        public static DataSet DataSetFromMsSql(SqlConnection sqlConn, string sqlQuery, Dictionary<string, object> paramList = null)
         {
             DataSet result = new DataSet();
-            using (SqlConnection connection = new SqlConnection(sqlConn))
+            using (SqlCommand command = new SqlCommand(sqlQuery, sqlConn))
             {
-                using (SqlCommand command = new SqlCommand(sqlQuery, connection))
+                if (paramList != null)
                 {
-                    if (paramList != null)
+                    command.Parameters.Clear();
+                    foreach (KeyValuePair<string, object> param in paramList)
                     {
-                        command.Parameters.Clear();
-                        foreach (KeyValuePair<string, object> param in paramList)
-                        {
-                            command.Parameters.AddWithValue(param.Key, param.Value);
-                        }
+                        command.Parameters.AddWithValue(param.Key, param.Value);
                     }
+                }
 
-                    using (SqlDataAdapter sda = new SqlDataAdapter(command))
-                    {
-                        connection.Open();
-                        sda.Fill(result);
-                        connection.Close();
-                    }
+                using (SqlDataAdapter sda = new SqlDataAdapter(command))
+                {
+                    sqlConn.Open();
+                    sda.Fill(result);
+                    sqlConn.Close();
                 }
             }
 
             return result;
         }
 
-        public static DataTable DataTableFromMsSql(string sqlConn, string sqlQuery, Dictionary<string, object> paramList = null)
+        public static DataTable DataTableFromMsSql(SqlConnection sqlConn, string sqlQuery, Dictionary<string, object> paramList = null)
         {
             DataTable result = new DataTable();
-            using (SqlConnection connection = new SqlConnection(sqlConn))
+            using (SqlCommand command = new SqlCommand(sqlQuery, sqlConn))
             {
-                using (SqlCommand command = new SqlCommand(sqlQuery, connection))
+                if (paramList != null)
                 {
-                    if (paramList != null)
+                    command.Parameters.Clear();
+                    foreach (KeyValuePair<string, object> param in paramList)
                     {
-                        command.Parameters.Clear();
-                        foreach (KeyValuePair<string, object> param in paramList)
-                        {
-                            command.Parameters.AddWithValue(param.Key, param.Value);
-                        }
+                        command.Parameters.AddWithValue(param.Key, param.Value);
                     }
+                }
 
-                    using (SqlDataAdapter sda = new SqlDataAdapter(command))
-                    {
-                        connection.Open();
-                        sda.Fill(result);
-                        connection.Close();
-                    }
+                using (SqlDataAdapter sda = new SqlDataAdapter(command))
+                {
+                    sqlConn.Open();
+                    sda.Fill(result);
+                    sqlConn.Close();
                 }
             }
 
             return result;
+        }
+
+        private static string ParameterValueForSQL(SqlParameter sp)
+        {
+            string retval;
+            switch (sp.SqlDbType)
+            {
+                case SqlDbType.Char:
+                case SqlDbType.NChar:
+                case SqlDbType.NText:
+                case SqlDbType.NVarChar:
+                case SqlDbType.Text:
+                case SqlDbType.Time:
+                case SqlDbType.VarChar:
+                case SqlDbType.Xml:
+                case SqlDbType.Date:
+                case SqlDbType.DateTime:
+                case SqlDbType.DateTime2:
+                case SqlDbType.DateTimeOffset:
+                    retval = "'" + sp.Value.ToString().Replace("'", "''") + "'";
+                    break;
+
+                case SqlDbType.Bit:
+                    retval = ToBooleanOrDefault(sp.Value, false) ? "1" : "0";
+                    break;
+
+                default:
+                    retval = sp.Value.ToString().Replace("'", "''");
+                    break;
+            }
+
+            return retval;
+        }
+
+        private static string ParameterValueForSQL(OleDbParameter sp)
+        {
+            string retval;
+            switch (sp.OleDbType)
+            {
+                case OleDbType.Char:
+                case OleDbType.WChar:
+                case OleDbType.VarChar:
+                case OleDbType.VarWChar:
+                case OleDbType.LongVarChar:
+                case OleDbType.LongVarWChar:
+                case OleDbType.Date:
+                case OleDbType.DBTime:
+                case OleDbType.DBDate:
+                case OleDbType.DBTimeStamp:
+                    retval = "'" + sp.Value.ToString().Replace("'", "''") + "'";
+                    break;
+
+                case OleDbType.Boolean:
+                    retval = ToBooleanOrDefault(sp.Value, false) ? "1" : "0";
+                    break;
+
+                default:
+                    retval = sp.Value.ToString().Replace("'", "''");
+                    break;
+            }
+
+            return retval;
+        }
+
+        private static bool ToBooleanOrDefault(object o, bool Default)
+        {
+            return ToBooleanOrDefault((string)o, Default);
+        }
+
+        private static bool ToBooleanOrDefault(string s, bool defaultValue)
+        {
+            if (string.IsNullOrEmpty(s))
+            {
+                return defaultValue;
+            }
+
+            // Convert input string to lowercase for case-insensitive comparison
+            string lowerCaseString = s.ToLower();
+
+            switch (lowerCaseString)
+            {
+                case "yes":
+                case "affirmative":
+                case "positive":
+                case "true":
+                case "ok":
+                case "okay":
+                case "y":
+                case "+":
+                    return true;
+                case "no":
+                case "negative":
+                case "negatory":
+                case "false":
+                case "n":
+                case "-":
+                    return false;
+                default:
+                    bool parsedValue;
+                    if (bool.TryParse(lowerCaseString, out parsedValue))
+                    {
+                        return parsedValue;
+                    }
+                    else
+                    {
+                        // Parsing failed, return default value
+                        return defaultValue;
+                    }
+            }
         }
         #endregion
 
@@ -201,6 +304,9 @@ namespace Element34.DataManager
             {
                 // Select named worksheet, default to first if name not supplied
                 ExcelWorksheet worksheet = (string.IsNullOrEmpty(sSheetName)) ? package.Workbook.Worksheets[0] : package.Workbook.Worksheets[sSheetName];
+                if (worksheet == null)
+                    throw new Exception("Worksheet not found");
+
                 int colCount = worksheet.Dimension.End.Column;  // get column count
                 int rowCount = worksheet.Dimension.End.Row;     // get row count
                 int start = 1;
@@ -357,6 +463,21 @@ namespace Element34.DataManager
 
             return result;
         }
+
+        private static T DeserializefromXML<T>(this string sInput)
+        {
+            T result = default(T);
+
+            DataContractSerializer serializer = new DataContractSerializer(typeof(T));
+            using (StringReader strReader = new StringReader(sInput))
+            using (XmlReader xmlReader = XmlReader.Create(strReader))
+            {
+                result = (T)serializer.ReadObject(xmlReader);
+            }
+            serializer = null;
+
+            return result;
+        }
         #endregion
 
         #region [JSON File Support]
@@ -384,133 +505,12 @@ namespace Element34.DataManager
 
             return result;
         }
-        #endregion
-        #endregion
-
-        #region [Private Functions]
-        private static string ParameterValueForSQL(SqlParameter sp)
-        {
-            string retval;
-            switch (sp.SqlDbType)
-            {
-                case SqlDbType.Char:
-                case SqlDbType.NChar:
-                case SqlDbType.NText:
-                case SqlDbType.NVarChar:
-                case SqlDbType.Text:
-                case SqlDbType.Time:
-                case SqlDbType.VarChar:
-                case SqlDbType.Xml:
-                case SqlDbType.Date:
-                case SqlDbType.DateTime:
-                case SqlDbType.DateTime2:
-                case SqlDbType.DateTimeOffset:
-                    retval = "'" + sp.Value.ToString().Replace("'", "''") + "'";
-                    break;
-
-                case SqlDbType.Bit:
-                    retval = ToBooleanOrDefault(sp.Value, false) ? "1" : "0";
-                    break;
-
-                default:
-                    retval = sp.Value.ToString().Replace("'", "''");
-                    break;
-            }
-
-            return retval;
-        }
-
-        private static string ParameterValueForSQL(OleDbParameter sp)
-        {
-            string retval;
-            switch (sp.OleDbType)
-            {
-                case OleDbType.Char:
-                case OleDbType.WChar:
-                case OleDbType.VarChar:
-                case OleDbType.VarWChar:
-                case OleDbType.LongVarChar:
-                case OleDbType.LongVarWChar:
-                case OleDbType.Date:
-                case OleDbType.DBTime:
-                case OleDbType.DBDate:
-                case OleDbType.DBTimeStamp:
-                    retval = "'" + sp.Value.ToString().Replace("'", "''") + "'";
-                    break;
-
-                case OleDbType.Boolean:
-                    retval = ToBooleanOrDefault(sp.Value, false) ? "1" : "0";
-                    break;
-
-                default:
-                    retval = sp.Value.ToString().Replace("'", "''");
-                    break;
-            }
-
-            return retval;
-        }
-
-        private static bool ToBooleanOrDefault(string s, bool Default)
-        {
-            return ToBooleanOrDefault((object)s, Default);
-        }
-
-        private static bool ToBooleanOrDefault(object o, bool Default)
-        {
-            bool ReturnVal = Default;
-            try
-            {
-                if (o != null)
-                {
-                    switch (o.ToString().ToLower())
-                    {
-                        case "yes":
-                        case "affirmative":
-                        case "positive":
-                        case "true":
-                        case "ok":
-                        case "y":
-                        case "+":
-                            ReturnVal = true;
-                            break;
-                        case "no":
-                        case "negative":
-                        case "false":
-                        case "n":
-                        case "-":
-                            ReturnVal = false;
-                            break;
-                        default:
-                            ReturnVal = bool.Parse(o.ToString());
-                            break;
-                    }
-                }
-            }
-            catch
-            {
-            }
-            return ReturnVal;
-        }
 
         private static T DeserializeFromJSON<T>(this string sInput)
         {
             return JsonConvert.DeserializeObject<T>(sInput);
         }
-
-        private static T DeserializefromXML<T>(this string sInput)
-        {
-            T result = default(T);
-
-            DataContractSerializer serializer = new DataContractSerializer(typeof(T));
-            using (StringReader strReader = new StringReader(sInput))
-            using (XmlReader xmlReader = XmlReader.Create(strReader))
-            {
-                result = (T)serializer.ReadObject(xmlReader);
-            }
-            serializer = null;
-
-            return result;
-        }
+        #endregion
         #endregion
     }
 }

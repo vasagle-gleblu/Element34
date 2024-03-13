@@ -46,7 +46,7 @@ To get started you should clone the code from GitHub and download the required N
 
 #### NuGet Packages:
 - DotNetSeleniumExtras.WaitHelpers by SeleniumExtras.WaitHelpers: This package provides an implementation of the ExpectedConditions class for use with WebDriverWait in .NET, replacing the implementation originally provided by the Selenium project.
-- Selenium.Support by Selenium Committers: Provides support classes for Selenium WebDriver.
+- Selenium.Support by Selenium Committers: Provides support classes for Selenium Webdvr.
 - Selenium.WebDriver by Selenium Committers: .NET bindings for the Selenium WebDriver API.
 - EPPlusFree by Rimland: EPPlusFree is an unofficial EPPlus library, it is a continuation of EPPlus Free Edition 4.5.3.3
 - Selenium.WebDriver.ChromeDriver by jsakamoto: Google Selenium.WebDriver.ChromeDriver package.
@@ -99,7 +99,7 @@ To get started you should clone the code from GitHub and download the required N
 - System.Xml
 - System.Xml.Linq
 - WebDriver
-- WebDriver.Support
+- Webdvr.Support
 - WindowsBase
 
 ### Installation

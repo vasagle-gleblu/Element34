@@ -1,225 +1,90 @@
-﻿namespace System
+﻿using System;
+using System.Linq;
+
+namespace System
 {
-    public static class MathExt
+    public static class MathExtensions
     {
-        public static SByte Max(params SByte[] inputs)
+        // Max Method
+        public static T Max<T>(params T[] values) where T : IComparable<T>
         {
-            SByte highest = inputs[0];
+            if (values == null || values.Length == 0)
+            {
+                throw new ArgumentException("At least one value must be provided.");
+            }
 
-            foreach (SByte input in inputs)
-                if (input > highest) highest = input;
-
-            return highest;
+            return values.Max();
         }
 
-        public static SByte Min(params SByte[] inputs)
+        // Min Method
+        public static T Min<T>(params T[] values) where T : IComparable<T>
         {
-            SByte lowest = inputs[0];
+            if (values == null || values.Length == 0)
+            {
+                throw new ArgumentException("At least one value must be provided.");
+            }
 
-            foreach (SByte input in inputs)
-                if (input < lowest) lowest = input;
-
-            return lowest;
+            return values.Min();
         }
 
-        public static Byte Max(params Byte[] inputs)
+        // Average Method
+        public static double Average<T>(params T[] values)
         {
-            Byte highest = inputs[0];
+            if (values == null || values.Length == 0)
+            {
+                throw new ArgumentException("At least one value must be provided.");
+            }
 
-            foreach (Byte input in inputs)
-                if (input > highest) highest = input;
-
-            return highest;
+            return values.Average(x => Convert.ToDouble(x));
         }
 
-        public static Byte Min(params Byte[] inputs)
+        // Sum Method
+        public static T Sum<T>(params T[] values)
         {
-            Byte lowest = inputs[0];
+            if (values == null || values.Length == 0)
+            {
+                throw new ArgumentException("At least one value must be provided.");
+            }
 
-            foreach (Byte input in inputs)
-                if (input < lowest) lowest = input;
-
-            return lowest;
+            dynamic sum = 0;
+            foreach (T value in values)
+            {
+                sum += value;
+            }
+            return sum;
         }
 
-        public static Int16 Max(params Int16[] inputs)
+        // Product Method
+        public static T Product<T>(params T[] values)
         {
-            Int16 highest = inputs[0];
+            if (values == null || values.Length == 0)
+            {
+                throw new ArgumentException("At least one value must be provided.");
+            }
 
-            foreach (Int16 input in inputs)
-                if (input > highest) highest = input;
-
-            return highest;
+            dynamic product = 1;
+            foreach (T value in values)
+            {
+                product *= value;
+            }
+            return product;
         }
 
-        public static Int16 Min(params Int16[] inputs)
+        // Absolute Value Method
+        public static T Abs<T>(params T[] values) where T : struct, IComparable<T>
         {
-            Int16 lowest = inputs[0];
+            if (values == null || values.Length == 0)
+            {
+                throw new ArgumentException("At least one value must be provided.");
+            }
 
-            foreach (Int16 input in inputs)
-                if (input < lowest) lowest = input;
-
-            return lowest;
+            dynamic absValue = Convert.ToDouble(values[0]);
+            foreach (T value in values)
+            {
+                absValue = Max(absValue, Convert.ToDouble(value));
+            }
+            return absValue < 0 ? (T)(-absValue) : (T)absValue;
         }
 
-        public static Int32 Max(params Int32[] inputs)
-        {
-            Int32 highest = inputs[0];
-
-            foreach (Int32 input in inputs)
-                if (input > highest) highest = input;
-
-            return highest;
-        }
-
-        public static Int32 Min(params Int32[] inputs)
-        {
-            Int32 lowest = inputs[0];
-
-            foreach (Int32 input in inputs)
-                if (input < lowest) lowest = input;
-
-            return lowest;
-        }
-
-        public static Int64 Max(params Int64[] inputs)
-        {
-            Int64 highest = inputs[0];
-
-            foreach (Int64 input in inputs)
-                if (input > highest) highest = input;
-
-            return highest;
-        }
-
-        public static Int64 Min(params Int64[] inputs)
-        {
-            Int64 lowest = inputs[0];
-
-            foreach (Int64 input in inputs)
-                if (input < lowest) lowest = input;
-
-            return lowest;
-        }
-
-        public static UInt16 Max(params UInt16[] inputs)
-        {
-            UInt16 highest = inputs[0];
-
-            foreach (UInt16 input in inputs)
-                if (input > highest) highest = input;
-
-            return highest;
-        }
-
-        public static UInt16 Min(params UInt16[] inputs)
-        {
-            UInt16 lowest = inputs[0];
-
-            foreach (UInt16 input in inputs)
-                if (input < lowest) lowest = input;
-
-            return lowest;
-        }
-
-        public static UInt32 Max(params UInt32[] inputs)
-        {
-            UInt32 highest = inputs[0];
-
-            foreach (UInt32 input in inputs)
-                if (input > highest) highest = input;
-
-            return highest;
-        }
-
-        public static UInt32 Min(params UInt32[] inputs)
-        {
-            UInt32 lowest = inputs[0];
-
-            foreach (UInt32 input in inputs)
-                if (input < lowest) lowest = input;
-
-            return lowest;
-        }
-
-        public static UInt64 Max(params UInt64[] inputs)
-        {
-            UInt64 highest = inputs[0];
-
-            foreach (UInt64 input in inputs)
-                if (input > highest) highest = input;
-
-            return highest;
-        }
-
-        public static UInt64 Min(params UInt64[] inputs)
-        {
-            UInt64 lowest = inputs[0];
-
-            foreach (UInt64 input in inputs)
-                if (input < lowest) lowest = input;
-
-            return lowest;
-        }
-
-        public static Single Max(params Single[] inputs)
-        {
-            Single highest = inputs[0];
-
-            foreach (Single input in inputs)
-                if (input > highest) highest = input;
-
-            return highest;
-        }
-
-        public static Single Min(params Single[] inputs)
-        {
-            Single lowest = inputs[0];
-
-            foreach (Single input in inputs)
-                if (input < lowest) lowest = input;
-
-            return lowest;
-        }
-
-        public static Double Max(params Double[] inputs)
-        {
-            Double highest = inputs[0];
-
-            foreach (Double input in inputs)
-                if (input > highest) highest = input;
-
-            return highest;
-        }
-
-        public static Double Min(params Double[] inputs)
-        {
-            Double lowest = inputs[0];
-
-            foreach (Double input in inputs)
-                if (input < lowest) lowest = input;
-
-            return lowest;
-        }
-
-        public static Decimal Max(params Decimal[] inputs)
-        {
-            Decimal highest = inputs[0];
-
-            foreach (Decimal input in inputs)
-                if (input > highest) highest = input;
-
-            return highest;
-        }
-
-        public static Decimal Min(params Decimal[] inputs)
-        {
-            Decimal lowest = inputs[0];
-
-            foreach (Decimal input in inputs)
-                if (input < lowest) lowest = input;
-
-            return lowest;
-        }
     }
 }

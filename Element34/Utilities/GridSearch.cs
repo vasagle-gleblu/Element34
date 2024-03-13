@@ -152,31 +152,40 @@ namespace Element34.Utilities
             // Avoid doing a .Trim() on each criteria for each row and column.
             var normalizedCriteria = criteria.Where(c => !string.IsNullOrEmpty(c)).Select(c => c.Trim()).ToArray();
             if (normalizedCriteria.Length == 0)
-            {
                 throw new ArgumentException("no criteria", nameof(criteria));
-            }
+
+            IWebDriver driver = ((IWrapsDriver)tableRows.FirstOrDefault()).WrappedDriver;
 
             for (int iRow = 0, rowLength = tableRows.Count(); iRow < rowLength; iRow++)
             {
                 IWebElement row = null;
                 IEnumerable<IWebElement> rowCells = null;
+                string[] cellContents = null;
 
                 // Common place for StaleElementReferenceException
-                try
-                {
-                    row = tableRows.ElementAt(iRow);
-                    rowCells = row.FindElements(By.TagName("td"));
-                }
-                catch (StaleElementReferenceException)
-                {
-                    row = tableRows.ElementAt(iRow);
-                    rowCells = row.FindElements(By.TagName("td"));
-                }
+                driver.PerformActionWithRetry(TimeSpan.FromSeconds(60), 15,
+                    d =>
+                    {
+                        try
+                        {
+                            row = tableRows.ElementAt(iRow);
+                            rowCells = row.FindElements(By.TagName("td"));
+                            return (row != null) && (rowCells != null);
+                        }
+                        catch
+                        {
+                            return false;
+                        }
+                    });
 
                 // This can cause a slowdown for tables with lots of columns where the criteria matches early columns.
                 // If that's the case, one can create an array of strings with null-values and initialize each cell on
                 // first read if cellContents[cellColumn] == null
-                string[] cellContents = rowCells.Select(cell => DecodeAndTrim(cell.Text)).ToArray();
+                if (rowCells != null)
+                    cellContents = rowCells.Select(cell => DecodeAndTrim(cell.Text)).ToArray();
+                else
+                    return 0;
+
 
                 bool isMatch = false;
                 foreach (string criterion in normalizedCriteria)
@@ -189,7 +198,10 @@ namespace Element34.Utilities
 
                         if (isMatch)
                         {
-                            if (!blnAllTrue) { return iRow + 1; }
+                            if (!blnAllTrue) 
+                            {
+                                return iRow + 1; 
+                            }
                             break;
                         }
                     }

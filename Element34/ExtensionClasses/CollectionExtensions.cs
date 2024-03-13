@@ -50,7 +50,7 @@ namespace Element34
             return dict.TryGetValue(key, out value) ? value : defaultValue;
         }
 
-        // To get the index of the current item just write an extension method using LINQ and Tuples.
+        // To get the index of the current item just write an extension method using LINQ and Value Tuples.
         public static IEnumerable<(T item, int index)> LoopIndex<T>(this IEnumerable<T> source)
         {
             return source.Select((item, index) => (item, index));

@@ -77,10 +77,10 @@ namespace Element34.StringMetrics.Similarity
                     int sub = matrix[p - 1, q - 1] + cost;
 
                     // Get the minimum
-                    int distance = MathExt.Min(insertion, deletion, sub);
+                    int distance = MathExtensions.Min(insertion, deletion, sub);
                     if (p > 1 && q > 1 && source[p - 1] == target[q - 2] && source[q - 2] == target[q - 1])
                     {
-                        distance = Math.Min(distance, matrix[q - 2, p - 2] + cost);
+                        distance = MathExtensions.Min(distance, matrix[q - 2, p - 2] + cost);
                     }
 
                     matrix[p, q] = distance;
@@ -111,7 +111,7 @@ namespace Element34.StringMetrics.Similarity
         /// </returns>
         public double? Normalized(string source, string target, bool ignoreCase = true)
         {
-            double longer = Math.Max(source.Length, target.Length);
+            double longer = MathExtensions.Max(source.Length, target.Length);
             double? distance = Compute(source, target, ignoreCase);
 
             if (longer > 0)

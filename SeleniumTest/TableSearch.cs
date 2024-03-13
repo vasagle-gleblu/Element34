@@ -7,7 +7,7 @@ using OpenQA.Selenium.Interactions;
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using static Element34.ExtensionClasses.WebDriverExtensions;
+using static Element34.ExtensionClasses.WebDriverExtras;
 
 namespace SeleniumTest
 {
