@@ -1,10 +1,4 @@
-﻿using OfficeOpenXml.FormulaParsing.Excel.Functions.Logical;
-using OfficeOpenXml.FormulaParsing.LexicalAnalysis;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Security.Policy;
-using System.Text;
-using static OfficeOpenXml.ExcelErrorValue;
+﻿using System.Collections.Generic;
 
 namespace Element34.StringMetrics.Phonetic
 {

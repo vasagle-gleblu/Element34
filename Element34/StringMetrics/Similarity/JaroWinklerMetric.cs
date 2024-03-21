@@ -1,7 +1,5 @@
 ﻿using Element34.StringMetrics.Similarity;
-using OfficeOpenXml.FormulaParsing.Excel.Functions.Information;
 using System;
-using System.Text;
 
 namespace Element34.StringMetrics
 {

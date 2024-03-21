@@ -1,252 +1,264 @@
 using Element34.StringMetrics;
+using Microsoft.Data.Sqlite;
 using Microsoft.VisualBasic.FileIO;
-using Newtonsoft.Json;
+using MySql.Data.MySqlClient;
 using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.OleDb;
 using System.Data.SqlClient;
-using System.Globalization;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.Serialization;
-using System.Text;
-using System.Xml;
+using static Element34.DataManager.Common;
 
 namespace Element34.DataManager
 {
     public static class DataReadLayer
     {
-        #region [Fields]
-        static readonly Encoding enc = Encoding.Default;
-        static readonly CultureInfo culture = CultureInfo.CurrentCulture;
-        #endregion
-
-        #region [Public Functions]
         #region [MS-SQL Server Support]
-        public static DataSet DataSetFromMsSql(SqlConnection sqlConn, string sqlQuery, Dictionary<string, object> paramList = null)
+        public static DataSet DataSetFromMsSql(SqlConnection connection, string query, Dictionary<string, object> paramList = null)
         {
             DataSet result = new DataSet();
-            using (SqlCommand command = new SqlCommand(sqlQuery, sqlConn))
+
+            try
             {
-                if (paramList != null)
+                using (SqlCommand command = new SqlCommand(query, connection))
                 {
-                    command.Parameters.Clear();
-                    foreach (KeyValuePair<string, object> param in paramList)
+                    if (paramList != null)
                     {
-                        command.Parameters.AddWithValue(param.Key, param.Value);
+                        command.Parameters.Clear();
+                        foreach (KeyValuePair<string, object> param in paramList)
+                        {
+                            command.Parameters.AddWithValue(param.Key, param.Value);
+                        }
+                    }
+
+                    using (SqlDataAdapter sda = new SqlDataAdapter(command))
+                    {
+                        connection.Open();
+                        sda.Fill(result);
                     }
                 }
-
-                using (SqlDataAdapter sda = new SqlDataAdapter(command))
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error reading data from MS-SQL Server: {ex.Message}");
+            }
+            finally
+            {
+                if (connection.State == ConnectionState.Open)
                 {
-                    sqlConn.Open();
-                    sda.Fill(result);
-                    sqlConn.Close();
+                    connection.Close();
                 }
             }
 
             return result;
         }
 
-        public static DataTable DataTableFromMsSql(SqlConnection sqlConn, string sqlQuery, Dictionary<string, object> paramList = null)
+        public static DataTable DataTableFromMsSql(SqlConnection connection, string query, Dictionary<string, object> paramList = null)
         {
             DataTable result = new DataTable();
-            using (SqlCommand command = new SqlCommand(sqlQuery, sqlConn))
+
+            try
             {
-                if (paramList != null)
+                using (SqlCommand command = new SqlCommand(query, connection))
                 {
-                    command.Parameters.Clear();
-                    foreach (KeyValuePair<string, object> param in paramList)
+                    if (paramList != null)
                     {
-                        command.Parameters.AddWithValue(param.Key, param.Value);
+                        command.Parameters.Clear();
+                        foreach (KeyValuePair<string, object> param in paramList)
+                        {
+                            command.Parameters.AddWithValue(param.Key, param.Value);
+                        }
+                    }
+
+                    using (SqlDataAdapter adapter = new SqlDataAdapter(command))
+                    {
+                        connection.Open();
+                        adapter.Fill(result);
                     }
                 }
-
-                using (SqlDataAdapter sda = new SqlDataAdapter(command))
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error reading data from MS-SQL Server: {ex.Message}");
+            }
+            finally
+            {
+                if (connection.State == ConnectionState.Open)
                 {
-                    sqlConn.Open();
-                    sda.Fill(result);
-                    sqlConn.Close();
+                    connection.Close();
+                }
+            }
+
+            return result;
+        }
+        #endregion
+
+        #region [MySQL Server Support]
+        public static DataSet DataSetFromMySql(MySqlConnection connection, string query, Dictionary<string, object> paramList = null)
+        {
+            DataSet result = new DataSet();
+
+            try
+            {
+                using (MySqlCommand command = new MySqlCommand(query, connection))
+                {
+                    if (paramList != null)
+                    {
+                        command.Parameters.Clear();
+                        foreach (KeyValuePair<string, object> param in paramList)
+                        {
+                            command.Parameters.AddWithValue(param.Key, param.Value);
+                        }
+                    }
+
+                    connection.Open();
+                    using (MySqlDataAdapter adapter = new MySqlDataAdapter(command))
+                    {
+                        adapter.Fill(result);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error reading data from MySQL Server: {ex.Message}");
+            }
+            finally
+            {
+                if (connection.State == ConnectionState.Open)
+                {
+                    connection.Close();
                 }
             }
 
             return result;
         }
 
-        private static string ParameterValueForSQL(SqlParameter sp)
+        public static DataTable DataTableFromMySql(MySqlConnection connection, string query, Dictionary<string, object> paramList = null)
         {
-            string retval;
-            switch (sp.SqlDbType)
+            DataTable result = new DataTable();
+
+            try
             {
-                case SqlDbType.Char:
-                case SqlDbType.NChar:
-                case SqlDbType.NText:
-                case SqlDbType.NVarChar:
-                case SqlDbType.Text:
-                case SqlDbType.Time:
-                case SqlDbType.VarChar:
-                case SqlDbType.Xml:
-                case SqlDbType.Date:
-                case SqlDbType.DateTime:
-                case SqlDbType.DateTime2:
-                case SqlDbType.DateTimeOffset:
-                    retval = "'" + sp.Value.ToString().Replace("'", "''") + "'";
-                    break;
-
-                case SqlDbType.Bit:
-                    retval = ToBooleanOrDefault(sp.Value, false) ? "1" : "0";
-                    break;
-
-                default:
-                    retval = sp.Value.ToString().Replace("'", "''");
-                    break;
-            }
-
-            return retval;
-        }
-
-        private static string ParameterValueForSQL(OleDbParameter sp)
-        {
-            string retval;
-            switch (sp.OleDbType)
-            {
-                case OleDbType.Char:
-                case OleDbType.WChar:
-                case OleDbType.VarChar:
-                case OleDbType.VarWChar:
-                case OleDbType.LongVarChar:
-                case OleDbType.LongVarWChar:
-                case OleDbType.Date:
-                case OleDbType.DBTime:
-                case OleDbType.DBDate:
-                case OleDbType.DBTimeStamp:
-                    retval = "'" + sp.Value.ToString().Replace("'", "''") + "'";
-                    break;
-
-                case OleDbType.Boolean:
-                    retval = ToBooleanOrDefault(sp.Value, false) ? "1" : "0";
-                    break;
-
-                default:
-                    retval = sp.Value.ToString().Replace("'", "''");
-                    break;
-            }
-
-            return retval;
-        }
-
-        private static bool ToBooleanOrDefault(object o, bool Default)
-        {
-            return ToBooleanOrDefault((string)o, Default);
-        }
-
-        private static bool ToBooleanOrDefault(string s, bool defaultValue)
-        {
-            if (string.IsNullOrEmpty(s))
-            {
-                return defaultValue;
-            }
-
-            // Convert input string to lowercase for case-insensitive comparison
-            string lowerCaseString = s.ToLower();
-
-            switch (lowerCaseString)
-            {
-                case "yes":
-                case "affirmative":
-                case "positive":
-                case "true":
-                case "ok":
-                case "okay":
-                case "y":
-                case "+":
-                    return true;
-                case "no":
-                case "negative":
-                case "negatory":
-                case "false":
-                case "n":
-                case "-":
-                    return false;
-                default:
-                    bool parsedValue;
-                    if (bool.TryParse(lowerCaseString, out parsedValue))
+                using (MySqlCommand command = new MySqlCommand(query, connection))
+                {
+                    if (paramList != null)
                     {
-                        return parsedValue;
+                        command.Parameters.Clear();
+                        foreach (KeyValuePair<string, object> param in paramList)
+                        {
+                            command.Parameters.AddWithValue(param.Key, param.Value);
+                        }
                     }
-                    else
+
+                    connection.Open();
+                    using (MySqlDataAdapter adapter = new MySqlDataAdapter(command))
                     {
-                        // Parsing failed, return default value
-                        return defaultValue;
+                        adapter.Fill(result);
                     }
+                }
             }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error reading data from MySQL Server: {ex.Message}");
+            }
+            finally
+            {
+                if (connection.State == ConnectionState.Open)
+                {
+                    connection.Close();
+                }
+            }
+
+            return result;
         }
         #endregion
 
         #region [MS Access File Support]
-        public static DataSet DataSetFromMDB(string connString)
+        public static DataSet DataSetFromMDB(OleDbConnection connection)
         {
             DataSet result = new DataSet();
 
             // For convenience, the DataSet is identified by the name of the loaded file (without extension).
-            string fileName = (new OleDbConnection(connString).DataSource);
+            string fileName = (connection.DataSource);
             result.DataSetName = Path.GetFileNameWithoutExtension(fileName).Replace(" ", "_");
 
-            // Opening the Access connection
-            using (OleDbConnection conn = new OleDbConnection(connString))
+            try
             {
-                conn.Open();
+                // Opening the Access connection
+                connection.Open();
 
                 // Getting all user tables present in the Access file (Msys* tables are system thus useless for this scenario)
-                DataTable dt = conn.GetSchema("Tables");
+                DataTable dt = connection.GetSchema("Tables");
                 List<string> tableNames = dt.AsEnumerable().Select(dr => dr.Field<string>("TABLE_NAME")).Where(dr => !dr.StartsWith("MSys")).ToList();
 
                 // Getting the data for every user tables
                 foreach (string tableName in tableNames)
                 {
-                    using (OleDbCommand cmd = new OleDbCommand(string.Format("SELECT * FROM [{0}]", tableName), conn))
+                    using (OleDbCommand command = new OleDbCommand(string.Format("SELECT * FROM [{0}]", tableName), connection))
                     {
-                        using (OleDbDataAdapter adapter = new OleDbDataAdapter(cmd))
+                        using (OleDbDataAdapter adapter = new OleDbDataAdapter(command))
                         {
                             // Saving all tables in our result DataSet.
-                            DataTable buf = new DataTable("[" + tableName + "]");
-                            adapter.Fill(buf);
-                            result.Tables.Add(buf);
+                            dt = new DataTable("[" + tableName + "]");
+                            adapter.Fill(dt);
+                            result.Tables.Add(dt);
                         }
                     }
                 }
-                conn.Close();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error reading from MS Access database: {ex.Message}");
+            }
+            finally
+            {
+                if (connection.State == ConnectionState.Open)
+                {
+                    connection.Close();
+                }
             }
 
             // Return the filled DataSet
             return result;
         }
 
-        public static DataTable DataTableFromMDB(string connString, string sqlStmt, Dictionary<string, object> paramList = null)
+        public static DataTable DataTableFromMDB(OleDbConnection connection, string query, Dictionary<string, object> paramList = null)
         {
             DataTable result = new DataTable();
 
-            using (OleDbConnection conn = new OleDbConnection(connString))
+            try
             {
-                using (OleDbCommand cmd = new OleDbCommand(sqlStmt, conn))
+                using (OleDbCommand command = new OleDbCommand(query, connection))
                 {
                     if (paramList != null)
                     {
-                        cmd.Parameters.Clear();
+                        command.Parameters.Clear();
                         foreach (KeyValuePair<string, object> param in paramList)
                         {
-                            cmd.Parameters.AddWithValue(param.Key, param.Value);
+                            command.Parameters.AddWithValue(param.Key, param.Value);
                         }
                     }
 
-                    conn.Open();
-                    using (OleDbDataAdapter adapter = new OleDbDataAdapter(cmd))
+                    connection.Open();
+                    using (OleDbDataAdapter adapter = new OleDbDataAdapter(command))
                     {
                         adapter.Fill(result);
                     }
-                    conn.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error reading table from MS Access database: {ex.Message}");
+            }
+            finally
+            {
+                if (connection.State == ConnectionState.Open)
+                {
+                    connection.Close();
                 }
             }
 
@@ -303,10 +315,7 @@ namespace Element34.DataManager
             using (ExcelPackage package = new ExcelPackage(oFile))
             {
                 // Select named worksheet, default to first if name not supplied
-                ExcelWorksheet worksheet = (string.IsNullOrEmpty(sSheetName)) ? package.Workbook.Worksheets[0] : package.Workbook.Worksheets[sSheetName];
-                if (worksheet == null)
-                    throw new Exception("Worksheet not found");
-
+                ExcelWorksheet worksheet = ((string.IsNullOrEmpty(sSheetName)) ? package.Workbook.Worksheets[0] : package.Workbook.Worksheets[sSheetName]) ?? throw new Exception("Worksheet not found");
                 int colCount = worksheet.Dimension.End.Column;  // get column count
                 int rowCount = worksheet.Dimension.End.Row;     // get row count
                 int start = 1;
@@ -339,6 +348,95 @@ namespace Element34.DataManager
         }
         #endregion
 
+        #region [SQLite File Support]
+        public static DataSet DataSetFromSqlite(SqliteConnection connection)
+        {
+            DataSet result = new DataSet();
+            List<string> tables = new List<string>();
+
+            try
+            {
+                connection.Open();
+
+                SqliteCommand command = new SqliteCommand("SELECT name FROM sqlite_master WHERE type='table'", connection);
+                SqliteDataReader reader = command.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    string tableName = reader.GetString(0);
+                    tables.Add(tableName);
+                }
+
+                foreach (string table in tables)
+                {
+                    command = new SqliteCommand($"SELECT * FROM {table}", connection);
+                    reader = command.ExecuteReader();
+
+                    // Load data into a DataTable
+                    DataTable dt = new DataTable();
+                    dt.Load(reader);
+
+                    // Add the DataTable to the DataSet
+                    result.Tables.Add(dt);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error reading data from SQLite database: {ex.Message}");
+            }
+            finally
+            {
+                if (connection.State == ConnectionState.Open)
+                {
+                    connection.Close();
+                }
+            }
+
+            return result;
+        }
+
+        public static DataTable DataTableFromSqlite(SqliteConnection connection, string query, Dictionary<string, object> paramList = null)
+        {
+            DataTable result = new DataTable();
+
+            try
+            {
+                connection.Open();
+
+                using (SqliteCommand command = new SqliteCommand(query, connection))
+                {
+                    if (paramList != null)
+                    {
+                        command.Parameters.Clear();
+                        foreach (KeyValuePair<string, object> param in paramList)
+                        {
+                            command.Parameters.AddWithValue(param.Key, param.Value);
+                        }
+                    }
+
+                    connection.Open();
+                    using (SqliteDataReader reader = command.ExecuteReader())
+                    {
+                        result.Load(reader);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error reading data from SQLite database: {ex.Message}");
+            }
+            finally
+            {
+                if (connection.State == ConnectionState.Open)
+                {
+                    connection.Close();
+                }
+            }
+
+            return result;
+        }
+        #endregion
+
         #region [CSV File Support]
         public static DataSet DataSetFromCSV(string sPath)
         {
@@ -363,8 +461,10 @@ namespace Element34.DataManager
         public static DataTable DataTableFromCSV(string sFile, bool blnFoldChars = false, bool blnTableReadOnly = false, bool blnMakeBackup = true)
         {
             // Create a new DataTable
-            DataTable dt = new DataTable();
-            dt.TableName = Path.GetFileNameWithoutExtension(Path.GetFileName(sFile));
+            DataTable dt = new DataTable
+            {
+                TableName = Path.GetFileNameWithoutExtension(Path.GetFileName(sFile))
+            };
 
             // Create backup
             if (blnMakeBackup)
@@ -463,21 +563,6 @@ namespace Element34.DataManager
 
             return result;
         }
-
-        private static T DeserializefromXML<T>(this string sInput)
-        {
-            T result = default(T);
-
-            DataContractSerializer serializer = new DataContractSerializer(typeof(T));
-            using (StringReader strReader = new StringReader(sInput))
-            using (XmlReader xmlReader = XmlReader.Create(strReader))
-            {
-                result = (T)serializer.ReadObject(xmlReader);
-            }
-            serializer = null;
-
-            return result;
-        }
         #endregion
 
         #region [JSON File Support]
@@ -505,12 +590,6 @@ namespace Element34.DataManager
 
             return result;
         }
-
-        private static T DeserializeFromJSON<T>(this string sInput)
-        {
-            return JsonConvert.DeserializeObject<T>(sInput);
-        }
-        #endregion
         #endregion
     }
 }

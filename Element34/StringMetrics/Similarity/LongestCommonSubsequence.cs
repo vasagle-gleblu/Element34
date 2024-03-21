@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Element34.StringMetrics.Similarity
 {
@@ -16,14 +12,14 @@ namespace Element34.StringMetrics.Similarity
     /// </summary>
     public class LongestCommonSubsequence
     {
-        public  string Compute(string source, string target)
+        public string Compute(string source, string target)
         {
             int[,] c = LongestCommonSequenceLengthTable(source, target);
 
             return Backtrack(c, source, target, source.Length, target.Length);
         }
 
-        private  int[,] LongestCommonSequenceLengthTable(string source, string target)
+        private int[,] LongestCommonSequenceLengthTable(string source, string target)
         {
             int[,] c = new int[source.Length + 1, target.Length + 1];
 
@@ -40,7 +36,7 @@ namespace Element34.StringMetrics.Similarity
             return c;
         }
 
-        private  string Backtrack(int[,] c, string source, string target, int i, int j)
+        private string Backtrack(int[,] c, string source, string target, int i, int j)
         {
             if (i == 0 || j == 0)
                 return "";

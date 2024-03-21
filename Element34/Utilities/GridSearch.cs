@@ -163,7 +163,7 @@ namespace Element34.Utilities
                 string[] cellContents = null;
 
                 // Common place for StaleElementReferenceException
-                driver.PerformActionWithRetry(TimeSpan.FromSeconds(60), 15,
+                driver.PerformActionWithRetry(TimeSpan.FromSeconds(45), 15,
                     d =>
                     {
                         try
@@ -198,9 +198,9 @@ namespace Element34.Utilities
 
                         if (isMatch)
                         {
-                            if (!blnAllTrue) 
+                            if (!blnAllTrue)
                             {
-                                return iRow + 1; 
+                                return iRow + 1;
                             }
                             break;
                         }

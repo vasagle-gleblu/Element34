@@ -1,4 +1,6 @@
-﻿using Element34.Utilities;
+﻿// Ignore Spelling: bln
+
+using Element34.Utilities;
 using OpenQA.Selenium;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -54,7 +56,7 @@ namespace SeleniumTest
             }
         }
 
-        public new bool GridSearch(IWebDriver driver, Dictionary<string, By> Locators, SelectionType oSelectType, List<string> criteria, bool blnAllTrue)
+        public bool GridSearch(IWebDriver driver, Dictionary<string, By> Locators, SelectionType oSelectType, List<string> criteria, bool blnAllTrue)
         {
             return base.GridSearch(driver, Locators, oSelectType, criteria, blnAllTrue);
         }
@@ -64,7 +66,7 @@ namespace SeleniumTest
             return base.findRow(tableRows, criteria, blnAllTrue, blnExactMatch);
         }
 
-        public new void RowSelect(ReadOnlyCollection<IWebElement> tableRows, SelectionType oSelectType, int iRowFound)
+        public void RowSelect(ReadOnlyCollection<IWebElement> tableRows, SelectionType oSelectType, int iRowFound)
         {
             base.RowSelect(tableRows, oSelectType, iRowFound);
         }
@@ -91,7 +93,7 @@ namespace SeleniumTest
             }
         }
 
-        public new bool GridSearch(IWebDriver driver, Dictionary<string, By> Locators, SelectionType oSelectType, List<string> criteria, bool blnAllTrue)
+        public bool GridSearch(IWebDriver driver, Dictionary<string, By> Locators, SelectionType oSelectType, List<string> criteria, bool blnAllTrue)
         {
             return base.GridSearch(driver, Locators, oSelectType, criteria, blnAllTrue);
         }
@@ -101,7 +103,7 @@ namespace SeleniumTest
             return base.findRow(tableRows, criteria, blnAllTrue, blnExactMatch);
         }
 
-        public new void RowSelect(ReadOnlyCollection<IWebElement> tableRows, SelectionType oSelectType, int iRowFound)
+        public void RowSelect(ReadOnlyCollection<IWebElement> tableRows, SelectionType oSelectType, int iRowFound)
         {
             base.RowSelect(tableRows, oSelectType, iRowFound);
         }

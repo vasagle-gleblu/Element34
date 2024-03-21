@@ -1,6 +1,4 @@
-﻿using System.Text;
-
-namespace Element34.StringMetrics.Phonetic
+﻿namespace Element34.StringMetrics.Phonetic
 {
     public interface IStringEncoder
     {

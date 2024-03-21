@@ -3,7 +3,6 @@ using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Edge;
 using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.IE;
-using OpenQA.Selenium.Interactions;
 using System;
 
 namespace Element34
@@ -24,6 +23,7 @@ namespace Element34
             switch (browserType)
             {
                 case BrowserType.Chrome:
+                case BrowserType.Chromium:
                     return CreateChromeDriver(options as ChromeOptions);
                 case BrowserType.Firefox:
                     return CreateFirefoxDriver(options as FirefoxOptions);

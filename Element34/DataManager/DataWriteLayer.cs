@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Data.Sqlite;
+using MySql.Data.MySqlClient;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using System;
@@ -7,29 +8,18 @@ using System.Data;
 using System.Data.OleDb;
 using System.Data.SqlClient;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.Serialization;
 using System.Text;
-using System.Xml;
-using System.Xml.Linq;
+using static Element34.DataManager.Common;
 
 namespace Element34.DataManager
 {
     public static class DataWriteLayer
     {
-        #region [Fields]
-        static readonly Encoding enc = Encoding.Default;
-        static readonly CultureInfo culture = CultureInfo.InvariantCulture;
-        const int MAXNVARCHAR = 4000;
-        const int MAXVARCHAR = 8000;
-        #endregion
-
-        #region [Public Functions]
         #region [MS-SQL Server Support]
-        public static void AddDataColumnMsSql(SqlConnection sqlConn, DataTable dt, string fieldName, Type dataType, int length = -1)
+        public static void AddDataColumnMsSql(SqlConnection connection, DataTable dt, string fieldName, Type dataType, int length = -1)
         {
             if (!dt.Columns.Contains(fieldName))
             {
@@ -39,22 +29,22 @@ namespace Element34.DataManager
                 {
                     switch (dataType.Name)
                     {
-                        case "String":
+                        case nameof(String):
                             length = 255;
                             break;
-                        case "Byte[]":
+                        case nameof(Byte):
                             length = 100;
                             break;
-                        case "DateTime":
+                        case nameof(DateTime):
                             length = 8;
                             break;
-                        case "DateTimeOffset":
+                        case nameof(DateTimeOffset):
                             length = 10;
                             break;
-                        case "TimeSpan":
+                        case nameof(TimeSpan):
                             length = 8;
                             break;
-                        case "Guid":
+                        case nameof(Guid):
                             length = 16;
                             break;
                         default:
@@ -70,11 +60,11 @@ namespace Element34.DataManager
 
                 try
                 {
-                    sqlConn.Open();
+                    connection.Open();
 
                     // Check if the column already exists
                     string query = $"SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{dt.TableName}' AND COLUMN_NAME = '{fieldName}'";
-                    using (SqlCommand command = new SqlCommand(query, sqlConn))
+                    using (SqlCommand command = new SqlCommand(query, connection))
                     {
                         int columnCount = (int)command.ExecuteScalar();
                         if (columnCount > 0)
@@ -90,7 +80,7 @@ namespace Element34.DataManager
                     string columnDefinition = length > 0 ? $"[{fieldName}] {columnType}({length})" : $"[{fieldName}] {columnType}";
                     query = $"ALTER TABLE [{dt.TableName}] ADD {columnDefinition}";
 
-                    using (SqlCommand command = new SqlCommand(query, sqlConn))
+                    using (SqlCommand command = new SqlCommand(query, connection))
                     {
                         command.ExecuteNonQuery();
                         Debug.WriteLine($"Column '{fieldName}' added successfully to table '{dt.TableName}'.");
@@ -104,33 +94,32 @@ namespace Element34.DataManager
             }
         }
 
-        public static void UpdateMsSql_MapEvents(SqlConnection sqlConn, DataTable dt)
+        public static void UpdateMsSql_MapEvents(SqlConnection connection, DataTable dt)
         {
-            dt.RowChanged += (sender, e) => UpdateMsSql_HandleRowUpsert(sender, e, sqlConn);
-            dt.RowDeleted += (sender, e) => UpdateMsSql_HandleRowDeleted(sender, e, sqlConn);
+            dt.RowChanged += (sender, e) => UpdateMsSql_HandleRowUpsert(sender, e, connection);
+            dt.RowDeleted += (sender, e) => UpdateMsSql_HandleRowDeleted(sender, e, connection);
         }
 
-        private static void UpdateMsSql_HandleRowUpsert(object sender, DataRowChangeEventArgs e, SqlConnection sqlConn)
+        private static void UpdateMsSql_HandleRowUpsert(object sender, DataRowChangeEventArgs e, SqlConnection connection)
         {
             DataTable dt = (DataTable)sender;
             string tableName = dt.TableName;
-            string selectStmt = $"SELECT * FROM [{tableName}]";
-            bool hasPrimaryKey = HasPrimaryKey(dt, sqlConn);
-            List<string> pkNames = (hasPrimaryKey) ? FindPrimaryKeys(dt, sqlConn) : null;
+            bool hasPrimaryKey = HasPrimaryKeyMsSql(dt, connection);
+            List<string> pkNames = (hasPrimaryKey) ? FindPrimaryKeysMsSql(dt, connection) : null;
 
             if (e.Row.RowState == DataRowState.Added)
             {
                 // Open the SQL connection
-                sqlConn.Open();
-                SqlTransaction transaction = sqlConn.BeginTransaction();
+                connection.Open();
+                SqlTransaction transaction = connection.BeginTransaction();
 
                 try
                 {
                     StringBuilder insertCommandText = new StringBuilder();
+                    insertCommandText.Append($"INSERT INTO [{tableName}] (");
+
                     if (hasPrimaryKey)
                     {
-                        insertCommandText.Append($"INSERT INTO [{tableName}] (");
-
                         // Append column names
                         for (int i = 0; i < dt.Columns.Count; i++)
                         {
@@ -172,8 +161,6 @@ namespace Element34.DataManager
                     }
                     else
                     {
-                        insertCommandText.Append($"INSERT INTO [{tableName}] (");
-
                         // Append column names
                         for (int i = 0; i < dt.Columns.Count; i++)
                         {
@@ -206,7 +193,7 @@ namespace Element34.DataManager
                         }
                     }
 
-                    SqlCommand command = new SqlCommand(insertCommandText.ToString(), sqlConn, transaction);
+                    SqlCommand command = new SqlCommand(insertCommandText.ToString(), connection, transaction);
                     command.ExecuteNonQuery();
                     transaction.Commit();
                 }
@@ -218,24 +205,25 @@ namespace Element34.DataManager
                 finally
                 {
                     // Close the SQL connection in the finally block to ensure it is always closed
-                    if (sqlConn.State == ConnectionState.Open)
+                    if (connection.State == ConnectionState.Open)
                     {
-                        sqlConn.Close();
+                        connection.Close();
                     }
                 }
             }
             else if (e.Action == DataRowAction.Change)
             {
-                sqlConn.Open();
-                SqlTransaction transaction = sqlConn.BeginTransaction();
+                connection.Open();
+                SqlTransaction transaction = connection.BeginTransaction();
 
                 try
                 {
                     StringBuilder updateCommandText = new StringBuilder();
+                    updateCommandText.Append($"UPDATE [{tableName}] SET ");
+
                     if (hasPrimaryKey)
                     {
                         // Build custom update command
-                        updateCommandText.Append($"UPDATE [{tableName}] SET ");
                         foreach (DataColumn column in dt.Columns)
                         {
                             if (e.Row[column, DataRowVersion.Current] != e.Row[column, DataRowVersion.Original])
@@ -260,7 +248,6 @@ namespace Element34.DataManager
                     else
                     {
                         // Build custom update command
-                        updateCommandText.Append($"UPDATE [{tableName}] SET ");
                         foreach (DataColumn column in dt.Columns)
                         {
                             if (e.Row[column, DataRowVersion.Current] != e.Row[column, DataRowVersion.Original])
@@ -288,7 +275,7 @@ namespace Element34.DataManager
                         }
                     }
 
-                    SqlCommand command = new SqlCommand(updateCommandText.ToString(), sqlConn, transaction);
+                    SqlCommand command = new SqlCommand(updateCommandText.ToString(), connection, transaction);
                     command.ExecuteNonQuery();
                     transaction.Commit();
 
@@ -296,32 +283,32 @@ namespace Element34.DataManager
                 catch (Exception ex)
                 {
                     transaction.Rollback();
-                    Debug.WriteLine($"Error updating record into SQL Server table: {ex.Message}");
+                    Debug.WriteLine($"Error updating record in SQL Server table: {ex.Message}");
                 }
                 finally
                 {
                     // Close the SQL connection in the finally block
-                    if (sqlConn.State == ConnectionState.Open)
+                    if (connection.State == ConnectionState.Open)
                     {
-                        sqlConn.Close();
+                        connection.Close();
                     }
                 }
             }
         }
 
-        private static void UpdateMsSql_HandleRowDeleted(object sender, DataRowChangeEventArgs e, SqlConnection sqlConn)
+        private static void UpdateMsSql_HandleRowDeleted(object sender, DataRowChangeEventArgs e, SqlConnection connection)
         {
             DataTable dt = (DataTable)sender;
             string tableName = dt.TableName;
 
             if (e.Action == DataRowAction.Delete)
             {
-                sqlConn.Open();
-                SqlTransaction transaction = sqlConn.BeginTransaction();
+                connection.Open();
+                SqlTransaction transaction = connection.BeginTransaction();
 
                 try
                 {
-                    using (SqlDataAdapter adapter = new SqlDataAdapter($"SELECT * FROM {tableName} WHERE 1=0", sqlConn)) // Fetch schema only
+                    using (SqlDataAdapter adapter = new SqlDataAdapter($"SELECT * FROM {tableName} WHERE 1=0", connection)) // Fetch schema only
                     {
                         adapter.SelectCommand.Transaction = transaction;
                         adapter.DeleteCommand = new SqlCommandBuilder(adapter).GetDeleteCommand();
@@ -340,25 +327,25 @@ namespace Element34.DataManager
                 finally
                 {
                     // Close the SQL connection in the finally block to ensure it is always closed
-                    if (sqlConn.State == ConnectionState.Open)
+                    if (connection.State == ConnectionState.Open)
                     {
-                        sqlConn.Close();
+                        connection.Close();
                     }
                 }
             }
         }
 
-        private static bool HasPrimaryKey(DataTable dataTable, SqlConnection sqlConn)
+        private static bool HasPrimaryKeyMsSql(DataTable dataTable, SqlConnection connection)
         {
             bool result = false;
             string query = $"SELECT CASE WHEN EXISTS (SELECT 1 FROM SYS.INDEXES AS i WHERE i.is_primary_key = 1 AND i.OBJECT_ID = OBJECT_ID('{dataTable.TableName}')) THEN 'true' ELSE 'false' END AS HasPrimaryKey; ";
 
             // Open the SQL connection
-            sqlConn.Open();
+            connection.Open();
 
             try
             {
-                using (SqlCommand command = new SqlCommand(query, sqlConn))
+                using (SqlCommand command = new SqlCommand(query, connection))
                 {
                     result = (bool)ToBooleanOrDefault(command.ExecuteScalar(), false);
                 }
@@ -370,26 +357,26 @@ namespace Element34.DataManager
             finally
             {
                 // Close the SQL connection in the finally block
-                if (sqlConn.State == ConnectionState.Open)
+                if (connection.State == ConnectionState.Open)
                 {
-                    sqlConn.Close();
+                    connection.Close();
                 }
             }
 
             return result;
         }
 
-        private static List<string> FindPrimaryKeys(DataTable dataTable, SqlConnection sqlConn)
+        private static List<string> FindPrimaryKeysMsSql(DataTable dataTable, SqlConnection connection)
         {
             List<string> result = new List<string>();
             string query = $"SELECT c.name AS column_name FROM sys.indexes AS i INNER JOIN sys.index_columns AS ic ON i.object_id = ic.object_id AND i.index_id = ic.index_id INNER JOIN sys.columns AS c ON ic.object_id = c.object_id AND ic.column_id = c.column_id WHERE i.object_id = OBJECT_ID('{dataTable.TableName}') AND i.is_primary_key = 1";
 
             // Open the SQL connection
-            sqlConn.Open();
+            connection.Open();
 
             try
             {
-                using (SqlCommand command = new SqlCommand(query, sqlConn))
+                using (SqlCommand command = new SqlCommand(query, connection))
                 using (SqlDataReader reader = command.ExecuteReader())
                 {
                     while (reader.Read())
@@ -406,520 +393,573 @@ namespace Element34.DataManager
             finally
             {
                 // Close the SQL connection in the finally block
-                if (sqlConn.State == ConnectionState.Open)
+                if (connection.State == ConnectionState.Open)
                 {
-                    sqlConn.Close();
+                    connection.Close();
+                }
+            }
+
+            return result;
+        }
+        #endregion
+
+        #region [MySQL Server Support]
+        public static void AddDataColumnMySql(MySqlConnection connection, DataTable dt, string fieldName, Type dataType, int length = -1)
+        {
+            if (!dt.Columns.Contains(fieldName))
+            {
+                DataColumn column = new DataColumn(fieldName, dataType);
+
+                if (length < 0)
+                {
+                    switch (dataType.Name)
+                    {
+                        case nameof(String):
+                            length = 255;
+                            break;
+                        case nameof(Byte):
+                            length = 100;
+                            break;
+                        case nameof(DateTime):
+                            length = 8;
+                            break;
+                        case nameof(DateTimeOffset):
+                            length = 10;
+                            break;
+                        case nameof(TimeSpan):
+                            length = 8;
+                            break;
+                        case nameof(Guid):
+                            length = 16;
+                            break;
+                        default:
+                            // Handle other data types if needed
+                            break;
+                    }
+                }
+
+                if (length > 0)
+                    column.MaxLength = length;
+
+                dt.Columns.Add(column);
+
+                try
+                {
+                    connection.Open();
+
+                    // Check if the column already exists
+                    string query = $"SHOW COLUMNS FROM `{dt.TableName}` WHERE Field = '{fieldName}'";
+                    using (MySqlCommand command = new MySqlCommand(query, connection))
+                    {
+                        using (MySqlDataReader reader = command.ExecuteReader())
+                        {
+                            if (reader.HasRows)
+                            {
+                                Debug.WriteLine("Column already exists.");
+                                return;
+                            }
+                        }
+                    }
+
+                    // If the column doesn't exist, add it
+                    string columnDefinition = length > 0 ? $"`{fieldName}` {ResolveMySqlDbType(column)}({length})" : $"`{fieldName}` {ResolveMySqlDbType(column)}";
+                    query = $"ALTER TABLE `{dt.TableName}` ADD {columnDefinition}";
+
+                    using (MySqlCommand command = new MySqlCommand(query, connection))
+                    {
+                        command.ExecuteNonQuery();
+                        Debug.WriteLine($"Column '{fieldName}' added successfully to table '{dt.TableName}'.");
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Error adding column: {ex.Message}");
+                }
+                finally
+                {
+                    // Close the MySQL connection in the finally block to ensure it is always closed
+                    if (connection.State == ConnectionState.Open)
+                    {
+                        connection.Close();
+                    }
+                }
+            }
+        }
+
+        public static void UpdateMySql_MapEvents(MySqlConnection connection, DataTable dt)
+        {
+            dt.RowChanged += (sender, e) => UpdateMySql_HandleRowUpsert(sender, e, connection);
+            dt.RowDeleted += (sender, e) => UpdateMySql_HandleRowDeleted(sender, e, connection);
+        }
+
+        private static void UpdateMySql_HandleRowUpsert(object sender, DataRowChangeEventArgs e, MySqlConnection connection)
+        {
+            DataTable dt = (DataTable)sender;
+            string tableName = dt.TableName;
+            bool hasPrimaryKey = HasPrimaryKey(tableName, connection);
+            List<string> pkNames = (hasPrimaryKey) ? FindPrimaryKeys(tableName, connection) : null;
+
+            if (e.Row.RowState == DataRowState.Added)
+            {
+                // Open the MySQL connection
+                connection.Open();
+                MySqlTransaction transaction = connection.BeginTransaction();
+                MySqlCommand command;
+
+                StringBuilder insertCommandText = new StringBuilder();
+                insertCommandText.Append($"INSERT INTO `{tableName}` (");
+
+                try
+                {
+                    if (hasPrimaryKey)
+                    {
+                        // Append column names
+                        for (int i = 0; i < dt.Columns.Count; i++)
+                        {
+                            string columnName = dt.Columns[i].ColumnName;
+
+                            if (!pkNames.Contains(columnName))
+                            {
+                                insertCommandText.Append($"`{columnName}`");
+                                if (i < dt.Columns.Count - 1)
+                                {
+                                    insertCommandText.Append(", ");
+                                }
+                            }
+                        }
+
+                        insertCommandText.Append(") VALUES (");
+
+                        // Append parameter placeholders
+                        for (int i = 0; i < dt.Columns.Count; i++)
+                        {
+                            string columnName = dt.Columns[i].ColumnName;
+
+                            if (!pkNames.Contains(columnName))
+                            {
+                                insertCommandText.Append($"@{columnName}");
+                                if (i < dt.Columns.Count - 1)
+                                {
+                                    insertCommandText.Append(", ");
+                                }
+                            }
+                        }
+                        insertCommandText.Append(")");
+
+                        // Add parameters
+                        command = new MySqlCommand(insertCommandText.ToString(), connection, transaction);
+                        foreach (DataColumn column in dt.Columns)
+                        {
+                            command.Parameters.AddWithValue($"@{column.ColumnName}", Normalize(e.Row[column], false, true));
+                        }
+                    }
+                    else
+                    {
+                        DataRow row = e.Row;
+
+                        // Append column names
+                        for (int i = 0; i < row.Table.Columns.Count; i++)
+                        {
+                            insertCommandText.Append($"`{row.Table.Columns[i].ColumnName}`");
+                            if (i < row.Table.Columns.Count - 1)
+                            {
+                                insertCommandText.Append(", ");
+                            }
+                        }
+
+                        insertCommandText.Append(") VALUES (");
+
+                        // Append parameter placeholders
+                        for (int i = 0; i < row.Table.Columns.Count; i++)
+                        {
+                            insertCommandText.Append($"@{row.Table.Columns[i].ColumnName}");
+                            if (i < row.Table.Columns.Count - 1)
+                            {
+                                insertCommandText.Append(", ");
+                            }
+                        }
+                        insertCommandText.Append(")");
+
+                        // Add parameters and execute the command
+                        command = new MySqlCommand(insertCommandText.ToString(), connection, transaction);
+                        foreach (DataColumn column in row.Table.Columns)
+                        {
+                            command.Parameters.AddWithValue($"@{column.ColumnName}", Normalize(row[column], false, true));
+                        }
+
+                        // For example, you might want to log an error here or take other appropriate action
+                        Debug.WriteLine("Error: Table does not have a primary key.");
+                    }
+
+                    command.ExecuteNonQuery();
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    Debug.WriteLine($"Error inserting record into MySQL table: {ex.Message}");
+                }
+                finally
+                {
+                    // Close the MySQL connection in the finally block to ensure it is always closed
+                    if (connection.State == ConnectionState.Open)
+                    {
+                        connection.Close();
+                    }
+                }
+            }
+            else if (e.Action == DataRowAction.Change)
+            {
+                connection.Open();
+                MySqlTransaction transaction = connection.BeginTransaction();
+                MySqlCommand command;
+
+                StringBuilder updateCommandText = new StringBuilder();
+                updateCommandText.Append($"UPDATE `{tableName}` SET ");
+
+                try
+                {
+                    DataRow row = e.Row;
+
+                    // Append SET clause dynamically based on updated columns
+                    for (int i = 0; i < row.Table.Columns.Count; i++)
+                    {
+                        if (row[i, DataRowVersion.Current] != row[i, DataRowVersion.Original])
+                        {
+                            updateCommandText.Append($"`{row.Table.Columns[i].ColumnName}` = @{row.Table.Columns[i].ColumnName}, ");
+                        }
+                    }
+                    updateCommandText.Remove(updateCommandText.Length - 2, 2); // Remove last comma
+                    updateCommandText.Append(" WHERE ");
+
+                    // Append WHERE clause based on primary key or all columns
+                    if (hasPrimaryKey)
+                    {
+                        List<string> pkColumns = FindPrimaryKeys(tableName, connection);
+                        foreach (string pkColumn in pkColumns)
+                        {
+                            updateCommandText.Append($"`{pkColumn}` = @{pkColumn} AND ");
+                        }
+                        updateCommandText.Remove(updateCommandText.Length - 5, 5); // Remove last 'AND'
+                    }
+                    else
+                    {
+                        for (int i = 0; i < row.Table.Columns.Count; i++)
+                        {
+                            updateCommandText.Append($"`{row.Table.Columns[i].ColumnName}` = @{row.Table.Columns[i].ColumnName}_old AND ");
+                        }
+                        updateCommandText.Remove(updateCommandText.Length - 5, 5); // Remove last 'AND'
+                    }
+
+                    // Create and execute the update command
+                    command = new MySqlCommand(updateCommandText.ToString(), connection, transaction);
+                    foreach (DataColumn column in row.Table.Columns)
+                    {
+                        if (row[column, DataRowVersion.Current] != row[column, DataRowVersion.Original])
+                        {
+                            command.Parameters.AddWithValue($"@{column.ColumnName}", Normalize(row[column, DataRowVersion.Current], false, true));
+                        }
+                        if (!hasPrimaryKey)
+                        {
+                            command.Parameters.AddWithValue($"@{column.ColumnName}_old", Normalize(row[column, DataRowVersion.Original], false, true));
+                        }
+                    }
+
+                    command.ExecuteNonQuery();
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    Debug.WriteLine($"Error updating record in MySQL table: {ex.Message}");
+                }
+                finally
+                {
+                    // Close the MySQL connection in the finally block to ensure it is always closed
+                    if (connection.State == ConnectionState.Open)
+                    {
+                        connection.Close();
+                    }
+                }
+            }
+        }
+
+        private static void UpdateMySql_HandleRowDeleted(object sender, DataRowChangeEventArgs e, MySqlConnection connection)
+        {
+            DataTable dt = (DataTable)sender;
+            string tableName = dt.TableName;
+            bool hasPrimaryKey = HasPrimaryKey(tableName, connection);
+
+            // Open the MySQL connection
+            connection.Open();
+            MySqlTransaction transaction = connection.BeginTransaction();
+
+            try
+            {
+                DataRow row = e.Row;
+
+                StringBuilder deleteCommandText = new StringBuilder();
+                deleteCommandText.Append($"DELETE FROM `{tableName}` WHERE ");
+
+                // Append WHERE clause based on primary key or all columns
+                if (hasPrimaryKey)
+                {
+                    List<string> pkColumns = FindPrimaryKeys(tableName, connection);
+                    foreach (string pkColumn in pkColumns)
+                    {
+                        deleteCommandText.Append($"`{pkColumn}` = @{pkColumn} AND ");
+                    }
+                    deleteCommandText.Remove(deleteCommandText.Length - 5, 5); // Remove last 'AND'
+                }
+                else
+                {
+                    for (int i = 0; i < row.Table.Columns.Count; i++)
+                    {
+                        deleteCommandText.Append($"`{row.Table.Columns[i].ColumnName}` = @{row.Table.Columns[i].ColumnName} AND ");
+                    }
+                    deleteCommandText.Remove(deleteCommandText.Length - 5, 5); // Remove last 'AND'
+                }
+
+                // Create and execute the delete command
+                MySqlCommand command = new MySqlCommand(deleteCommandText.ToString(), connection, transaction);
+                if (hasPrimaryKey)
+                {
+                    foreach (string pkColumn in FindPrimaryKeys(tableName, connection))
+                    {
+                        command.Parameters.AddWithValue($"@{pkColumn}", Normalize(row[pkColumn], false, true));
+                    }
+                }
+                else
+                {
+                    foreach (DataColumn column in row.Table.Columns)
+                    {
+                        command.Parameters.AddWithValue($"@{column.ColumnName}", Normalize(row[column], false, true));
+                    }
+                }
+
+                command.ExecuteNonQuery();
+                transaction.Commit();
+            }
+            catch (Exception ex)
+            {
+                transaction.Rollback();
+                Debug.WriteLine($"Error deleting record from MySQL table: {ex.Message}");
+            }
+            finally
+            {
+                // Close the MySQL connection in the finally block to ensure it is always closed
+                if (connection.State == ConnectionState.Open)
+                {
+                    connection.Close();
+                }
+            }
+        }
+
+        private static bool HasPrimaryKey(string tableName, MySqlConnection connection)
+        {
+            bool result = false;
+            string query = $"SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS WHERE TABLE_NAME = '{tableName}' AND CONSTRAINT_TYPE = 'PRIMARY KEY'";
+
+            // Open the MySQL connection
+            connection.Open();
+
+            try
+            {
+                using (MySqlCommand command = new MySqlCommand(query, connection))
+                {
+                    int count = Convert.ToInt32(command.ExecuteScalar());
+                    result = (count > 0);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error querying MySQL table: {ex.Message}");
+            }
+            finally
+            {
+                // Close the MySQL connection in the finally block
+                if (connection.State == ConnectionState.Open)
+                {
+                    connection.Close();
                 }
             }
 
             return result;
         }
 
-        /// <summary>
-        /// Inspects a DataTable and return a SQL string that can be used to CREATE a TABLE in MS-SQL Server.
-        /// </summary>
-        /// <param name="inTable">System.Data.DataTable object to be inspected for building the SQL CREATE TABLE statement.</param>
-        /// <returns>String of SQL</returns>
-        private static string DefineSQLTable(DataTable inTable)
+        private static List<string> FindPrimaryKeys(string tableName, MySqlConnection connection)
         {
-            StringBuilder sql = new StringBuilder();
-            StringBuilder alterSql = new StringBuilder();
+            List<string> result = new List<string>();
+            string query = $"SELECT COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_NAME = '{tableName}' AND CONSTRAINT_NAME = 'PRIMARY'";
 
-            sql.AppendFormat("CREATE TABLE [{0}] (", inTable.TableName);
+            // Open the MySQL connection
+            connection.Open();
 
-            for (int i = 0; i < inTable.Columns.Count; i++)
+            try
             {
-                bool isNumeric = false;
-                bool usesColumnDefault = true;
-
-                sql.AppendFormat("\n\t[{0}]", inTable.Columns[i].ColumnName);
-                Type columnType = inTable.Columns[i].DataType;
-
-                switch (columnType.ToString())
+                using (MySqlCommand command = new MySqlCommand(query, connection))
+                using (MySqlDataReader reader = command.ExecuteReader())
                 {
-                    case nameof(System.Byte):
-                        sql.Append(" TINYINT");
-                        isNumeric = true;
-                        break;
-
-                    case nameof(System.Int16):
-                        sql.Append(" SMALLINT");
-                        isNumeric = true;
-                        break;
-
-                    case nameof(System.Int32):
-                        sql.Append(" INT");
-                        isNumeric = true;
-                        break;
-
-                    case nameof(System.Int64):
-                        sql.Append(" BIGINT");
-                        isNumeric = true;
-                        break;
-
-                    case nameof(System.DateTime):
-                        sql.Append(" DATETIME");
-                        usesColumnDefault = false;
-                        break;
-
-                    case nameof(System.String):
-                        sql.AppendFormat(" NVARCHAR({0}) ", inTable.Columns[i].MaxLength == -1 ? "max" : inTable.Columns[i].MaxLength.ToString());
-                        break;
-
-                    case nameof(System.Single):
-                        sql.Append(" SINGLE");
-                        isNumeric = true;
-                        break;
-
-                    case nameof(System.Double):
-                        sql.Append(" DOUBLE");
-                        isNumeric = true;
-                        break;
-
-                    case nameof(System.Decimal):
-                        sql.AppendFormat(" DECIMAL(18, 6)");
-                        isNumeric = true;
-                        break;
-
-                    default:
-                        throw new NotSupportedException("Data type not supported: " + columnType.FullName);
-                }
-
-                if (inTable.Columns[i].AutoIncrement)
-                {
-                    sql.AppendFormat(" IDENTITY({0},{1})",
-                        inTable.Columns[i].AutoIncrementSeed,
-                        inTable.Columns[i].AutoIncrementStep);
-                }
-                else
-                {
-                    // DataColumns will add a blank DefaultValue for any AutoIncrement column. 
-                    // We only want to create an ALTER statement for those columns that are not set to AutoIncrement. 
-                    if (inTable.Columns[i].DefaultValue != null)
+                    while (reader.Read())
                     {
-                        if (usesColumnDefault)
-                        {
-                            if (isNumeric)
-                            {
-                                alterSql.AppendFormat("\r\nALTER TABLE {0} ADD CONSTRAINT [DF_{0}_{1}]  DEFAULT ({2}) FOR [{1}];",
-                                    inTable.TableName,
-                                    inTable.Columns[i].ColumnName,
-                                    inTable.Columns[i].DefaultValue);
-                            }
-                            else
-                            {
-                                alterSql.AppendFormat("\r\nALTER TABLE {0} ADD CONSTRAINT [DF_{0}_{1}]  DEFAULT ('{2}') FOR [{1}];",
-                                    inTable.TableName,
-                                    inTable.Columns[i].ColumnName,
-                                    inTable.Columns[i].DefaultValue);
-                            }
-                        }
-                        else
-                        {
-                            // Default values on Date columns, e.g., "DateTime.Now" will not translate to SQL.
-                            // This inspects the caption for a simple XML string to see if there is a SQL compliant default value, e.g., "GETDATE()".
-                            try
-                            {
-                                System.Xml.XmlDocument xml = new System.Xml.XmlDocument();
-
-                                xml.LoadXml(inTable.Columns[i].Caption);
-
-                                alterSql.AppendFormat("\r\nALTER TABLE {0} ADD CONSTRAINT [DF_{0}_{1}]  DEFAULT ({2}) FOR [{1}];",
-                                    inTable.TableName,
-                                    inTable.Columns[i].ColumnName,
-                                    xml.GetElementsByTagName("defaultValue")[0].InnerText);
-                            }
-                            catch
-                            {
-                                // Handle
-                            }
-                        }
-                    }
-                }
-
-                if (!inTable.Columns[i].AllowDBNull)
-                {
-                    sql.Append(" NOT NULL");
-                }
-
-                sql.Append(",");
-            }
-
-            if (inTable.PrimaryKey.Length > 0)
-            {
-                StringBuilder primaryKeySql = new StringBuilder();
-
-                primaryKeySql.AppendFormat("\n\tCONSTRAINT PK_{0} PRIMARY KEY (", inTable.TableName);
-
-                for (int i = 0; i < inTable.PrimaryKey.Length; i++)
-                {
-                    primaryKeySql.AppendFormat("{0},", inTable.PrimaryKey[i].ColumnName);
-                }
-
-                primaryKeySql.Remove(primaryKeySql.Length - 1, 1);
-                primaryKeySql.Append(")");
-
-                sql.Append(primaryKeySql);
-            }
-            else
-            {
-                sql.Remove(sql.Length - 1, 1);
-            }
-
-            sql.AppendFormat("\r\n);\r\n{0}", alterSql.ToString());
-
-            return sql.ToString();
-        }
-
-        private static void DefineSqlServerTable(DataTable inTable)
-        {
-            // Connection string to your SQL Server database
-            string connectionString = "Data Source=YourServer;Initial Catalog=YourDatabase;Integrated Security=True";
-
-            // Create SQL Server table based on DataTable schema
-            using (SqlConnection connection = new SqlConnection(connectionString))
-            {
-                connection.Open();
-
-                // Construct SQL command to create the table
-                string createTableCommand = $"CREATE TABLE {inTable.TableName} (";
-                foreach (DataColumn column in inTable.Columns)
-                {
-                    createTableCommand += $"{column.ColumnName} {ResolveSqlDbType(column)}, ";
-                }
-                createTableCommand = createTableCommand.TrimEnd(',', ' ') + ")";
-
-                // Execute the CreateTable command
-                using (SqlCommand command = new SqlCommand(createTableCommand, connection))
-                {
-                    command.ExecuteNonQuery();
-                }
-
-                connection.Close();
-            }
-
-            Debug.WriteLine($"Table '{inTable.TableName}' created in SQL Server.");
-        }
-
-        private static SqlDbType ResolveSqlDbType(DataColumn column)
-        {
-            if (column == null)
-            {
-                return SqlDbType.Variant;
-            }
-
-            int length = column.MaxLength;
-            SqlDbType sqlDbType = ToSqlDbType(column.GetType());
-
-            // Adjust SqlDbType for string types based on length
-            if (sqlDbType == SqlDbType.NVarChar || sqlDbType == SqlDbType.VarChar || sqlDbType == SqlDbType.Char)
-            {
-                // For string types, check if length is specified and within valid range
-                if (length > 0)
-                {
-                    if (sqlDbType == SqlDbType.NVarChar)
-                    {
-                        // Limit length to max value supported by NVARCHAR (4000)
-                        sqlDbType = length <= MAXNVARCHAR ? SqlDbType.NVarChar : SqlDbType.NText;
-                    }
-                    else
-                    {
-                        // Limit length to max value supported by CHAR (8000)
-                        sqlDbType = length <= MAXVARCHAR ? SqlDbType.Char : SqlDbType.Text;
+                        // Read the column name and add it to the list
+                        result.Add(reader["COLUMN_NAME"].ToString());
                     }
                 }
             }
-
-            return sqlDbType;
-        }
-
-        private static SqlDbType ToSqlDbType(Type clrType)
-        {
-            TypeCode typeCode = Type.GetTypeCode(clrType);
-            SqlDbType sqlDbType = SqlDbType.Variant;
-
-            switch (typeCode)
+            catch (Exception ex)
             {
-                case TypeCode.String:
-                    sqlDbType = SqlDbType.NVarChar;
-                    break;
-                case TypeCode.Int16:
-                    sqlDbType = SqlDbType.SmallInt;
-                    break;
-                case TypeCode.Int32:
-                    sqlDbType = SqlDbType.Int;
-                    break;
-                case TypeCode.Int64:
-                    sqlDbType = SqlDbType.BigInt;
-                    break;
-                case TypeCode.Byte:
-                    sqlDbType = SqlDbType.TinyInt;
-                    break;
-                case TypeCode.SByte:
-                    sqlDbType = SqlDbType.TinyInt;
-                    break;
-                case TypeCode.UInt16:
-                    sqlDbType = SqlDbType.SmallInt;
-                    break;
-                case TypeCode.UInt32:
-                    sqlDbType = SqlDbType.Int;
-                    break;
-                case TypeCode.UInt64:
-                    sqlDbType = SqlDbType.Decimal;
-                    break;
-                case TypeCode.Char:
-                    sqlDbType = SqlDbType.Char;
-                    break;
-                case TypeCode.Single:
-                    sqlDbType = SqlDbType.Float;
-                    break;
-                case TypeCode.Double:
-                    sqlDbType = SqlDbType.Float;
-                    break;
-                case TypeCode.Decimal:
-                    sqlDbType = SqlDbType.Decimal;
-                    break;
-                case TypeCode.DateTime:
-                    sqlDbType = SqlDbType.DateTime;
-                    break;
-                case TypeCode.Boolean:
-                    sqlDbType = SqlDbType.Bit;
-                    break;
-                case TypeCode.Object:
-                    if (clrType == typeof(Guid))
-                        sqlDbType = SqlDbType.UniqueIdentifier;
-                    else if (clrType == typeof(Guid?))
-                        sqlDbType = SqlDbType.UniqueIdentifier;
-                    else if (clrType == typeof(TimeSpan))
-                        sqlDbType = SqlDbType.Time;
-                    else if (clrType == typeof(DateTimeOffset))
-                        sqlDbType = SqlDbType.DateTimeOffset;
-                    else if (clrType == typeof(XmlDocument))
-                        sqlDbType = SqlDbType.Xml;
-                    else if (clrType == typeof(XDocument))
-                        sqlDbType = SqlDbType.Xml;
-                    else if (clrType == typeof(byte[]))
-                        sqlDbType = SqlDbType.VarBinary;
-                    else if (clrType == typeof(char[]))
-                        sqlDbType = SqlDbType.NVarChar;
-                    else if (clrType == typeof(string))
-                        sqlDbType = SqlDbType.NVarChar;
-                    else if (clrType == typeof(short?))
-                        sqlDbType = SqlDbType.SmallInt;
-                    else if (clrType == typeof(int?))
-                        sqlDbType = SqlDbType.Int;
-                    else if (clrType == typeof(long?))
-                        sqlDbType = SqlDbType.BigInt;
-                    else if (clrType == typeof(float?))
-                        sqlDbType = SqlDbType.Float;
-                    else if (clrType == typeof(double?))
-                        sqlDbType = SqlDbType.Float;
-                    else if (clrType == typeof(decimal?))
-                        sqlDbType = SqlDbType.Decimal;
-                    else if (clrType == typeof(bool?))
-                        sqlDbType = SqlDbType.Bit;
-                    break;
-                case TypeCode.DBNull:
-                    sqlDbType = SqlDbType.Variant;
-                    break;
-                default:
-                    sqlDbType = SqlDbType.Variant; // Default to Variant for unknown types
-                    break;
+                Debug.WriteLine($"Error querying MySQL table: {ex.Message}");
+            }
+            finally
+            {
+                // Close the MySQL connection in the finally block
+                if (connection.State == ConnectionState.Open)
+                {
+                    connection.Close();
+                }
             }
 
-            return sqlDbType;
-        }
-
-        private static Type ToClrType(SqlDbType sqlType)
-        {
-            switch (sqlType)
-            {
-                case SqlDbType.BigInt:
-                    return typeof(long?);
-
-                case SqlDbType.Binary:
-                case SqlDbType.Image:
-                case SqlDbType.Timestamp:
-                case SqlDbType.VarBinary:
-                    return typeof(byte[]);
-
-                case SqlDbType.Bit:
-                    return typeof(bool?);
-
-                case SqlDbType.Char:
-                case SqlDbType.NChar:
-                case SqlDbType.NText:
-                case SqlDbType.NVarChar:
-                case SqlDbType.Text:
-                case SqlDbType.VarChar:
-                case SqlDbType.Xml:
-                    return typeof(string);
-
-                case SqlDbType.DateTime:
-                case SqlDbType.SmallDateTime:
-                case SqlDbType.Date:
-                case SqlDbType.Time:
-                case SqlDbType.DateTime2:
-                    return typeof(DateTime?);
-
-                case SqlDbType.Decimal:
-                case SqlDbType.Money:
-                case SqlDbType.SmallMoney:
-                    return typeof(decimal?);
-
-                case SqlDbType.Float:
-                    return typeof(double?);
-
-                case SqlDbType.Int:
-                    return typeof(int?);
-
-                case SqlDbType.Real:
-                    return typeof(float?);
-
-                case SqlDbType.UniqueIdentifier:
-                    return typeof(Guid?);
-
-                case SqlDbType.SmallInt:
-                    return typeof(short?);
-
-                case SqlDbType.TinyInt:
-                    return typeof(byte?);
-
-                case SqlDbType.Variant:
-                case SqlDbType.Udt:
-                    return typeof(object);
-
-                case SqlDbType.Structured:
-                    return typeof(DataTable);
-
-                case SqlDbType.DateTimeOffset:
-                    return typeof(DateTimeOffset?);
-
-                default:
-                    throw new ArgumentOutOfRangeException("sqlType");
-            }
-        }
-
-        private static bool? ToBooleanOrDefault(object o, bool? Default)
-        {
-            return ToBooleanOrDefault((string)o, Default);
-        }
-
-        private static bool? ToBooleanOrDefault(string s, bool? defaultValue)
-        {
-            if (string.IsNullOrEmpty(s))
-            {
-                return defaultValue;
-            }
-
-            // Convert input string to lowercase for case-insensitive comparison
-            string lowerCaseString = s.ToLower();
-
-            switch (lowerCaseString)
-            {
-                case "yes":
-                case "affirmative":
-                case "positive":
-                case "true":
-                case "ok":
-                case "okay":
-                case "y":
-                case "+":
-                    return true;
-                case "no":
-                case "negative":
-                case "negatory":
-                case "false":
-                case "n":
-                case "-":
-                    return false;
-                default:
-                    bool parsedValue;
-                    if (bool.TryParse(lowerCaseString, out parsedValue))
-                    {
-                        return parsedValue;
-                    }
-                    else
-                    {
-                        // Parsing failed, return default value
-                        return defaultValue;
-                    }
-            }
+            return result;
         }
         #endregion
 
         #region [MS Access File Support]
-        public enum MDBType
+        public static void AddDataColumnMDB(OleDbConnection connection, DataTable dt, string fieldName, Type dataType, int length = -1)
         {
-            Access2000,
-            Access2003,
-            Access2007,
-            Access2010,
-            Access2016,
-            Access2019
+            if (!dt.Columns.Contains(fieldName))
+            {
+                DataColumn column = new DataColumn(fieldName, dataType);
+
+                if (length < 0)
+                {
+                    switch (dataType.Name)
+                    {
+                        case nameof(String):
+                            length = 255;
+                            break;
+                        case nameof(Byte):
+                            length = 100;
+                            break;
+                        case nameof(DateTime):
+                            length = 8;
+                            break;
+                        case nameof(DateTimeOffset):
+                            length = 10;
+                            break;
+                        case nameof(TimeSpan):
+                            length = 8;
+                            break;
+                        case nameof(Guid):
+                            length = 16;
+                            break;
+                        default:
+                            // Handle other data types if needed
+                            break;
+                    }
+                }
+
+                if (length > 0)
+                    column.MaxLength = length;
+
+                dt.Columns.Add(column);
+
+                try
+                {
+                    connection.Open();
+
+                    // Check if the column already exists
+                    string query = $"SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{dt.TableName}' AND COLUMN_NAME = '{fieldName}'";
+                    using (OleDbCommand command = new OleDbCommand(query, connection))
+                    {
+                        int columnCount = (int)command.ExecuteScalar();
+                        if (columnCount > 0)
+                        {
+                            Debug.WriteLine("Column already exists.");
+                            return;
+                        }
+                    }
+
+                    OleDbType columnType = ResolveOleDbType(column);
+
+                    // If the column doesn't exist, add it
+                    string columnDefinition = length > 0 ? $"[{fieldName}] {columnType}({length})" : $"[{fieldName}] {columnType}";
+                    query = $"ALTER TABLE [{dt.TableName}] ADD COLUMN {columnDefinition}";
+
+                    using (OleDbCommand command = new OleDbCommand(query, connection))
+                    {
+                        command.ExecuteNonQuery();
+                        Debug.WriteLine($"Column '{fieldName}' added successfully to table '{dt.TableName}'.");
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Error adding column: {ex.Message}");
+                }
+                finally
+                {
+                    // Close the MS Access connection in the finally block
+                    if (connection.State == ConnectionState.Open)
+                    {
+                        connection.Close();
+                    }
+                }
+            }
         }
 
-        public static void ExportToMDBwithADOX(string connString, DataSet ds)
+        public static void ExportToMDBwithADOX(OleDbConnection connection, DataSet ds)
         {
-            ADOX.Catalog cat = new ADOX.Catalog();
-            OleDbConnection con = new OleDbConnection(connString);
-            string fileName = con.DataSource;
+            ADOX.Catalog catalog = new ADOX.Catalog();
+            string fileName = connection.DataSource;
 
             if (File.Exists(fileName))
                 File.Delete(fileName);
 
-            cat.Create(connString);
+            catalog.Create(connection.ConnectionString);
 
             foreach (DataTable dt in ds.Tables)
             {
-                ADOX.Table tbl = DefineADOXTable(dt);
-                cat.Tables.Append(tbl);
-                AddDataTableToMDBwithADOX(cat, dt);
+                ADOX.Table table = DefineADOXTable(dt);
+                catalog.Tables.Append(table);
+                AddDataTableToMDBwithADOX(catalog, dt);
             }
 
-            con = cat.ActiveConnection as OleDbConnection;
-            if (con != null)
-                con.Close();
-            cat = null;
-
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
+            connection = catalog.ActiveConnection as OleDbConnection;
+            connection?.Close();
+            catalog = null;
         }
 
-        public static void ExportToMDBwithFile(string connString, DataSet ds, MDBType mDBType)
+        public static void ExportToMDBwithFile(OleDbConnection connection, DataSet ds, MDBType mDBType)
         {
-            OleDbConnection con = CreateMDBfromFile(connString, mDBType);
+            CreateMDBfromFile(connection, mDBType);
 
             foreach (DataTable dt in ds.Tables)
             {
-                AddDataTableToMDB(dt, con);
+                AddDataTableToMDB(dt, connection);
             }
         }
 
-        public static OleDbConnection CreateMDBfromADOX(string connString)
+        public static OleDbConnection CreateMDBfromADOX(OleDbConnection connection)
         {
-            ADOX.Catalog cat = new ADOX.Catalog();
-            OleDbConnection con = new OleDbConnection(connString);
-            string fileName = Path.GetFullPath(con.DataSource);
+            ADOX.Catalog catalog = new ADOX.Catalog();
+            string fileName = Path.GetFullPath(connection.DataSource);
 
             if (File.Exists(fileName))
                 File.Delete(fileName);
 
-            cat.Create(connString);
+            catalog.Create(connection.ConnectionString);
 
-            con = cat.ActiveConnection as OleDbConnection;
-            cat = null;
+            connection = catalog.ActiveConnection as OleDbConnection;
+            catalog = null;
 
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-
-            return con;
+            return connection;
         }
 
-        public static OleDbConnection CreateMDBfromFile(string connString, MDBType mDBType)
+        public static OleDbConnection CreateMDBfromFile(OleDbConnection connection, MDBType mDBType)
         {
-            OleDbConnection con = new OleDbConnection(connString);
-            string fileName = Path.GetFullPath(con.DataSource);
+            string fileName = Path.GetFullPath(connection.DataSource);
 
             if (File.Exists(fileName))
                 File.Delete(fileName);
@@ -928,7 +968,7 @@ namespace Element34.DataManager
             try
             {
                 Assembly assembly = typeof(DataWriteLayer).Assembly;
-                using (System.IO.Stream resource = assembly.GetManifestResourceStream(Enum.GetName(typeof(DataWriteLayer.MDBType), mDBType)))
+                using (System.IO.Stream resource = assembly.GetManifestResourceStream(Enum.GetName(typeof(MDBType), mDBType)))
                 using (FileStream file = new FileStream(fileName, FileMode.Create, FileAccess.Write))
                 {
                     if (resource == null)
@@ -940,7 +980,7 @@ namespace Element34.DataManager
                     FileAttributes attributes = File.GetAttributes(fileName);
                     if ((attributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
                     {
-                        attributes = attributes & ~FileAttributes.ReadOnly;
+                        attributes &= ~FileAttributes.ReadOnly;
                         File.SetAttributes(fileName, attributes);
                     }
                 }
@@ -954,276 +994,334 @@ namespace Element34.DataManager
             // Connect to Access database file.
             try
             {
-                con.Open();
+                connection.Open();
             }
             catch (Exception e)
             {
                 throw new Exception("Could not connect to the database successfully.", e);
             }
 
-            return con;
+            return connection;
         }
 
-        private static ADOX.Table DefineADOXTable(DataTable inTable)
+        public static void UpdateMDB_MapEvents(OleDbConnection connection, DataTable dt)
         {
-            ADOX.Table result = new ADOX.Table();
-            result.Name = (new string(inTable.TableName.Where(c => !char.IsPunctuation(c)).ToArray())).Replace("$", string.Empty);
-            DataColumnCollection inColumns = inTable.Columns;
+            dt.RowChanged += (sender, e) => UpdateMDB_HandleRowUpsert(sender, e, connection);
+            dt.RowDeleted += (sender, e) => UpdateMDB_HandleRowDeleted(sender, e, connection);
+        }
 
-            foreach (DataColumn inColumn in inColumns)
+        private static void UpdateMDB_HandleRowUpsert(object sender, DataRowChangeEventArgs e, OleDbConnection connection)
+        {
+            DataTable dt = (DataTable)sender;
+            string tableName = dt.TableName;
+            bool hasPrimaryKey = HasPrimaryKeyMDB(dt, connection);
+            List<string> pkNames = (hasPrimaryKey) ? FindPrimaryKeysMDB(dt, connection) : null;
+
+            if (e.Row.RowState == DataRowState.Added)
             {
-                ADOX.Column col = new ADOX.Column();
-                col.Name = inColumn.ColumnName;
-                col.Type = ResolveADOXType(inColumn);
+                // Open the MS Access connection
+                connection.Open();
+                OleDbTransaction transaction = connection.BeginTransaction();
 
-                if ((col.Type == ADOX.DataTypeEnum.adVarWChar) || (col.Type == ADOX.DataTypeEnum.adWChar))
+                try
                 {
-                    if (inColumn.MaxLength > 0)
-                        col.DefinedSize = inColumn.MaxLength;
+                    StringBuilder insertCommandText = new StringBuilder();
+                    insertCommandText.Append($"INSERT INTO [{tableName}] (");
+
+                    if (hasPrimaryKey)
+                    {
+                        // Append column names
+                        for (int i = 0; i < dt.Columns.Count; i++)
+                        {
+                            string columnName = dt.Columns[i].ColumnName;
+
+                            if (!pkNames.Contains(columnName))
+                            {
+                                insertCommandText.Append(columnName);
+                                if (i < dt.Columns.Count - 1)
+                                {
+                                    insertCommandText.Append(", ");
+                                }
+                            }
+                        }
+
+                        insertCommandText.Append(") VALUES (");
+
+                        // Append parameter placeholders
+                        for (int i = 0; i < dt.Columns.Count; i++)
+                        {
+                            string columnName = dt.Columns[i].ColumnName;
+
+                            if (!pkNames.Contains(columnName))
+                            {
+                                insertCommandText.Append($"@{columnName}");
+                                if (i < dt.Columns.Count - 1)
+                                {
+                                    insertCommandText.Append(", ");
+                                }
+                            }
+                        }
+                        insertCommandText.Append(")");
+
+                        // Add parameters
+                        foreach (DataColumn column in dt.Columns)
+                        {
+                            insertCommandText.Replace($"@{column.ColumnName}", Normalize(e.Row[column], false, true));
+                        }
+                    }
                     else
-                        col.DefinedSize = 255;
+                    {
+                        // Append column names
+                        for (int i = 0; i < dt.Columns.Count; i++)
+                        {
+                            string columnName = dt.Columns[i].ColumnName;
+                            insertCommandText.Append(columnName);
+                            if (i < dt.Columns.Count - 1)
+                            {
+                                insertCommandText.Append(", ");
+                            }
+                        }
+
+                        insertCommandText.Append(") VALUES (");
+
+                        // Append parameter placeholders
+                        for (int i = 0; i < dt.Columns.Count; i++)
+                        {
+                            string columnName = dt.Columns[i].ColumnName;
+                            insertCommandText.Append($"@{columnName}");
+                            if (i < dt.Columns.Count - 1)
+                            {
+                                insertCommandText.Append(", ");
+                            }
+                        }
+                        insertCommandText.Append(")");
+
+                        // Add parameters
+                        foreach (DataColumn column in dt.Columns)
+                        {
+                            insertCommandText.Replace($"@{column.ColumnName}", Normalize(e.Row[column], false, true));
+                        }
+                    }
+
+                    OleDbCommand command = new OleDbCommand(insertCommandText.ToString(), connection, transaction);
+                    command.ExecuteNonQuery();
+                    transaction.Commit();
                 }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    Debug.WriteLine($"Error inserting record into MS Access table: {ex.Message}");
+                }
+                finally
+                {
+                    // Close the Access connection in the finally block to ensure it is always closed
+                    if (connection.State == ConnectionState.Open)
+                    {
+                        connection.Close();
+                    }
+                }
+            }
+            else if (e.Action == DataRowAction.Change)
+            {
+                connection.Open();
+                OleDbTransaction transaction = connection.BeginTransaction();
 
-                if (inColumn.AllowDBNull)
-                    col.Attributes = ADOX.ColumnAttributesEnum.adColNullable;
+                try
+                {
+                    StringBuilder updateCommandText = new StringBuilder();
+                    updateCommandText.Append($"UPDATE [{tableName}] SET ");
 
-                result.Columns.Append(col);
+                    if (hasPrimaryKey)
+                    {
+                        // Build custom update command
+                        foreach (DataColumn column in dt.Columns)
+                        {
+                            if (e.Row[column, DataRowVersion.Current] != e.Row[column, DataRowVersion.Original])
+                                if (!pkNames.Contains(column.ColumnName))
+                                    updateCommandText.Append($"[{column.ColumnName}] = @{column.ColumnName}, ");
+                        }
+                        updateCommandText.Remove(updateCommandText.Length - 2, 2); // Remove last comma
+
+                        updateCommandText.Append($" WHERE ");
+                        foreach (string pk in pkNames)
+                        {
+                            updateCommandText.Append($"[{pk}]={Normalize(e.Row[pk])}, ");
+                        }
+                        updateCommandText.Remove(updateCommandText.Length - 2, 2); // Remove last comma
+
+                        // Add parameters
+                        foreach (DataColumn column in dt.Columns)
+                        {
+                            updateCommandText.Replace($"@{column.ColumnName}", Normalize(e.Row[column, DataRowVersion.Current], false, true));
+                        }
+                    }
+                    else
+                    {
+                        // Build custom update command
+                        foreach (DataColumn column in dt.Columns)
+                        {
+                            if (e.Row[column, DataRowVersion.Current] != e.Row[column, DataRowVersion.Original])
+                                updateCommandText.Append($"[{column.ColumnName}] = @{column.ColumnName}, ");
+                        }
+                        updateCommandText.Remove(updateCommandText.Length - 2, 2); // Remove last comma
+                        updateCommandText.Append($" WHERE ");
+                        foreach (DataColumn column in dt.Columns)
+                        {
+                            if (e.Row[column, DataRowVersion.Current] == e.Row[column, DataRowVersion.Original])
+                                updateCommandText.Append($"[{column.ColumnName}] = @{column.ColumnName}_old AND ");
+                        }
+                        updateCommandText.Remove(updateCommandText.Length - 5, 5); // Remove last 'AND'
+
+                        // Add parameters
+                        foreach (DataColumn column in dt.Columns)
+                        {
+                            if (e.Row[column, DataRowVersion.Current] == e.Row[column, DataRowVersion.Original])
+                            {
+                                updateCommandText.Replace($"@{column.ColumnName}_old", Normalize(e.Row[column, DataRowVersion.Original], false, true));
+                                updateCommandText.Replace($"[{column.ColumnName}] = NULL", $"[{column.ColumnName}] IS NULL");
+                            }
+                            else
+                                updateCommandText.Replace($"@{column.ColumnName}", Normalize(e.Row[column, DataRowVersion.Current], false, true));
+                        }
+                    }
+
+                    OleDbCommand command = new OleDbCommand(updateCommandText.ToString(), connection, transaction);
+                    command.ExecuteNonQuery();
+                    transaction.Commit();
+
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    Debug.WriteLine($"Error updating record in MS Access table: {ex.Message}");
+                }
+                finally
+                {
+                    // Close the Access connection in the finally block
+                    if (connection.State == ConnectionState.Open)
+                    {
+                        connection.Close();
+                    }
+                }
+            }
+        }
+
+        private static void UpdateMDB_HandleRowDeleted(object sender, DataRowChangeEventArgs e, OleDbConnection connection)
+        {
+            DataTable dt = (DataTable)sender;
+            string tableName = dt.TableName;
+
+            if (e.Action == DataRowAction.Delete)
+            {
+                connection.Open();
+                OleDbTransaction transaction = connection.BeginTransaction();
+
+                try
+                {
+                    // Create a command to delete the row directly in the database
+                    string deleteQuery = $"DELETE FROM [{tableName}] WHERE ";
+                    List<string> whereClauses = new List<string>();
+
+                    foreach (DataColumn column in dt.Columns)
+                    {
+                        whereClauses.Add($"[{column.ColumnName}] = @{column.ColumnName}");
+                    }
+
+                    deleteQuery += string.Join(" AND ", whereClauses);
+                    OleDbCommand deleteCommand = new OleDbCommand(deleteQuery, connection, transaction);
+
+                    // Add parameters for each column in the row being deleted
+                    foreach (DataColumn column in dt.Columns)
+                    {
+                        deleteCommand.Parameters.AddWithValue($"@{column.ColumnName}", e.Row[column]);
+                    }
+
+                    // Execute the delete command
+                    deleteCommand.ExecuteNonQuery();
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    Debug.WriteLine($"Error deleting row from MS Access table: {ex.Message}");
+                }
+                finally
+                {
+                    // Close the MS Access connection in the finally block to ensure it is always closed
+                    if (connection.State == ConnectionState.Open)
+                    {
+                        connection.Close();
+                    }
+                }
+            }
+        }
+
+        private static bool HasPrimaryKeyMDB(DataTable dataTable, OleDbConnection connection)
+        {
+            bool result = false;
+            string query = $"SELECT COUNT(*) FROM MSysObjects WHERE Type=1 AND Name='{dataTable.TableName}' AND Flags=0";
+
+            // Open the MS Access connection
+            connection.Open();
+
+            try
+            {
+                using (OleDbCommand command = new OleDbCommand(query, connection))
+                {
+                    int tableCount = (int)command.ExecuteScalar();
+                    result = tableCount > 0;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error querying MS Access table: {ex.Message}");
+            }
+            finally
+            {
+                // Close the MS Access connection in the finally block
+                if (connection.State == ConnectionState.Open)
+                {
+                    connection.Close();
+                }
             }
 
             return result;
         }
 
-        private static void AddDataTableToMDBwithADOX(ADOX.Catalog cat, DataTable inTable)
+        private static List<string> FindPrimaryKeysMDB(DataTable dataTable, OleDbConnection connection)
         {
-            ADODB.Recordset rs = new ADODB.Recordset();
-            rs.CursorLocation = ADODB.CursorLocationEnum.adUseClient;
-            DataColumnCollection inColumns = inTable.Columns;
+            List<string> result = new List<string>();
+            string query = $"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_NAME = '{dataTable.TableName}' AND CONSTRAINT_NAME LIKE 'PrimaryKey%'";
 
-            //remove punctuation from inTable.TableName for ADODB.Recordset
-            rs.Open(string.Format("SELECT * FROM[{0}]", (new string(inTable.TableName.Where(c => !char.IsPunctuation(c)).ToArray())).Replace("$", string.Empty))
-                    , cat.ActiveConnection
-                    , ADODB.CursorTypeEnum.adOpenDynamic
-                    , ADODB.LockTypeEnum.adLockOptimistic);
+            // Open the MS Access connection
+            connection.Open();
 
-            if (!rs.BOF || !rs.EOF)
-                rs.MoveFirst();
-
-            foreach (DataRow dr in inTable.Rows)
+            try
             {
-                rs.AddNew();
-                for (int columnIndex = 0; columnIndex < inColumns.Count; columnIndex++)
+                using (OleDbCommand command = new OleDbCommand(query, connection))
+                using (OleDbDataReader reader = command.ExecuteReader())
                 {
-                    rs.Fields[columnIndex].Value = dr[columnIndex];
-                }
-                rs.Update();
-            }
-
-            rs.Close();
-        }
-
-        private static void AddDataTableToMDB(DataTable inTable, OleDbConnection conn)
-        {
-            StringBuilder sqlStmt;
-            conn.Open();
-
-            using (OleDbCommand cmd = new OleDbCommand())
-            {
-                sqlStmt = new StringBuilder();
-                sqlStmt.Append("CREATE TABLE [" + inTable.TableName + "] (");
-                foreach (DataColumn inColumn in inTable.Columns)
-                {
-                    sqlStmt.Append("[" + inColumn.ColumnName + "] " + ResolveOleDbType(inColumn) + ",");
-                }
-
-                // remove last comma
-                sqlStmt.Length = sqlStmt.Length - 1;
-                sqlStmt.Append(");");
-
-                cmd.CommandText = sqlStmt.ToString();
-                cmd.ExecuteNonQuery();
-            }
-
-            using (OleDbDataAdapter oledbDataAdapter = new OleDbDataAdapter("SELECT * FROM [" + inTable.TableName + "];", conn))
-            {
-                OleDbCommandBuilder oledbCmdBuilder = new OleDbCommandBuilder(oledbDataAdapter);
-                oledbDataAdapter.InsertCommand = oledbCmdBuilder.GetInsertCommand();
-                oledbDataAdapter.UpdateCommand = oledbCmdBuilder.GetUpdateCommand();
-
-                using (DataTable accDataTable = inTable.Copy())
-                {
-                    // Set the RowState to added to ensure an Insert is performed
-                    foreach (DataRow row in accDataTable.Rows)
+                    while (reader.Read())
                     {
-                        if (row.RowState == DataRowState.Added || row.RowState == DataRowState.Unchanged)
-                        {
-                            row.SetAdded();
-                        }
+                        // Read the column name and add it to the list
+                        result.Add(reader["COLUMN_NAME"].ToString());
                     }
-
-                    oledbDataAdapter.Update(accDataTable);
                 }
             }
-            conn.Close();
-        }
-
-        private static OleDbType ResolveOleDbType(DataColumn column)
-        {
-            Type type = column.GetType();
-            TypeCode typeCode = Type.GetTypeCode(type);
-
-            switch (typeCode)
+            catch (Exception ex)
             {
-                case TypeCode.String:
-                    if (column.MaxLength > MAXNVARCHAR)
-                        return OleDbType.LongVarWChar;
-                    else
-                        return OleDbType.VarWChar;
-                case TypeCode.Int16:
-                    return OleDbType.SmallInt;
-                case TypeCode.Int32:
-                    return OleDbType.Integer;
-                case TypeCode.Int64:
-                    return OleDbType.BigInt;
-                case TypeCode.Byte:
-                    return OleDbType.UnsignedTinyInt;
-                case TypeCode.SByte:
-                    return OleDbType.TinyInt;
-                case TypeCode.UInt16:
-                    return OleDbType.UnsignedSmallInt;
-                case TypeCode.UInt32:
-                    return OleDbType.UnsignedInt;
-                case TypeCode.UInt64:
-                    return OleDbType.UnsignedBigInt;
-                case TypeCode.Char:
-                    return OleDbType.Char;
-                case TypeCode.Single:
-                    return OleDbType.Single;
-                case TypeCode.Double:
-                    return OleDbType.Double;
-                case TypeCode.Decimal:
-                    return OleDbType.Decimal;
-                case TypeCode.DateTime:
-                    return OleDbType.Date;
-                case TypeCode.Boolean:
-                    return OleDbType.Boolean;
-                case TypeCode.Object:
-                    if (type == typeof(Guid))
-                        return OleDbType.Guid;
-                    else if (type == typeof(byte[]))
-                        return OleDbType.Binary;
-                    else if (type == typeof(TimeSpan))
-                        return OleDbType.DBTime;
-                    else if (type == typeof(DateTimeOffset))
-                        return OleDbType.DBTimeStamp;
-                    else if (type == typeof(byte[]))
-                        return OleDbType.VarBinary;
-                    else if (type == typeof(char[]))
-                        return OleDbType.VarChar;
-                    else if (type == typeof(short?))
-                        return OleDbType.SmallInt;
-                    else if (type == typeof(int?))
-                        return OleDbType.Integer;
-                    else if (type == typeof(long?))
-                        return OleDbType.BigInt;
-                    else if (type == typeof(float?))
-                        return OleDbType.Single;
-                    else if (type == typeof(double?))
-                        return OleDbType.Double;
-                    else if (type == typeof(decimal?))
-                        return OleDbType.Decimal;
-                    else if (type == typeof(bool?))
-                        return OleDbType.Boolean;
-                    else if (type == typeof(Guid?))
-                        return OleDbType.Guid;
-                    break;
-                case TypeCode.DBNull:
-                    return OleDbType.Empty;
-                default:
-                    return OleDbType.Variant; // Default to OleDbType.Variant for unknown types
+                Debug.WriteLine($"Error querying MS Access table: {ex.Message}");
+            }
+            finally
+            {
+                // Close the MS Access connection in the finally block
+                if (connection.State == ConnectionState.Open)
+                {
+                    connection.Close();
+                }
             }
 
-            // Default to OleDbType.Variant for unsupported types
-            return OleDbType.Variant;
-        }
-
-        private static ADOX.DataTypeEnum ResolveADOXType(DataColumn column)
-        {
-            Type type = column.GetType();
-            TypeCode typeCode = Type.GetTypeCode(type);
-
-            switch (typeCode)
-            {
-                case TypeCode.String:
-                    if (column.MaxLength > MAXNVARCHAR)
-                        return ADOX.DataTypeEnum.adLongVarWChar;
-                    else
-                        return ADOX.DataTypeEnum.adVarWChar;
-                case TypeCode.Int16:
-                    return ADOX.DataTypeEnum.adSmallInt;
-                case TypeCode.Int32:
-                    return ADOX.DataTypeEnum.adInteger;
-                case TypeCode.Int64:
-                    return ADOX.DataTypeEnum.adBigInt;
-                case TypeCode.Byte:
-                    return ADOX.DataTypeEnum.adUnsignedTinyInt;
-                case TypeCode.SByte:
-                    return ADOX.DataTypeEnum.adTinyInt;
-                case TypeCode.UInt16:
-                    return ADOX.DataTypeEnum.adUnsignedSmallInt;
-                case TypeCode.UInt32:
-                    return ADOX.DataTypeEnum.adUnsignedInt;
-                case TypeCode.UInt64:
-                    return ADOX.DataTypeEnum.adUnsignedBigInt;
-                case TypeCode.Char:
-                    return ADOX.DataTypeEnum.adChar;
-                case TypeCode.Single:
-                    return ADOX.DataTypeEnum.adSingle;
-                case TypeCode.Double:
-                    return ADOX.DataTypeEnum.adDouble;
-                case TypeCode.Decimal:
-                    return ADOX.DataTypeEnum.adDecimal;
-                case TypeCode.DateTime:
-                    return ADOX.DataTypeEnum.adDate;
-                case TypeCode.Boolean:
-                    return ADOX.DataTypeEnum.adBoolean;
-                case TypeCode.Object:
-                    if (type == typeof(Guid))
-                        return ADOX.DataTypeEnum.adGUID;
-                    else if (type == typeof(byte[]))
-                        return ADOX.DataTypeEnum.adBinary;
-                    else if (type == typeof(TimeSpan))
-                        return ADOX.DataTypeEnum.adDBTime;
-                    else if (type == typeof(DateTimeOffset))
-                        return ADOX.DataTypeEnum.adDBTimeStamp;
-                    else if (type == typeof(byte[]))
-                        return ADOX.DataTypeEnum.adVarBinary;
-                    else if (type == typeof(char[]))
-                        return ADOX.DataTypeEnum.adVarChar;
-                    else if (type == typeof(short?))
-                        return ADOX.DataTypeEnum.adSmallInt;
-                    else if (type == typeof(int?))
-                        return ADOX.DataTypeEnum.adInteger;
-                    else if (type == typeof(long?))
-                        return ADOX.DataTypeEnum.adBigInt;
-                    else if (type == typeof(float?))
-                        return ADOX.DataTypeEnum.adSingle;
-                    else if (type == typeof(double?))
-                        return ADOX.DataTypeEnum.adDouble;
-                    else if (type == typeof(decimal?))
-                        return ADOX.DataTypeEnum.adDecimal;
-                    else if (type == typeof(bool?))
-                        return ADOX.DataTypeEnum.adBoolean;
-                    else if (type == typeof(Guid?))
-                        return ADOX.DataTypeEnum.adGUID;
-                    break;
-                case TypeCode.DBNull:
-                    return ADOX.DataTypeEnum.adEmpty;
-                default:
-                    return ADOX.DataTypeEnum.adVariant; // Default to adVariant for unknown types
-            }
-
-            // Default to adVariant for unsupported types
-            return ADOX.DataTypeEnum.adVariant;
+            return result;
         }
         #endregion
 
@@ -1262,8 +1360,6 @@ namespace Element34.DataManager
         {
             if (File.Exists(sFilename))
                 File.Delete(sFilename);
-
-            DataRow row = null;
             int offset = 1; // Environment.Version;
             string tmp;
 
@@ -1293,7 +1389,7 @@ namespace Element34.DataManager
                 // Write out rows
                 for (int recordIndex = 0; recordIndex < dt.Rows.Count; recordIndex++)
                 {
-                    row = dt.Rows[recordIndex];
+                    DataRow row = dt.Rows[recordIndex];
 
                     for (int j = 0; j < dt.Columns.Count; j++)
                     {
@@ -1312,7 +1408,7 @@ namespace Element34.DataManager
         {
             using (ExcelPackage pkg = new ExcelPackage(new FileInfo(sFilename)))
             {
-                string path = Path.Combine(Path.GetDirectoryName(sFilename), Path.GetFileNameWithoutExtension(sFilename) + "_bak", Path.GetExtension(sFilename));
+                string path = Path.Combine(Path.GetDirectoryName(sFilename), Path.GetFileNameWithoutExtension(sFilename) + "_bak" + Path.GetExtension(sFilename));
                 System.IO.Stream stream = File.Create(path);
                 pkg.SaveAs(stream);
                 stream.Close();
@@ -1321,7 +1417,6 @@ namespace Element34.DataManager
 
         public static void UpdateWkshtXLS(string sFilename, DataTable dt, string sheetName = "")
         {
-            DataRow row = null;
             int offset = 1; // Environment.Version;
             string tmp;
 
@@ -1354,7 +1449,7 @@ namespace Element34.DataManager
                 // Write out rows
                 for (int recordIndex = 0; recordIndex < dt.Rows.Count; recordIndex++)
                 {
-                    row = dt.Rows[recordIndex];
+                    DataRow row = dt.Rows[recordIndex];
 
                     for (int j = 0; j < dt.Columns.Count; j++)
                     {
@@ -1473,6 +1568,425 @@ namespace Element34.DataManager
                     pkg.Save();
                 }
             }
+        }
+        #endregion
+
+        #region [SQLite File Support]
+        public static void AddDataColumnSQLite(SqliteConnection connection, DataTable dt, string fieldName, Type dataType, int length = -1)
+        {
+            if (!dt.Columns.Contains(fieldName))
+            {
+                DataColumn column = new DataColumn(fieldName, dataType);
+
+                if (length < 0)
+                {
+                    switch (dataType.Name)
+                    {
+                        case nameof(String):
+                            length = 255;
+                            break;
+                        case nameof(Byte):
+                            length = 100;
+                            break;
+                        case nameof(DateTime):
+                            length = 8;
+                            break;
+                        case nameof(DateTimeOffset):
+                            length = 10;
+                            break;
+                        case nameof(TimeSpan):
+                            length = 8;
+                            break;
+                        case nameof(Guid):
+                            length = 16;
+                            break;
+                        default:
+                            // Handle other data types if needed
+                            break;
+                    }
+                }
+
+                if (length > 0)
+                    column.MaxLength = length;
+
+                dt.Columns.Add(column);
+
+                try
+                {
+                    connection.Open();
+
+                    // Check if the column already exists
+                    string query = $"PRAGMA table_info({dt.TableName})";
+                    using (SqliteCommand command = new SqliteCommand(query, connection))
+                    using (SqliteDataReader reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            string existingColumnName = reader["name"].ToString();
+                            if (existingColumnName.Equals(fieldName, StringComparison.OrdinalIgnoreCase))
+                            {
+                                Debug.WriteLine("Column already exists.");
+                                return;
+                            }
+                        }
+                    }
+
+                    // If the column doesn't exist, add it
+                    string columnDefinition = length > 0 ? $"[{fieldName}] {ResolveSQLiteColumnType(dataType)}({length})" : $"[{fieldName}] {ResolveSQLiteColumnType(dataType)}";
+                    query = $"ALTER TABLE [{dt.TableName}] ADD COLUMN {columnDefinition}";
+
+                    using (SqliteCommand command = new SqliteCommand(query, connection))
+                    {
+                        command.ExecuteNonQuery();
+                        Debug.WriteLine($"Column '{fieldName}' added successfully to table '{dt.TableName}'.");
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Error adding column: {ex.Message}");
+                }
+                finally
+                {
+                    // Close the SQLite connection in the finally block
+                    if (connection.State == ConnectionState.Open)
+                    {
+                        connection.Close();
+                    }
+                }
+            }
+        }
+
+        public static void UpdateSqlite_MapEvents(SqliteConnection connection, DataTable dt)
+        {
+            dt.RowChanged += (sender, e) => UpdateSqlite_HandleRowUpsert(sender, e, connection);
+            dt.RowDeleted += (sender, e) => UpdateSqlite_HandleRowDeleted(sender, e, connection);
+        }
+
+        private static void UpdateSqlite_HandleRowUpsert(object sender, DataRowChangeEventArgs e, SqliteConnection connection)
+        {
+            DataTable dt = (DataTable)sender;
+            string tableName = dt.TableName;
+            bool hasPrimaryKey = HasPrimaryKeySqlite(dt, connection);
+            List<string> pkNames = (hasPrimaryKey) ? FindPrimaryKeysSqlite(dt, connection) : null;
+
+            if (e.Row.RowState == DataRowState.Added)
+            {
+                // Open the SQLite connection
+                connection.Open();
+                SqliteTransaction transaction = connection.BeginTransaction();
+
+                try
+                {
+                    StringBuilder insertCommandText = new StringBuilder();
+                    insertCommandText.Append($"INSERT INTO [{tableName}] (");
+
+                    if (hasPrimaryKey)
+                    {
+                        // Append column names
+                        for (int i = 0; i < dt.Columns.Count; i++)
+                        {
+                            string columnName = dt.Columns[i].ColumnName;
+
+                            if (!pkNames.Contains(columnName))
+                            {
+                                insertCommandText.Append(columnName);
+                                if (i < dt.Columns.Count - 1)
+                                {
+                                    insertCommandText.Append(", ");
+                                }
+                            }
+                        }
+
+                        insertCommandText.Append(") VALUES (");
+
+                        // Append parameter placeholders
+                        for (int i = 0; i < dt.Columns.Count; i++)
+                        {
+                            string columnName = dt.Columns[i].ColumnName;
+
+                            if (!pkNames.Contains(columnName))
+                            {
+                                insertCommandText.Append($"@{columnName}");
+                                if (i < dt.Columns.Count - 1)
+                                {
+                                    insertCommandText.Append(", ");
+                                }
+                            }
+                        }
+                        insertCommandText.Append(")");
+
+                        // Add parameters
+                        foreach (DataColumn column in dt.Columns)
+                        {
+                            insertCommandText.Replace($"@{column.ColumnName}", Normalize(e.Row[column], false, true));
+                        }
+                    }
+                    else
+                    {
+                        // Append column names
+                        for (int i = 0; i < dt.Columns.Count; i++)
+                        {
+                            string columnName = dt.Columns[i].ColumnName;
+                            insertCommandText.Append(columnName);
+                            if (i < dt.Columns.Count - 1)
+                            {
+                                insertCommandText.Append(", ");
+                            }
+                        }
+
+                        insertCommandText.Append(") VALUES (");
+
+                        // Append parameter placeholders
+                        for (int i = 0; i < dt.Columns.Count; i++)
+                        {
+                            string columnName = dt.Columns[i].ColumnName;
+                            insertCommandText.Append($"@{columnName}");
+                            if (i < dt.Columns.Count - 1)
+                            {
+                                insertCommandText.Append(", ");
+                            }
+                        }
+                        insertCommandText.Append(")");
+
+                        // Add parameters
+                        foreach (DataColumn column in dt.Columns)
+                        {
+                            insertCommandText.Replace($"@{column.ColumnName}", Normalize(e.Row[column], false, true));
+                        }
+                    }
+
+                    SqliteCommand command = new SqliteCommand(insertCommandText.ToString(), connection, transaction);
+                    command.ExecuteNonQuery();
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    Debug.WriteLine($"Error inserting record into SQLite table: {ex.Message}");
+                }
+                finally
+                {
+                    // Close the SQLite connection in the finally block to ensure it is always closed
+                    if (connection.State == ConnectionState.Open)
+                    {
+                        connection.Close();
+                    }
+                }
+            }
+            else if (e.Action == DataRowAction.Change)
+            {
+                connection.Open();
+                SqliteTransaction transaction = connection.BeginTransaction();
+
+                try
+                {
+                    StringBuilder updateCommandText = new StringBuilder();
+                    updateCommandText.Append($"UPDATE [{tableName}] SET ");
+
+                    if (hasPrimaryKey)
+                    {
+                        // Build custom update command
+                        foreach (DataColumn column in dt.Columns)
+                        {
+                            if (e.Row[column, DataRowVersion.Current] != e.Row[column, DataRowVersion.Original])
+                                if (!pkNames.Contains(column.ColumnName))
+                                    updateCommandText.Append($"[{column.ColumnName}] = @{column.ColumnName}, ");
+                        }
+                        updateCommandText.Remove(updateCommandText.Length - 2, 2); // Remove last comma
+
+                        updateCommandText.Append($" WHERE ");
+                        foreach (string pk in pkNames)
+                        {
+                            updateCommandText.Append($"[{pk}]={Normalize(e.Row[pk])}, ");
+                        }
+                        updateCommandText.Remove(updateCommandText.Length - 2, 2); // Remove last comma
+
+                        // Add parameters
+                        foreach (DataColumn column in dt.Columns)
+                        {
+                            updateCommandText.Replace($"@{column.ColumnName}", Normalize(e.Row[column, DataRowVersion.Current], false, true));
+                        }
+                    }
+                    else
+                    {
+                        // Build custom update command
+                        foreach (DataColumn column in dt.Columns)
+                        {
+                            if (e.Row[column, DataRowVersion.Current] != e.Row[column, DataRowVersion.Original])
+                                updateCommandText.Append($"[{column.ColumnName}] = @{column.ColumnName}, ");
+                        }
+                        updateCommandText.Remove(updateCommandText.Length - 2, 2); // Remove last comma
+                        updateCommandText.Append($" WHERE ");
+                        foreach (DataColumn column in dt.Columns)
+                        {
+                            if (e.Row[column, DataRowVersion.Current] == e.Row[column, DataRowVersion.Original])
+                                updateCommandText.Append($"[{column.ColumnName}] = @{column.ColumnName}_old AND ");
+                        }
+                        updateCommandText.Remove(updateCommandText.Length - 5, 5); // Remove last 'AND'
+
+                        // Add parameters
+                        foreach (DataColumn column in dt.Columns)
+                        {
+                            if (e.Row[column, DataRowVersion.Current] == e.Row[column, DataRowVersion.Original])
+                            {
+                                updateCommandText.Replace($"@{column.ColumnName}_old", Normalize(e.Row[column, DataRowVersion.Original], false, true));
+                                updateCommandText.Replace($"[{column.ColumnName}] = NULL", $"[{column.ColumnName}] IS NULL");
+                            }
+                            else
+                                updateCommandText.Replace($"@{column.ColumnName}", Normalize(e.Row[column, DataRowVersion.Current], false, true));
+                        }
+                    }
+
+                    SqliteCommand command = new SqliteCommand(updateCommandText.ToString(), connection, transaction);
+                    command.ExecuteNonQuery();
+                    transaction.Commit();
+
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    Debug.WriteLine($"Error updating record in SQLite table: {ex.Message}");
+                }
+                finally
+                {
+                    // Close the SQLite connection in the finally block
+                    if (connection.State == ConnectionState.Open)
+                    {
+                        connection.Close();
+                    }
+                }
+            }
+        }
+
+        private static void UpdateSqlite_HandleRowDeleted(object sender, DataRowChangeEventArgs e, SqliteConnection connection)
+        {
+            DataTable dt = (DataTable)sender;
+            string tableName = dt.TableName;
+
+            if (e.Action == DataRowAction.Delete)
+            {
+                connection.Open();
+                SqliteTransaction transaction = connection.BeginTransaction();
+
+                try
+                {
+                    // Create a command to delete the row directly in the database
+                    string deleteQuery = $"DELETE FROM [{tableName}] WHERE ";
+                    List<string> whereClauses = new List<string>();
+
+                    foreach (DataColumn column in dt.Columns)
+                    {
+                        whereClauses.Add($"[{column.ColumnName}] = @{column.ColumnName}");
+                    }
+
+                    deleteQuery += string.Join(" AND ", whereClauses);
+                    SqliteCommand deleteCommand = new SqliteCommand(deleteQuery, connection, transaction);
+
+                    // Add parameters for each column in the row being deleted
+                    foreach (DataColumn column in dt.Columns)
+                    {
+                        deleteCommand.Parameters.AddWithValue($"@{column.ColumnName}", e.Row[column]);
+                    }
+
+                    // Execute the delete command
+                    deleteCommand.ExecuteNonQuery();
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    Debug.WriteLine($"Error deleting row from SQLite table: {ex.Message}");
+                }
+                finally
+                {
+                    // Close the SQLite connection in the finally block to ensure it is always closed
+                    if (connection.State == ConnectionState.Open)
+                    {
+                        connection.Close();
+                    }
+                }
+            }
+        }
+
+        private static bool HasPrimaryKeySqlite(DataTable dataTable, SqliteConnection connection)
+        {
+            bool result = false;
+            string query = $"PRAGMA table_info({dataTable.TableName})";
+
+            // Open the SQLite connection
+            connection.Open();
+
+            try
+            {
+                using (SqliteCommand command = new SqliteCommand(query, connection))
+                using (SqliteDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        bool isPrimaryKey = Convert.ToBoolean(reader["pk"]);
+                        if (isPrimaryKey)
+                        {
+                            result = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error querying SQLite table: {ex.Message}");
+            }
+            finally
+            {
+                // Close the SQLite connection in the finally block
+                if (connection.State == ConnectionState.Open)
+                {
+                    connection.Close();
+                }
+            }
+
+            return result;
+        }
+
+        private static List<string> FindPrimaryKeysSqlite(DataTable dataTable, SqliteConnection connection)
+        {
+            List<string> result = new List<string>();
+            string query = $"PRAGMA table_info({dataTable.TableName})";
+
+            // Open the SQLite connection
+            connection.Open();
+
+            try
+            {
+                using (SqliteCommand command = new SqliteCommand(query, connection))
+                using (SqliteDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        bool isPrimaryKey = Convert.ToBoolean(reader["pk"]);
+                        if (isPrimaryKey)
+                        {
+                            string columnName = reader["name"].ToString();
+                            result.Add(columnName);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error querying SQLite table: {ex.Message}");
+            }
+            finally
+            {
+                // Close the SQLite connection in the finally block
+                if (connection.State == ConnectionState.Open)
+                {
+                    connection.Close();
+                }
+            }
+
+            return result;
         }
         #endregion
 
@@ -1659,23 +2173,6 @@ namespace Element34.DataManager
                 }
             }
         }
-
-        private static string BuildCsvRow(DataRow row)
-        {
-            StringBuilder sb = new StringBuilder();
-
-            for (int i = 0; i < row.Table.Columns.Count; i++)
-            {
-                sb.Append(Normalize(row[i].ToString(), true));
-
-                if (i < row.Table.Columns.Count - 1)
-                {
-                    sb.Append(",");
-                }
-            }
-
-            return sb.ToString();
-        }
         #endregion
 
         #region [XML File Support]
@@ -1688,19 +2185,6 @@ namespace Element34.DataManager
         {
             return dt.SerializeToXML();
         }
-
-        private static string SerializeToXML(this object item)
-        {
-            StringBuilder result = new StringBuilder();
-            DataContractSerializer serializer = new DataContractSerializer(item.GetType());
-            using (StringWriter strWriter = new StringWriter(result))
-            using (XmlWriter xmlWriter = XmlWriter.Create(strWriter))
-            {
-                serializer.WriteObject(xmlWriter, item);
-            }
-
-            return result.ToString();
-        }
         #endregion
 
         #region [JSON File Support]
@@ -1712,160 +2196,6 @@ namespace Element34.DataManager
         public static string ExportToJSON(DataTable dt)
         {
             return dt.SerializeToJSON();
-        }
-
-        private static string SerializeToJSON(this object item)
-        {
-            return JsonConvert.SerializeObject(item);
-        }
-        #endregion
-        #endregion
-
-        #region [Private Functions]
-        private static ADODB.Recordset DefineRecordset(DataTable inTable)
-        {
-            ADODB.Recordset result = new ADODB.Recordset();
-            string fieldName;
-            ADODB.DataTypeEnum dataType;
-            ADODB.FieldAttributeEnum attributes = ADODB.FieldAttributeEnum.adFldUnspecified;
-            int DefinedSize;
-
-            foreach (DataColumn inColumn in inTable.Columns)
-            {
-                fieldName = inColumn.ColumnName;
-                dataType = ResolveADODBType(inColumn);
-                if (inColumn.MaxLength > 0)
-                    DefinedSize = inColumn.MaxLength;
-                else
-                    DefinedSize = 255;
-
-                if (inColumn.AllowDBNull)
-                    attributes = ADODB.FieldAttributeEnum.adFldIsNullable;
-
-                result.Fields.Append(fieldName, dataType, DefinedSize, attributes);
-            }
-
-            return result;
-        }
-
-        private static ADODB.DataTypeEnum ResolveADODBType(DataColumn column)
-        {
-            Type type = column.GetType();
-            TypeCode typeCode = Type.GetTypeCode(type);
-
-            switch (typeCode)
-            {
-                case TypeCode.String:
-                    if (column.MaxLength > MAXNVARCHAR)
-                        return ADODB.DataTypeEnum.adLongVarWChar;
-                    else
-                        return ADODB.DataTypeEnum.adVarWChar;
-                case TypeCode.Int16:
-                    return ADODB.DataTypeEnum.adSmallInt;
-                case TypeCode.Int32:
-                    return ADODB.DataTypeEnum.adInteger;
-                case TypeCode.Int64:
-                    return ADODB.DataTypeEnum.adBigInt;
-                case TypeCode.Byte:
-                    return ADODB.DataTypeEnum.adUnsignedTinyInt;
-                case TypeCode.SByte:
-                    return ADODB.DataTypeEnum.adTinyInt;
-                case TypeCode.UInt16:
-                    return ADODB.DataTypeEnum.adUnsignedSmallInt;
-                case TypeCode.UInt32:
-                    return ADODB.DataTypeEnum.adUnsignedInt;
-                case TypeCode.UInt64:
-                    return ADODB.DataTypeEnum.adUnsignedBigInt;
-                case TypeCode.Char:
-                    return ADODB.DataTypeEnum.adChar;
-                case TypeCode.Single:
-                    return ADODB.DataTypeEnum.adSingle;
-                case TypeCode.Double:
-                    return ADODB.DataTypeEnum.adDouble;
-                case TypeCode.Decimal:
-                    return ADODB.DataTypeEnum.adDecimal;
-                case TypeCode.DateTime:
-                    return ADODB.DataTypeEnum.adDate;
-                case TypeCode.Boolean:
-                    return ADODB.DataTypeEnum.adBoolean;
-                case TypeCode.Object:
-                    if (type == typeof(Guid))
-                        return ADODB.DataTypeEnum.adGUID;
-                    else if (type == typeof(byte[]))
-                        return ADODB.DataTypeEnum.adBinary;
-                    else if (type == typeof(TimeSpan))
-                        return ADODB.DataTypeEnum.adDBTime;
-                    else if (type == typeof(DateTimeOffset))
-                        return ADODB.DataTypeEnum.adDBTimeStamp;
-                    else if (type == typeof(byte[]))
-                        return ADODB.DataTypeEnum.adVarBinary;
-                    else if (type == typeof(char[]))
-                        return ADODB.DataTypeEnum.adVarChar;
-                    else if (type == typeof(short?))
-                        return ADODB.DataTypeEnum.adSmallInt;
-                    else if (type == typeof(int?))
-                        return ADODB.DataTypeEnum.adInteger;
-                    else if (type == typeof(long?))
-                        return ADODB.DataTypeEnum.adBigInt;
-                    else if (type == typeof(float?))
-                        return ADODB.DataTypeEnum.adSingle;
-                    else if (type == typeof(double?))
-                        return ADODB.DataTypeEnum.adDouble;
-                    else if (type == typeof(decimal?))
-                        return ADODB.DataTypeEnum.adDecimal;
-                    else if (type == typeof(bool?))
-                        return ADODB.DataTypeEnum.adBoolean;
-                    else if (type == typeof(Guid?))
-                        return ADODB.DataTypeEnum.adGUID;
-                    break;
-                case TypeCode.DBNull:
-                    return ADODB.DataTypeEnum.adEmpty;
-                default:
-                    return ADODB.DataTypeEnum.adVariant; // Default to OleDbType.Variant for unknown types
-            }
-
-            // Default to OleDbType.Variant for unsupported types
-            return ADODB.DataTypeEnum.adVariant;
-        }
-
-        private static string Normalize(object o, bool isCSV = false, bool isSQL = false)
-        {
-            string value = o.ToString();
-
-            value = value.Replace(Environment.NewLine, "\r\n");  // OS dependent
-
-            value = (isCSV) ? value.Replace(",", "\",\"") : value;
-
-            if (isSQL)
-            {
-                // Handle data type conversions
-                if (o.GetType() == typeof(string) || o.GetType() == typeof(DateTime))
-                {
-                    // Escape single quotes in string values
-                    value = value.Replace("'", "''");
-                    // Surround string values with single quotes
-                    value = $"'{value}'";
-                }
-                else if (o.GetType() == typeof(bool))
-                {
-                    // Convert boolean value to 0 or 1
-                    value = (bool.Parse(value)) ? "1" : "0";
-                }
-                else if (o.GetType() == typeof(DateTime))
-                {
-                    // Format date/time values properly
-                    value = $"CONVERT(datetime, '{value}', 121)";
-                }
-                else if (string.IsNullOrEmpty(value))
-                {
-                    // Handle NULL values
-                    value = "NULL";
-                }
-            }
-
-            value = value.Replace("\"", "\"\"\"");
-
-            return value;
         }
         #endregion
     }

@@ -1,8 +1,8 @@
 ﻿namespace Element34.StringMetrics.Similarity
 {
-/// <summary>
-/// Something, something...
-/// </summary>
+    /// <summary>
+    /// Something, something...
+    /// </summary>
 
     public abstract class StringMetric<A>
     {

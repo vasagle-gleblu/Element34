@@ -1,9 +1,6 @@
-﻿using System.Linq;
-using System;
-using System.Text;
+﻿using System;
 using System.Collections.Generic;
-using OfficeOpenXml.FormulaParsing.Excel.Functions.Math;
-using OpenQA.Selenium.Interactions;
+using System.Linq;
 
 namespace Element34.StringMetrics.Similarity
 {

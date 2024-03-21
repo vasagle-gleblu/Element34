@@ -2,7 +2,7 @@
 {
     public interface IStringComparison
     {
-        bool Compare(string value1, string value2); 
+        bool Compare(string value1, string value2);
     }
 
     public interface IStringMetaphoneComparison

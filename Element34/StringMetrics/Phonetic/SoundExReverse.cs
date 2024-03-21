@@ -1,5 +1,4 @@
-﻿using OfficeOpenXml.FormulaParsing.Excel.Functions.Text;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Element34.StringMetrics.Phonetic
 {

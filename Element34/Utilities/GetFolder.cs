@@ -45,7 +45,7 @@ namespace Element34.Utilities
             while (list.Length == 0)
             {
                 currentFolder = Path.GetFullPath(Path.Combine(currentFolder, ".."));
-                if (currentFolder == Path.GetPathRoot(currentFolder)) 
+                if (currentFolder == Path.GetPathRoot(currentFolder))
                 {
                     throw new DirectoryNotFoundException();
                 }

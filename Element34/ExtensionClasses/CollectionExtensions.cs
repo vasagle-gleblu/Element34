@@ -26,28 +26,39 @@ namespace Element34
             return destination;
         }
 
-        public static V ComputeIfAbsent<K, V>(this Dictionary<K, V> dict, K key, Func<K, V> generator)
+        /// <summary>
+        /// This method is used to compute the value for a given key using the given mapping function. Store the computed value for 
+        /// the key in the Dictionary if the key is not already associated with a value (or is mapped to null) else null.  This 
+        /// mimics the same functionality of a Map / HashMap from Java.
+        /// </summary>
+        /// <typeparam name="K">Key Type</typeparam>
+        /// <typeparam name="V">Value Type</typeparam>
+        /// <param name="Dict">Dictionary</param>
+        /// <param name="key">Key parameter</param>
+        /// <param name="generator">The predefined delegate type to calculate the hash key.</param>
+        /// <returns></returns>
+        public static V ComputeIfAbsent<K, V>(this Dictionary<K, V> Dict, K key, Func<K, V> generator)
         {
-            bool exists = dict.TryGetValue(key, out var value);
+            bool exists = Dict.TryGetValue(key, out var value);
             if (exists)
             {
                 return value;
             }
             var generated = generator(key);
-            dict.Add(key, generated);
+            Dict.Add(key, generated);
             return generated;
         }
 
         // Extension methods to add Python-style get() to C#
-        public static V GetValue<K, V>(this IDictionary<K, V> dict, K key)
+        public static V GetValue<K, V>(this IDictionary<K, V> Dict, K key)
         {
-            return dict.GetValue(key, default(V));
+            return Dict.GetValue(key, default(V));
         }
 
-        public static V GetValue<K, V>(this IDictionary<K, V> dict, K key, V defaultValue = default(V))
+        public static V GetValue<K, V>(this IDictionary<K, V> Dict, K key, V defaultValue = default(V))
         {
             V value;
-            return dict.TryGetValue(key, out value) ? value : defaultValue;
+            return Dict.TryGetValue(key, out value) ? value : defaultValue;
         }
 
         // To get the index of the current item just write an extension method using LINQ and Value Tuples.

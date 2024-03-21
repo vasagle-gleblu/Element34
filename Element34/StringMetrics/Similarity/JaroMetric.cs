@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace Element34.StringMetrics.Similarity
 {
@@ -36,7 +33,7 @@ namespace Element34.StringMetrics.Similarity
         {
             int m = source.Intersect(target).Count();
 
-            if (m == 0) 
+            if (m == 0)
                 return 0;
 
             string sourceTargetIntersetAsString = string.Empty;
@@ -45,15 +42,15 @@ namespace Element34.StringMetrics.Similarity
             IEnumerable<char> sourceIntersectTarget = source.Intersect(target);
             IEnumerable<char> targetIntersectSource = target.Intersect(source);
 
-            foreach (char character in sourceIntersectTarget) 
+            foreach (char character in sourceIntersectTarget)
                 sourceTargetIntersetAsString += character;
 
-            foreach (char character in targetIntersectSource) 
+            foreach (char character in targetIntersectSource)
                 targetSourceIntersetAsString += character;
 
             double? t = m_levenshteinDist.Compute(sourceTargetIntersetAsString, targetSourceIntersetAsString) / 2;
 
-            return (m/source.Length + m/(target.Length + (m - t)) / m) / 3.0;
+            return (m / source.Length + m / (target.Length + (m - t)) / m) / 3.0;
         }
 
         public override double? Compute(char[] a, char[] b) => Compute(a.ToString(), b.ToString());
