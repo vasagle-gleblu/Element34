@@ -61,9 +61,9 @@ namespace SeleniumTest
             return base.GridSearch(driver, Locators, oSelectType, criteria, blnAllTrue);
         }
 
-        public new int findRow(IEnumerable<IWebElement> tableRows, List<string> criteria, bool blnAllTrue = true, bool blnExactMatch = false)
+        public new int FindRow(IEnumerable<IWebElement> tableRows, List<string> criteria, bool blnAllTrue = true, bool blnExactMatch = false)
         {
-            return base.findRow(tableRows, criteria, blnAllTrue, blnExactMatch);
+            return base.FindRow(tableRows, criteria, blnAllTrue, blnExactMatch);
         }
 
         public void RowSelect(ReadOnlyCollection<IWebElement> tableRows, SelectionType oSelectType, int iRowFound)
@@ -98,9 +98,9 @@ namespace SeleniumTest
             return base.GridSearch(driver, Locators, oSelectType, criteria, blnAllTrue);
         }
 
-        public new int findRow(IEnumerable<IWebElement> tableRows, List<string> criteria, bool blnAllTrue = true, bool blnExactMatch = false)
+        public new int FindRow(IEnumerable<IWebElement> tableRows, List<string> criteria, bool blnAllTrue = true, bool blnExactMatch = false)
         {
-            return base.findRow(tableRows, criteria, blnAllTrue, blnExactMatch);
+            return base.FindRow(tableRows, criteria, blnAllTrue, blnExactMatch);
         }
 
         public void RowSelect(ReadOnlyCollection<IWebElement> tableRows, SelectionType oSelectType, int iRowFound)

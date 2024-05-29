@@ -1,3 +1,4 @@
+using Microsoft.VisualBasic;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Chromium;
@@ -17,6 +18,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Windows.Forms;
 using Keys = OpenQA.Selenium.Keys;
 
 
@@ -25,14 +27,12 @@ namespace Element34.ExtensionClasses
     public static class WebDriverExtras
     {
         #region Fields
-        private static bool _acceptNextAlert = true;
-        private const int _defaultTimeSpan = 45;
+        private const int _defaultTimeSpan = 15;
         private const int timeDelay = 1500;
-        //private static Logger _logger;
         #endregion
 
-        public static string[] positiveResponse = new string[] { "y", "yes", "t", "true", "1", "+", "affirmative", "positive" };
-        public static string[] negativeResponse = new string[] { "n", "no", "f", "false", "0", "-", "negative" };
+        private static readonly HashSet<string> PositiveResponses = new HashSet<string> { "y", "yes", "t", "true", "1", "+", "affirmative", "positive" };
+        private static readonly HashSet<string> NegativeResponses = new HashSet<string> { "n", "no", "f", "false", "0", "-", "negative" };
 
         public static TabManager<TWebDriver> CreateTabManager<TWebDriver>(this TWebDriver driver) where TWebDriver : IWebDriver
         {
@@ -108,104 +108,32 @@ namespace Element34.ExtensionClasses
             return (T)js.ExecuteScript(script, args);
         }
 
+        /// <summary>
+        /// Gets the 'innerText' attribute of an element, which represents the rendered text content of the node.
+        /// </summary>
+        /// <param name="element">The web element from which to retrieve the inner text.</param>
+        /// <returns>The inner text of the element.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if the element is null.</exception>
         public static string InnerText(this IWebElement element)
         {
+            if (element == null)
+                throw new ArgumentNullException(nameof(element), "Element cannot be null.");
+
             return element.GetAttribute("innerText");
         }
 
+        /// <summary>
+        /// Gets the 'value' attribute of an element, typically used for input fields.
+        /// </summary>
+        /// <param name="element">The web element from which to retrieve the value attribute.</param>
+        /// <returns>The value attribute of the element.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if the element is null.</exception>
         public static string Value(this IWebElement element)
         {
+            if (element == null)
+                throw new ArgumentNullException(nameof(element), "Element cannot be null.");
+
             return element.GetAttribute("value");
-        }
-
-        public static void actionClick(this IWebDriver driver, IWebElement element)
-        {  // Experimental: Method extension of actionClick() for WebDriver
-            Actions actionBuilder = new Actions(driver);
-            var flag = false;
-
-            while (flag == false)
-            {
-                IAction act = actionBuilder
-                    .MoveToElement(element)
-                    .Click()
-                    .Build();
-                try
-                {
-                    var tmp = element.TagName;
-                    if (tmp == "html")
-                        break;
-
-                    act.Perform();
-                    flag = true;
-                }
-                catch (ElementNotInteractableException)
-                {
-                    var e = element.FindElement(By.XPath(".."));
-                    element = e;
-                }
-            }
-        }
-
-        public static void actionClick(this IWebElement element)
-        {  // Experimental: If element is not clickable, move up to parent element and try again utilizing an Action Builder
-            var driver = ((IWrapsDriver)element).WrappedDriver;
-            Actions actionBuilder = new Actions(driver);
-            var flag = false;
-
-            while (flag == false)
-            {
-                IAction act = actionBuilder
-                    .MoveToElement(element)
-                    .Click()
-                    .Build();
-                try
-                {
-                    var tmp = element.TagName;
-                    if (tmp == "html")
-                        break;
-
-                    act.Perform();
-                    flag = true;
-                }
-                catch (ElementNotInteractableException)
-                {
-                    var e = element.FindElement(By.XPath(".."));
-                    element = e;
-                }
-            }
-        }
-
-        public static void actionType(this IWebDriver driver, IWebElement element, string sInput)
-        {  // Experimental: Method extension of actionType() for WebDriver
-            Actions actionBuilder = new Actions(driver);
-            IAction act = actionBuilder
-                .MoveToElement(element)
-                .Click()
-                .KeyDown(Keys.Control)
-                .KeyDown("A")
-                .KeyUp("A")
-                .KeyUp(Keys.Control)
-                .SendKeys(sInput)
-                .Build();
-
-            act.Perform();
-        }
-
-        public static void actionType(this IWebElement element, string sInput)
-        {  // Experimental: Consolidated steps for typing in a string value using an Action Builder
-            var driver = ((IWrapsDriver)element).WrappedDriver;
-            Actions actionBuilder = new Actions(driver);
-            IAction act = actionBuilder
-                .MoveToElement(element)
-                .Click()
-                .KeyDown(Keys.Control)
-                .KeyDown("A")
-                .KeyUp("A")
-                .KeyUp(Keys.Control)
-                .SendKeys(sInput)
-                .Build();
-
-            act.Perform();
         }
 
         public static Dictionary<string, object> GetAttributes(this IWebElement element)
@@ -267,589 +195,866 @@ namespace Element34.ExtensionClasses
                 ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].focus();", element);
         }
 
-        public static void Type(this IWebDriver driver, By locator, string sInput)
+        /// <summary>
+        /// Finds an element and types the specified text into it.
+        /// </summary>
+        /// <param name="driver">The WebDriver instance.</param>
+        /// <param name="locator">The locator of the element to type into.</param>
+        /// <param name="input">The text to be typed.</param>
+        public static void Type(this IWebDriver driver, By locator, string input)
         {
-            IWebElement webElement = driver.FindElement(locator);
-            webElement.Type(sInput);
+            IWebElement webElement = driver.FindElement(locator) ?? throw new InvalidOperationException("Element not found with the specified locator.");
+            webElement.Type(input);
         }
 
-        public static void Type(this IWebElement webElement, string sInput)
+        /// <summary>
+        /// Types the specified text into the provided web element, ensuring the element is suitable for text input.
+        /// </summary>
+        /// <param name="webElement">The web element.</param>
+        /// <param name="input">Text to be typed.</param>
+        /// <exception cref="ArgumentNullException">Thrown if the web element is null.</exception>
+        /// <exception cref="ArgumentException">Thrown if the element is not a valid input or textarea, or if the input type is unsupported.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if the element is not visible and enabled.</exception>
+        public static void Type(this IWebElement webElement, string input)
         {
             if (webElement == null)
-                throw new ArgumentNullException(nameof(webElement));
-            else if (webElement.TagName != "input")
-                throw new ArgumentException("tag name");
+                throw new ArgumentNullException(nameof(webElement), "Web element cannot be null.");
 
-            string type = webElement.GetAttribute("type");
-            if (!compareAnyStr(type.ToLower(), new string[] { "text", "password", "email", "date", "datetime-local", "month", "number", "search", "tel", "time", "url", "week" }))
-                throw new ArgumentException("type attribute");
+            if (!webElement.Enabled || !webElement.Displayed)
+                throw new InvalidOperationException("Element must be visible and enabled to type.");
 
-            webElement.Click();
-            webElement.Clear();
-            webElement.SendKeys(sInput);
+            string tagName = webElement.TagName.ToLower();
+            if (!new[] { "input", "textarea" }.Contains(tagName))
+                throw new ArgumentException("Element must be an input or textarea.", nameof(tagName));
+
+            if (tagName == "input")
+            {
+                string type = webElement.GetAttribute("type")?.ToLower();
+                if (type != null && !new[] { "text", "password", "email", "date", "datetime-local", "month", "number", "search", "tel", "time", "url", "week" }.Contains(type))
+                    throw new ArgumentException($"Unsupported input type: {type}.", nameof(type));
+            }
+
+            webElement.Click(); // Ensure the element is focused
+            webElement.Clear(); // Clear any pre-existing text
+            webElement.SendKeys(input); // Input the new text
         }
 
+        /// <summary>
+        /// Tests whether an input element enforces a maximum length.
+        /// </summary>
+        /// <param name="webElement">The input web element to test.</param>
+        /// <param name="limit">The expected maximum length of the input field.</param>
+        /// <returns>True if the input value's length after insertion is equal to the specified limit, false otherwise.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if the provided web element is null.</exception>
+        /// <exception cref="ArgumentException">Thrown if the web element is not a valid input or if its type is not supported.</exception>
         public static bool testMaxLength(IWebElement webElement, int limit)
         {
             if (webElement == null)
                 throw new ArgumentNullException(nameof(webElement));
-            else if (webElement.TagName != "input")
-                throw new ArgumentException("tag name");
 
-            string type = webElement.GetAttribute("type");
-            if (!compareAnyStr(type.ToLower(), new string[] { "text", "password", "email", "number", "search", "url" }))
-                throw new ArgumentException("type attribute");
+            if (webElement.TagName.ToLower() != "input")
+                throw new ArgumentException("The provided element is not an input element.", nameof(webElement));
 
-            // Clear field
+            string type = webElement.GetAttribute("type").ToLower();
+            var allowedTypes = new[] { "text", "password", "email", "number", "search", "url" };
+            if (!allowedTypes.Contains(type))
+                throw new ArgumentException($"Unsupported input type '{type}'. Supported types are: {string.Join(", ", allowedTypes)}", nameof(type));
+
+            // Clear the input field before testing
             webElement.Click();
             webElement.Clear();
 
-            // Type more than max limit
-            for (int i = 1; i < (limit + 20); i++)
-                webElement.SendKeys((i % 10).ToString());
+            // Type characters into the field
+            string longInput = new string('a', limit + 20);
+            webElement.SendKeys(longInput);
 
-            // Get the typed value
+            // Retrieve the value entered in the field
             string typedValue = webElement.GetAttribute("value");
+            int typedLength = typedValue.Length;
 
-            // Get the length of typed value
-            int size = typedValue.Length;
-
-            // Assert size limit equals expected value
-            return (size == limit);
+            // Check if the length of the input is capped at the limit
+            return typedLength == limit;
         }
 
+        /// <summary>
+        /// Gets a By locator for the CSS selector of the given element.
+        /// </summary>
+        /// <param name="element">The web element.</param>
+        /// <returns>A By locator constructed from the CSS selector of the element.</returns>
         public static By GetCssSelectLocator(this IWebElement element)
-        {// Experimental
-            string cssSelector = GetCssSelectText(element);
-            return By.CssSelector(cssSelector);
+        {
+            return By.CssSelector(GetCssSelectText(element));
         }
 
+        /// <summary>
+        /// Generates a full CSS selector path for a given element using JavaScript.
+        /// </summary>
+        /// <param name="element">The web element to generate a selector for.</param>
+        /// <returns>The CSS selector string for the specified element.</returns>
         public static string GetCssSelectText(this IWebElement element)
         {
-            // Use JavaScript to obtain the full CSS Selector
             IWebDriver driver = ((IWrapsDriver)element).WrappedDriver;
             IJavaScriptExecutor executor = (IJavaScriptExecutor)driver;
 
-            string script =
-            "    var el = arguments[0];" +
-            "    if (!(el instanceof Element)) return;" +
-            "    var path = [];" +
-            "    while (el.nodeType === Node.ELEMENT_NODE) {" +
-            "        var selector = el.nodeName.toLowerCase();" +
-            "        if (el.id) {" +
-            "            selector += '#' + el.id;" +
-            "            path.unshift(selector);" +
-            "            break;" +
-            "        } else {" +
-            "            var sibling = el;" +
-            "            var nth = 1;" +
-            "            while (sibling = sibling.previousElementSibling) {" +
-            "                if (sibling.nodeName.toLowerCase() == selector) {" +
-            "                    nth++;" +
-            "                }" +
-            "            }" +
-            "            if (nth != 1) {" +
-            "                selector += ':nth-of-type(' + nth + ')';" +
-            "            }" +
-            "        }" +
-            "        path.unshift(selector);" +
-            "        el = el.parentNode;" +
-            "    }" +
-            "    return path.join(' > ');";
-
-            string cssSelector = (string)executor.ExecuteScript(script, element);
-
-            if (cssSelector != string.Empty)
-            {
-                cssSelector = "." + cssSelector;
+            string script = @"
+        var el = arguments[0];
+        if (!(el instanceof Element)) return '';
+        var path = [];
+        while (el.nodeType === Node.ELEMENT_NODE) {
+            var selector = el.nodeName.toLowerCase();
+            if (el.id) {
+                selector += '#' + el.id;
+                path.unshift(selector);
+                break;
+            } else {
+                var sibling = el;
+                var nth = 1;
+                while (sibling = sibling.previousElementSibling) {
+                    if (sibling.nodeName.toLowerCase() == selector) nth++;
+                }
+                if (nth != 1) {
+                    selector += ':nth-of-type(' + nth + ')';
+                }
             }
-            return cssSelector;
+            path.unshift(selector);
+            el = el.parentNode;
+        }
+        return path.join(' > ');";
+
+            try
+            {
+                string cssSelector = (string)executor.ExecuteScript(script, element);
+                return cssSelector;
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException("Failed to retrieve CSS selector for the element.", ex);
+            }
         }
 
+        /// <summary>
+        /// Retrieves an XPath locator for the specified web element.
+        /// </summary>
+        /// <param name="element">The web element to generate XPath for.</param>
+        /// <returns>An XPath By locator.</returns>
         public static By GetXPathLocator(this IWebElement element)
         {
             return By.XPath(element.GetXPathText());
         }
 
+        /// <summary>
+        /// Generates a full XPath string for a given element using JavaScript.
+        /// </summary>
+        /// <param name="element">The web element to generate XPath for.</param>
+        /// <returns>The XPath string for the specified element.</returns>
         public static string GetXPathText(this IWebElement element)
         {
-            // Use JavaScript to obtain the full XPath
             IWebDriver driver = ((IWrapsDriver)element).WrappedDriver;
             IJavaScriptExecutor executor = (IJavaScriptExecutor)driver;
 
-            string script =
-            "function getElementIdx(ele) {" +
-            "    var count = 1;" +
-            "    for (var sib = ele.previousSibling; sib ; sib = sib.previousSibling) {" +
-            "        if (sib.nodeType == 1 && sib.tagName == ele.tagName) count++;" +
-            "    }" +
-            "    return count;" +
-            "}" +
-            "    var path = '';" +
-            "    var ele = arguments[0];" +
-            "    for (; ele && ele.nodeType == 1; ele = ele.parentNode) {" +
-            "        var idx = getElementIdx(ele);" +
-            "        var xname = ele.tagName;" +
-            "        if (idx > 1) xname += '[' + idx + ']';" +
-            "        path = '/' + xname + path;" +
-            "    }" +
-            "    return path;";
-
-            string fullXPath = (string)executor.ExecuteScript(script, element);
-            return fullXPath.ToLower();
+            string script = @"
+        function getElementIdx(ele) {
+            var count = 1;
+            for (var sib = ele.previousSibling; sib; sib = sib.previousSibling) {
+                if (sib.nodeType == 1 && sib.tagName === ele.tagName) count++;
+            }
+            return count;
         }
+        var path = '';
+        for (var ele = arguments[0]; ele && ele.nodeType == 1; ele = ele.parentNode) {
+            var idx = getElementIdx(ele);
+            var xname = ele.tagName;
+            if (idx > 1) xname += '[' + idx + ']';
+            path = '/' + xname + path;
+        }
+        return path;";
 
-        ///<summary>
-        ///Check:
-        /// 1) Absolute selection state of control.
-        /// 2) Ensure checkbox or radio button is the specified value of sInput is regardless of initial state.
-        ///</summary>
-        ///<param name="radioBox">IWebElement object representing checkbox or radio button in DOM.</param>
-        ///<param name="sInput">Input string indicating Yes/No response.</param>
-        public static void Check(IWebElement radioBox, string sInput)
-        {
-            if (radioBox == null)
-                throw new ArgumentNullException(nameof(radioBox));
-            else if (radioBox.TagName != "input")
-                throw new ArgumentException("tag name");
-
-            string type = radioBox.GetAttribute("type");
-            if (!compareAnyStr(type.ToLower(), new string[] { "radio", "checkbox" }))
-                throw new ArgumentException("type attribute");
-
-            IWebDriver driver = ((IWrapsDriver)radioBox).WrappedDriver;
-            IJavaScriptExecutor js = (IJavaScriptExecutor)driver;
-            js.ExecuteScript("arguments[0].focus();", radioBox);
-
-            bool blnSelected = radioBox.Selected;
-            bool? blnInput = determineResponse(sInput);
-
-            if (blnInput != null)
+            try
             {
-                if ((bool)blnInput)
-                {
-                    if (!blnSelected)
-                    {
-                        radioBox.Click();
-                    }
-
-                    else
-                    {
-                        if (blnSelected)
-                        {
-                            radioBox.Click();
-                        }
-                    }
-                }
+                string fullXPath = (string)executor.ExecuteScript(script, element);
+                return fullXPath;  // Removed ToLower to preserve case sensitivity
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException("Failed to generate XPath for the element.", ex);
             }
         }
 
-        public static bool IsElementHidden(this IWebDriver driver, By locator)
+        ///<summary>
+        /// Sets the state of a checkbox or radio button based on a given input.
+        ///</summary>
+        ///<param name="radioBox">IWebElement representing a checkbox or radio radioBox in the DOM.</param>
+        ///<param name="sInput">Input string indicating Yes/No response; 'yes' for checked and 'no' for unchecked.</param>
+        public static void Check(IWebElement radioBox, string sInput)
         {
-            return driver.IsElementHidden(driver.FindElement(locator));
-        }
+            if (radioBox == null)
+                throw new ArgumentNullException(nameof(radioBox), "The radioBox element cannot be null.");
 
-        public static bool IsElementHidden(this IWebDriver driver, IWebElement element)
-        {
-            return driver.ExecuteJavaScript<bool>("const styles = window.getComputedStyle(arguments[0]); return styles.display === 'none' || styles.visibility === 'hidden';", element);
+            if (radioBox.TagName.ToLower() != "input")
+                throw new ArgumentException("The element must be an input element.", nameof(radioBox));
+
+            string type = radioBox.GetAttribute("type").ToLower();
+            if (!new[] { "radio", "checkbox" }.Contains(type))
+                throw new ArgumentException("The element must be of type 'radio' or 'checkbox'.", nameof(type));
+
+            bool? shouldCheck = determineResponse(sInput) ?? throw new ArgumentException("Invalid input. Expected 'yes' or 'no'.", nameof(sInput));
+
+            // Ensure the current selection state matches the desired state.
+            if (radioBox.Selected != shouldCheck)
+            {
+                radioBox.Click();
+            }
         }
 
         /// <summary>
-        /// Extension method to check if an alert box is present.  Initially generated by Katalon Recorder.
+        /// Determines whether the specified element is hidden on the page.
         /// </summary>
-        /// <param name="driver">The type (e.g. IWebDriver) that the method operates on.</param>
-        /// <param name="delay">Time delay in ms.</param>
-        /// <returns>True if found.</returns>
+        /// <param name="driver">The WebDriver instance used to execute JavaScript.</param>
+        /// <param name="element">The web element to check for visibility.</param>
+        /// <returns>True if the element is either not displayed or hidden via CSS; otherwise, false.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if the 'element' is null.</exception>
+        public static bool IsElementHidden(this IWebDriver driver, IWebElement element)
+        {
+            if (element == null)
+                throw new ArgumentNullException(nameof(element), "Element cannot be null.");
+
+            try
+            {
+                string script = @"
+                const styles = window.getComputedStyle(arguments[0]);
+                return styles.display === 'none' || styles.visibility === 'hidden';";
+
+                return driver.ExecuteJavaScript<bool>(script, element);
+            }
+            catch (WebDriverException ex)
+            {
+                throw new InvalidOperationException("Failed to execute script on the element.", ex);
+            }
+        }
+
+        /// <summary>
+        /// Checks if an alert is present on the page within the specified delay.
+        /// </summary>
+        /// <param name="driver">The WebDriver instance this method extends.</param>
+        /// <param name="delay">Time delay in milliseconds to wait for the alert.</param>
+        /// <returns>True if an alert is found within the given delay; otherwise, false.</returns>
         public static bool IsAlertPresent(this IWebDriver driver, int delay = timeDelay)
         {
             try
             {
-                WebDriverWait wait = new WebDriverWait(driver, new TimeSpan(delay));
+                WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromMilliseconds(delay));
                 wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.AlertIsPresent());
-                driver.SwitchTo().Alert();
                 return true;
             }
-            catch (StaleElementReferenceException)
-            {
-                return false;
-            }
-            catch (NoSuchElementException)
+            catch (NoAlertPresentException)
             {
                 return false;
             }
         }
 
-        public static string CloseAlertAndGetItsText(this IWebDriver driver)
-        { // Generated by Selenium IDE
+        /// <summary>
+        /// Closes the currently displayed alert and returns its text.  Initially generated by Selenium IDE.
+        /// </summary>
+        /// <param name="driver">The WebDriver instance.</param>
+        /// <param name="acceptAlert">If true, the alert will be accepted; if false, the alert will be dismissed.</param>
+        /// <returns>The text of the alert.</returns>
+        /// <exception cref="NoAlertPresentException">Thrown if no alert is present when the method is called.</exception>
+        public static string CloseAlertAndGetItsText(this IWebDriver driver, bool acceptAlert = true)
+        {
+            IAlert alert = driver.SwitchTo().Alert();
+            string alertText = alert.Text; // Get the text before closing the alert
+
+            if (acceptAlert)
+            {
+                alert.Accept();
+            }
+            else
+            {
+                alert.Dismiss();
+            }
+
+            return alertText;
+        }
+
+        /// <summary>
+        /// Opens a web browser, navigates to a specified URL, and maximizes the window.
+        /// </summary>
+        /// <param name="driver">The WebDriver instance.</param>
+        /// <param name="url">The URL to navigate to.</param>
+        /// <param name="timeOut">Optional. The timeout for the page load. If not specified, a default timeout is used.</param>
+        /// <exception cref="UriFormatException">Thrown if the URL is not a valid URI.</exception>
+        public static void OpenBrowser(this IWebDriver driver, string url, TimeSpan? timeOut = null)
+        {
+            if (string.IsNullOrEmpty(url))
+                throw new ArgumentException("URL cannot be null or empty.", nameof(url));
+
+            if (!Uri.IsWellFormedUriString(url, UriKind.Absolute))
+                throw new UriFormatException("The provided URL is not in a valid format.");
+
+            timeOut = timeOut ?? TimeSpan.FromSeconds(_defaultTimeSpan);
+
+            driver.Manage().Timeouts().PageLoad = timeOut.Value;
             try
             {
-                IAlert alert = driver.SwitchTo().Alert();
-                string alertText = alert.Text;
-                if (_acceptNextAlert)
-                {
-                    alert.Accept();
-                }
-                else
-                {
-                    alert.Dismiss();
-                }
-                return alertText;
+                driver.Navigate().GoToUrl(url);
+                driver.Manage().Window.Maximize();
             }
-            finally
+            catch (WebDriverTimeoutException ex)
             {
-                _acceptNextAlert = true;
+                throw new WebDriverTimeoutException($"The page did not load within the allotted time of {timeOut.Value.TotalSeconds} seconds.", ex);
             }
         }
 
-        public static void OpenBrowser(this IWebDriver driver, string URL, TimeSpan? timeOut = null)
-        {  // GoToUrl() and Maximize() window in given time span
-            timeOut = (timeOut == null) ? TimeSpan.FromSeconds(_defaultTimeSpan) : timeOut.Value;     // default value for TimeSpan parameter
-
-            driver.Manage().Timeouts().PageLoad = (TimeSpan)timeOut;
-            driver.Navigate().GoToUrl(URL);
-            driver.Manage().Window.Maximize();
-        }
-
+        /// <summary>
+        /// Navigates to a URL using basic authentication by embedding the credentials.
+        /// </summary>
+        /// <param name="driver">The WebDriver instance used to navigate.</param>
+        /// <param name="URL">The URL to navigate to.</param>
+        /// <param name="username">The username for basic authentication.</param>
+        /// <param name="password">The password for basic authentication.</param>
+        /// <exception cref="ArgumentException">Thrown if the provided URL is not in a valid format.</exception>
         public static void OpenWithBasicAuthURL(this IWebDriver driver, string URL, string username, string password)
-        {   // Workaround for Selenium WebDriver's lack of support for Basic HTTP Authentication.
-            string sDoubleSlash = @"//";
-            int iDblSlashOffset = URL.IndexOf(sDoubleSlash) + sDoubleSlash.Length;
-            URL = URL.Substring(0, iDblSlashOffset) + Uri.EscapeDataString(username) + ":" + Uri.EscapeDataString(password) + "@" + URL.Substring(iDblSlashOffset, URL.Length - iDblSlashOffset);
-            driver.OpenBrowser(URL);
+        {
+            try
+            {
+                var uriBuilder = new UriBuilder(URL)
+                {
+                    UserName = Uri.EscapeDataString(username),
+                    Password = Uri.EscapeDataString(password)
+                };
+
+                driver.Navigate().GoToUrl(uriBuilder.Uri.ToString());
+            }
+            catch (UriFormatException ex)
+            {
+                throw new ArgumentException("Provided URL is not in a valid format.", nameof(URL), ex);
+            }
         }
 
-        public static void OpenNewTabWithBasicAuthURL(this TabManager<IWebDriver> tabs, string URL, string username, string password)
-        {   // Workaround for Selenium WebDriver's lack of support for Basic HTTP Authentication.
-            string sDoubleSlash = @"//";
-            int iDblSlashOffset = URL.IndexOf(sDoubleSlash) + sDoubleSlash.Length;
-            URL = URL.Substring(0, iDblSlashOffset) + Uri.EscapeDataString(username) + ":" + Uri.EscapeDataString(password) + "@" + URL.Substring(iDblSlashOffset, URL.Length - iDblSlashOffset);
-            tabs.OpenNewTab(URL);
+    /// <summary>
+    /// Opens a new tab with the specified URL, including basic authentication credentials.
+    /// </summary>
+    /// <param name="tabs">The TabManager instance for managing browser tabs.</param>
+    /// <param name="URL">The URL to open.</param>
+    /// <param name="username">The username for basic authentication.</param>
+    /// <param name="password">The password for basic authentication.</param>
+    public static void OpenNewTabWithBasicAuthURL(this TabManager<IWebDriver> tabs, string URL, string username, string password)
+        {
+            try
+            {
+                var uriBuilder = new UriBuilder(URL)
+                {
+                    UserName = Uri.EscapeDataString(username),
+                    Password = Uri.EscapeDataString(password)
+                };
+
+                tabs.OpenNewTab(uriBuilder.Uri.ToString());
+            }
+            catch (UriFormatException ex)
+            {
+                throw new ArgumentException("Provided URL is not in a valid format.", nameof(URL), ex);
+            }
         }
 
+        /// <summary>
+        /// Clears the browser cache for the current session based on the WebDriver instance provided.
+        /// This method supports specific browser types and employs custom routines tailored to each supported browser.
+        /// </summary>
+        /// <param name="driver">The WebDriver instance used to perform actions on the browser.</param>
+        /// <exception cref="NotImplementedException">Thrown when an unsupported browser driver type is encountered or specific functionality is not implemented for a supported browser.</exception>
+        /// <remarks>
+        /// This method determines the browser type using the provided WebDriver instance and executes
+        /// browser-specific commands to navigate to the settings page and clear the browser data.
+        /// Supported browsers include Chrome, Firefox, and Edge. Internet Explorer is recognized but not implemented.
+        /// 
+        /// The method uses explicit waits to ensure that UI elements are interactable before performing actions on them.
+        /// Proper error handling is recommended for callers to manage potential timeouts or element not found exceptions
+        /// that may arise due to changes in browser settings UI or slow response times.
+        /// 
+        /// Usage of this method should be carefully managed to avoid disrupting user sessions unintentionally.
+        /// </remarks>
         public static void clearCache(this IWebDriver driver)
         {
-            // Selenium accumulates many temp files if it crashes.
-            // These commands will prevent too many files from accumulating.
-            const string cmd = @"@ECHO OFF & CD %temp% & FOR /d %D IN (*) DO RD /s /q ""%D"" & DEL /F /Q *";
-            ExecuteShellCommand(cmd);
-
-            var wait = new WebDriverWait(driver, TimeSpan.FromMilliseconds(timeDelay));
+            ClearSystemCache();
+            WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));  // Assuming a default wait time
 
             switch (driver.GetType().Name)
             {
                 case nameof(ChromiumDriver):
                 case nameof(ChromeDriver):
-                    // This section navigates to Chrome's privacy and security section.
-                    // It was updated with ShadowRoot elements to reach the Clear Data button.
-                    driver.Navigate().GoToUrl("chrome://settings/clearBrowserData");
-                    ShadowRoot shadowRoot1 = driver.getShadowRootElement(By.TagName("settings-ui"));
-                    ShadowRoot shadowRoot2 = driver.getShadowRootElement(shadowRoot1.FindElement(By.CssSelector("settings-main")));
-                    ShadowRoot shadowRoot3 = driver.getShadowRootElement(shadowRoot2.FindElement(By.CssSelector("settings-basic-page")));
-                    ShadowRoot shadowRoot4 = driver.getShadowRootElement(shadowRoot3.FindElement(By.CssSelector("settings-section > settings-privacy-page")));
-                    driver.wait_A_Moment(timeDelay);  // This is necessary!
-                    ShadowRoot shadowRoot5 = driver.getShadowRootElement(wait.Until(x => shadowRoot4.FindElement(By.CssSelector("settings-clear-browsing-data-dialog"))));
-                    IWebElement root6 = shadowRoot5.FindElement(By.CssSelector("#clearBrowsingDataDialog"));
-
-                    // This sections reaches the Time Range drop-down list
-                    // to select "All time".
-                    IWebElement root2 = root6.FindElement(By.CssSelector("iron-pages#tabs")).FindElement(By.CssSelector("settings-dropdown-menu#clearFromBasic"));
-                    ShadowRoot shadowRoot7 = driver.getShadowRootElement(root2);
-                    IWebElement ddlTimeRange = shadowRoot7.FindElement(By.CssSelector("select#dropdownMenu"));
-                    new SelectElement(ddlTimeRange).SelectByValue("4");
-
-                    IWebElement clearDataButton = root6.FindElement(By.CssSelector("#clearBrowsingDataConfirm"));
-                    clearDataButton.Click(); // click that hard to reach button!
+                    ClearCacheForChrome(driver, wait);
                     break;
-
                 case nameof(FirefoxDriver):
-                    // converted from Python
-                    driver.Navigate().GoToUrl("about:preferences#privacy");
-                    wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
-
-                    // Click the "Clear Data..." button under "Cookies and Site Data".
-                    IWebElement clearSiteDataButton = wait.Until(drv => drv.FindElement(By.CssSelector("#clearSiteDataButton")));
-                    clearSiteDataButton.Click();
-
-                    // Accept the "Clear Data" dialog by clicking on the "Clear" button.
-                    IWebElement clearDataDialog = wait.Until(drv => drv.FindElement(By.CssSelector("#dialogOverlay-0 > groupbox:nth-child(1) > browser:nth-child(2)")));
-                    driver.ExecuteJavaScript("const browser = document.querySelector('arguments[0]');" +
-                                        "browser.contentDocument.documentElement.querySelector('arguments[1]').click();",
-                                        @"{dialog_selector}", "#clearButton");
-
-                    // Accept the confirmation alert.
-                    IAlert alert = wait.Until(drv => drv.SwitchTo().Alert());
-                    alert.Accept();
+                    ClearCacheForFirefox(driver, wait);
                     break;
-
                 case nameof(EdgeDriver):
-                    driver.Navigate().GoToUrl("edge://settings/clearBrowserData");
-                    driver.FindElement(By.XPath("//*[@id='modal-root']//button[@id='selecttrigger-35']")).Click();
-
+                    ClearCacheForEdge(driver);
                     break;
-
                 case nameof(InternetExplorerDriver):
-                    throw new NotImplementedException();
-
+                    throw new NotImplementedException("Internet Explorer cache clearing not implemented.");
                 default:
-                    throw new NotImplementedException(string.Format("Driver {0} is not supported", driver.GetType().Name));
+                    throw new NotImplementedException($"Driver {driver.GetType().Name} is not supported for cache clearing.");
             }
+        }
+
+        private static void ClearSystemCache()
+        {
+            // Selenium accumulates many temp files if it crashes.
+            // This commands will prevent too many files from accumulating.
+            const string cmd = @"@ECHO OFF & CD %temp% & FOR /d %D IN (*) DO RD /s /q ""%D"" & DEL /F /Q *";
+            ExecuteShellCommand(cmd);
+        }
+
+        private static void ClearCacheForChrome(IWebDriver driver, WebDriverWait wait)
+        {
+            // This section navigates to Chrome's privacy and security section.
+            // It was updated with ShadowRoot elements to reach the Clear Data button.
+            driver.Navigate().GoToUrl("chrome://settings/clearBrowserData");
+            driver.wait_A_Moment(timeDelay);
+            ShadowRoot shadowRoot1 = driver.getShadowRootElement(By.TagName("settings-ui"));
+            ShadowRoot shadowRoot2 = driver.getShadowRootElement(shadowRoot1.FindElement(By.CssSelector("settings-main")));
+            ShadowRoot shadowRoot3 = driver.getShadowRootElement(shadowRoot2.FindElement(By.CssSelector("settings-basic-page")));
+            ShadowRoot shadowRoot4 = driver.getShadowRootElement(shadowRoot3.FindElement(By.CssSelector("settings-section > settings-privacy-page")));
+            driver.wait_A_Moment(timeDelay);  // This is necessary!
+            ShadowRoot shadowRoot5 = driver.getShadowRootElement(wait.Until(x => shadowRoot4.FindElement(By.CssSelector("settings-clear-browsing-data-dialog"))));
+            IWebElement root6 = shadowRoot5.FindElement(By.CssSelector("#clearBrowsingDataDialog"));
+
+            // This sections reaches the Time Range drop-down list
+            // to select "All time".
+            IWebElement root2 = root6.FindElement(By.CssSelector("iron-pages")).FindElement(By.CssSelector("settings-dropdown-menu#clearFromBasic"));
+            ShadowRoot shadowRoot7 = driver.getShadowRootElement(root2);
+            IWebElement ddlTimeRange = shadowRoot7.FindElement(By.CssSelector("select#dropdownMenu"));
+            new SelectElement(ddlTimeRange).SelectByValue("4");
+
+            IWebElement clearDataButton = root6.FindElement(By.CssSelector("#clearBrowsingDataConfirm"));
+            clearDataButton.Click(); // click that hard to reach button!
+        }
+
+        private static void ClearCacheForFirefox(IWebDriver driver, WebDriverWait wait)
+        {
+            // converted from Python
+            driver.Navigate().GoToUrl("about:preferences#privacy");
+            wait = new WebDriverWait(driver, TimeSpan.FromSeconds(_defaultTimeSpan));
+
+            // Click the "Clear Data..." button under "Cookies and Site Data".
+            IWebElement clearSiteDataButton = wait.Until(drv => drv.FindElement(By.CssSelector("#clearSiteDataButton")));
+            clearSiteDataButton.Click();
+
+            // Accept the "Clear Data" dialog by clicking on the "Clear" button.
+            IWebElement clearDataDialog = wait.Until(drv => drv.FindElement(By.CssSelector("#dialogOverlay-0 > groupbox:nth-child(1) > browser:nth-child(2)")));
+            driver.ExecuteJavaScript("const browser = document.querySelector('arguments[0]');" +
+                                "browser.contentDocument.documentElement.querySelector('arguments[1]').click();",
+                                @"{dialog_selector}", "#clearButton");
+
+            // Accept the confirmation alert.
+            IAlert alert = wait.Until(drv => drv.SwitchTo().Alert());
+            alert.Accept();
+        }
+
+        private static void ClearCacheForEdge(IWebDriver driver)
+        {
+            driver.Navigate().GoToUrl("edge://settings/clearBrowserData");
+            driver.FindElement(By.Id("clear-now")).SendKeys(Keys.Enter);
         }
 
         public static void wait_A_Moment(this IWebDriver driver, int waitInterval)
         { // Dramatic Pause in milliseconds...
+            WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromMilliseconds(waitInterval));
             Thread.Sleep(waitInterval);
-            Thread.Yield();
+            wait.IgnoreExceptionTypes();
         }
 
         public static void wait_A_Moment(this IWebDriver driver, TimeSpan timeSpan)
         { // Dramatic Pause...
+            WebDriverWait wait = new WebDriverWait(driver, timeSpan);
             Thread.Sleep(timeSpan);
-            Thread.Yield();
+            wait.IgnoreExceptionTypes();
         }
 
+        /// <summary>
+        /// Checks if an element exists on the current web page.
+        /// </summary>
+        /// <param name="driver">The WebDriver instance.</param>
+        /// <param name="locator">The locator used to find the element.</param>
+        /// <returns>True if the element is found, otherwise false.</returns>
         public static bool Exists(this IWebDriver driver, By locator)
         {
             if (locator == null)
                 throw new ArgumentNullException(nameof(locator));
 
-            bool exists = false;
-
-            //Save implicit timeout to reset it later 
-            TimeSpan tmp = driver.Manage().Timeouts().ImplicitWait;
+            // Save the current implicit wait timeout.
+            TimeSpan originalTimeout = driver.Manage().Timeouts().ImplicitWait;
 
             try
             {
+                // Set implicit wait to zero to return immediately when an element is not found.
                 driver.Manage().Timeouts().ImplicitWait = TimeSpan.Zero;
-                exists = driver.FindElements(locator).Count > 0;
+                return driver.FindElements(locator).Count > 0;
             }
-            catch { }
             finally
             {
-                driver.Manage().Timeouts().ImplicitWait = tmp;
+                // Restore the original implicit wait timeout.
+                driver.Manage().Timeouts().ImplicitWait = originalTimeout;
             }
-
-            return exists;
         }
 
+        /// <summary>
+        /// Checks if an element exists within the context of a specified parent element.
+        /// </summary>
+        /// <param name="element">The parent element to search within.</param>
+        /// <param name="locator">The locator used to find the child element.</param>
+        /// <returns>True if at least one element is found matching the locator, otherwise false.</returns>
+        public static bool Exists(this IWebElement element, By locator)
+        {
+            if (locator == null)
+                throw new ArgumentNullException(nameof(locator));
+
+            IWebDriver driver = ((IWrapsDriver)element).WrappedDriver;
+
+            // Save the current implicit wait timeout.
+            TimeSpan originalTimeout = driver.Manage().Timeouts().ImplicitWait;
+
+            try
+            {
+                // Set implicit wait to zero to return immediately when an element is not found.
+                driver.Manage().Timeouts().ImplicitWait = TimeSpan.Zero;
+                return element.FindElements(locator).Count > 0;
+            }
+            finally
+            {
+                // Restore the original implicit wait timeout.
+                driver.Manage().Timeouts().ImplicitWait = originalTimeout;
+            }
+        }
+
+        /// <summary>
+        /// Determines whether the specified element has any child elements.
+        /// </summary>
+        /// <param name="driver">The WebDriver instance used to manage settings.</param>
+        /// <param name="element">The parent element to check for children.</param>
+        /// <returns>True if the element has one or more child elements; otherwise, false.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if the provided element is null.</exception>
         public static bool HasChildren(this IWebDriver driver, IWebElement element)
-        {  // Determine if element has **ANY** children at that moment
+        {
             if (element == null)
                 throw new ArgumentNullException(nameof(element));
 
-            bool exists = false;
-
-            //Save implicit timeout to reset it later 
-            TimeSpan tmp = driver.Manage().Timeouts().ImplicitWait;
+            // Save the current implicit wait timeout.
+            TimeSpan originalTimeout = driver.Manage().Timeouts().ImplicitWait;
 
             try
             {
+                // Set implicit wait to zero to return immediately when no children are found.
                 driver.Manage().Timeouts().ImplicitWait = TimeSpan.Zero;
-                exists = element.FindElements(By.XPath(".//*")).Count > 0;
+                // Check if there are any direct children
+                return element.FindElements(By.XPath("./*")).Count > 0;
             }
-            catch { }
+            catch
+            {
+                // Return false if no elements are found
+                return false;
+            }
             finally
             {
-                driver.Manage().Timeouts().ImplicitWait = tmp;
+                // Restore the original implicit wait timeout.
+                driver.Manage().Timeouts().ImplicitWait = originalTimeout;
             }
-
-            return exists;
         }
 
+
+        /// <summary>
+        /// Determines whether the specified element has any children.
+        /// </summary>
+        /// <param name="element">The parent element to check for children.</param>
+        /// <returns>True if the element has one or more child elements; otherwise, false.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if the provided element is null.</exception>
         public static bool HasChildren(this IWebElement element)
-        {  // Determine if element has **ANY** children at that moment
+        {
             if (element == null)
                 throw new ArgumentNullException(nameof(element));
 
             IWebDriver driver = ((IWrapsDriver)element).WrappedDriver;
-            bool exists = false;
 
-            //Save implicit timeout to reset it later 
-            TimeSpan tmp = driver.Manage().Timeouts().ImplicitWait;
+            // Save the current implicit wait timeout.
+            TimeSpan originalTimeout = driver.Manage().Timeouts().ImplicitWait;
 
             try
             {
+                // Set implicit wait to zero to return immediately when no children are found.
                 driver.Manage().Timeouts().ImplicitWait = TimeSpan.Zero;
-                exists = element.FindElements(By.XPath(".//*")).Count > 0;
+                // Check if there are any direct children
+                return element.FindElements(By.XPath("./*")).Count > 0;
             }
-            catch { }
+            catch
+            {
+                // Return false if no elements are found
+                return false;
+            }
             finally
             {
-                driver.Manage().Timeouts().ImplicitWait = tmp;
+                // Restore the original implicit wait timeout.
+                driver.Manage().Timeouts().ImplicitWait = originalTimeout;
             }
-
-            return exists;
         }
 
+        /// <summary>
+        /// Retrieves all row elements from the specified table element.
+        /// </summary>
+        /// <param name="table">The table element from which to retrieve row elements.</param>
+        /// <returns>An IEnumerable of IWebElement representing the rows in the table.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if the input 'table' element is null.</exception>
+        /// <exception cref="ArgumentException">Thrown if the input element is not a 'table'.</exception>
         public static IEnumerable<IWebElement> getTableRows(IWebElement table)
-        {  // Return read-only collection of table rows
+        {
             if (table == null)
-                throw new ArgumentNullException(nameof(table));
-            else if (table.TagName != "table")
-                throw new ArgumentException("tag name");
+                throw new ArgumentNullException(nameof(table), "Provided table element is null.");
 
-            IEnumerable<IWebElement> rows = table.FindElements(By.TagName("tr"));
-            return rows;
+            if (table.TagName.ToLower() != "table")
+                throw new ArgumentException("Provided element is not a table.", nameof(table));
+
+            return table.FindElements(By.TagName("tr"));
         }
 
+
+        /// <summary>
+        /// Retrieves the text from each cell of a specified row within a table element.
+        /// </summary>
+        /// <param name="table">The table element from which to retrieve the data.</param>
+        /// <param name="rowNumber">The zero-based index of the row from which to retrieve the data.</param>
+        /// <returns>A ReadOnlyCollection containing the text of each cell in the specified row.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if the 'table' argument is null.</exception>
+        /// <exception cref="ArgumentException">Thrown if the 'table' argument is not an HTML table.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if the 'rowNumber' is out of the range of existing rows.</exception>
         public static ReadOnlyCollection<string> getRow(IWebElement table, int rowNumber)
         {
             if (table == null)
-                throw new ArgumentNullException(nameof(table));
-            else if (table.TagName != "table")
-                throw new ArgumentException("tag name");
+                throw new ArgumentNullException(nameof(table), "Provided table element is null.");
+            if (table.TagName.ToLower() != "table")
+                throw new ArgumentException("Provided element is not a table.", nameof(table));
+            if (rowNumber < 0)
+                throw new ArgumentOutOfRangeException(nameof(rowNumber), "Row number cannot be negative.");
 
-            IEnumerable<IWebElement> row = getTableRows(table).ElementAt(rowNumber).FindElements(By.TagName("td"));
-            List<string> result = new List<string>();
-            foreach (var cell in row)
-            {
-                result.Add(cell.Text);
-            }
+            List<IWebElement> rows = getTableRows(table).ToList();
+            if (rowNumber >= rows.Count)
+                throw new ArgumentOutOfRangeException(nameof(rowNumber), "Row number is out of range.");
 
-            return new ReadOnlyCollection<string>(result);
+            List<string> cellTexts = rows[rowNumber].FindElements(By.TagName("td")).Select(cell => cell.Text).ToList();
+
+            return new ReadOnlyCollection<string>(cellTexts);
         }
 
+
+        /// <summary>
+        /// Retrieves the text from each cell of a specified column within a table element.
+        /// </summary>
+        /// <param name="table">The table element from which to retrieve the data.</param>
+        /// <param name="colNumber">The zero-based index of the column from which to retrieve the data.</param>
+        /// <returns>A ReadOnlyCollection containing the text of each cell in the specified column.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if the 'table' argument is null.</exception>
+        /// <exception cref="ArgumentException">Thrown if the 'table' argument is not an HTML table or if the 'colNumber' is invalid.</exception>
         public static ReadOnlyCollection<string> getColumn(IWebElement table, int colNumber)
         {
             if (table == null)
-                throw new ArgumentNullException(nameof(table));
-            else if (table.TagName != "table")
-                throw new ArgumentException("tag name");
+                throw new ArgumentNullException(nameof(table), "Provided table element is null.");
+            if (table.TagName.ToLower() != "table")
+                throw new ArgumentException("Provided element is not a table.", nameof(table));
+            if (colNumber < 0)
+                throw new ArgumentOutOfRangeException(nameof(colNumber), "Column number cannot be negative.");
 
             List<string> result = new List<string>();
-            foreach (var row in getTableRows(table))
+            var rows = getTableRows(table).ToList();  // Ensures that all rows are fetched once.
+
+            foreach (var row in rows)
             {
-                result.Add(row.FindElements(By.TagName("td"))[colNumber].Text);
+                var cells = row.FindElements(By.TagName("td"));
+                if (colNumber >= cells.Count)  // Check if the column number is valid for the current row
+                    throw new ArgumentOutOfRangeException(nameof(colNumber), "Column number is out of range for the row with index " + rows.IndexOf(row) + ".");
+
+                result.Add(cells[colNumber].Text);
             }
 
             return new ReadOnlyCollection<string>(result);
         }
 
+        /// <summary>
+        /// Takes a screenshot of the current browser window and saves it to a specified path.
+        /// </summary>
+        /// <param name="driver">The WebDriver instance used to take the screenshot.</param>
+        /// <param name="sPath">The file path where the screenshot will be saved.</param>
+        /// <param name="format">The image format for the screenshot. Default is JPEG if not specified.</param>
+        /// <exception cref="ArgumentNullException">Thrown if the provided path is null or empty.</exception>
+        /// <exception cref="ArgumentException">Thrown if the specified path is invalid or the directory does not exist.</exception>
+        /// <exception cref="IOException">Thrown if an I/O error occurs during saving the file.</exception>
         public static void TakeScreenshot(this IWebDriver driver, string sPath, ImageFormat format = null)
-        {  // Take snapshot of current web browser screen and save to specified file
+        {
+            if (string.IsNullOrWhiteSpace(sPath))
+                throw new ArgumentNullException(nameof(sPath), "Screenshot path cannot be null or empty.");
+
+            if (!Directory.Exists(Path.GetDirectoryName(sPath)))
+                throw new ArgumentException("Directory does not exist.", nameof(sPath));
+
             Screenshot ss = ((ITakesScreenshot)driver).GetScreenshot();
 
-            if (format == null)
-                format = ImageFormat.Jpeg;
+            // Set default format if not specified
+            format = format ?? ImageFormat.Jpeg;
 
-            using (MemoryStream imageStream = new MemoryStream(ss.AsByteArray))
-            using (FileStream fileStream = new FileStream(sPath, FileMode.Create))
-            using (Image screenshotImage = Image.FromStream(imageStream))
+            try
             {
-                screenshotImage.Save(fileStream, format);
+                // Capture browser viewport
+                using (MemoryStream imageStream = new MemoryStream(ss.AsByteArray))
+                using (FileStream fileStream = new FileStream(sPath, FileMode.Create))
+                using (Image screenshotImage = Image.FromStream(imageStream))
+                {
+                    screenshotImage.Save(fileStream, format);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new IOException("Failed to save the screenshot.", ex);
             }
         }
 
+        /// <summary>
+        /// Takes a screenshot of the entire screen and saves it to a specified path.
+        /// </summary>
+        /// <param name="sPath">The file path where the screenshot will be saved.</param>
+        /// <param name="format">The image format for the screenshot. Default is JPEG if not specified.</param>
+        /// <exception cref="ArgumentNullException">Thrown if the provided path is null or empty.</exception>
+        /// <exception cref="ArgumentException">Thrown if the specified path is invalid or the directory does not exist.</exception>
+        /// <exception cref="IOException">Thrown if an I/O error occurs during saving the file.</exception>
+        public static void TakeFullScreenshot(string sPath, ImageFormat format = null)
+        {
+            if (string.IsNullOrWhiteSpace(sPath))
+                throw new ArgumentNullException(nameof(sPath), "Screenshot path cannot be null or empty.");
+
+            if (!Directory.Exists(Path.GetDirectoryName(sPath)))
+                throw new ArgumentException("Directory does not exist.", nameof(sPath));
+
+            format = format ?? ImageFormat.Jpeg;
+
+            try
+            {
+                // Capture the entire screen
+                Rectangle bounds = Screen.GetBounds(Point.Empty);
+                using (Bitmap bitmap = new Bitmap(bounds.Width, bounds.Height))
+                {
+                    using (Graphics g = Graphics.FromImage(bitmap))
+                    {
+                        g.CopyFromScreen(Point.Empty, Point.Empty, bounds.Size);
+                    }
+
+                    // Save the screenshot
+                    bitmap.Save(sPath, format);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new IOException("Failed to save the screenshot.", ex);
+            }
+        }
+
+        /// <summary>
+        /// Determines whether the input string corresponds to a known response and what type.
+        /// </summary>
+        /// <param name="sInput">The input response to evaluate.</param>
+        /// <returns>True if positive, False if negative, null if unknown.</returns>
         public static bool? determineResponse(string sInput)
         {
-            bool? response = null;
-            string[] acceptedResponse = positiveResponse.Concat(negativeResponse).ToArray();
-
-            if (acceptedResponse.Any(testElement => testElement == sInput.ToLower()))
-            {
-                response = positiveResponse.Any(testElement => testElement == sInput.ToLower()) || negativeResponse.Any(testElement => testElement == sInput.ToLower());
-            }
-
-            return response;
+            sInput = sInput.ToLower();
+            if (PositiveResponses.Contains(sInput))
+                return true;
+            if (NegativeResponses.Contains(sInput))
+                return false;
+            return null;
         }
 
+        /// <summary>
+        /// Checks if the given string is a positive response.
+        /// </summary>
+        /// <param name="sInput">The input string to check.</param>
+        /// <returns>True if the input is a positive response, otherwise false.</returns>
         public static bool IsPositiveResponse(string sInput)
         {
-            /*
-                Is Positive Response?
-                test input for *any* response considered positive
-            */
-
-            return positiveResponse.Any(testElement => testElement == sInput.ToLower());
+            return PositiveResponses.Contains(sInput.ToLower());
         }
 
+        /// <summary>
+        /// Checks if the given string is a negative response.
+        /// </summary>
+        /// <param name="sInput">The input string to check.</param>
+        /// <returns>True if the input is a negative response, otherwise false.</returns>
         public static bool IsNegativeResponse(string sInput)
         {
-            /*
-                Is Negative Response?
-                test input for *any* response considered negative
-            */
-
-            return negativeResponse.Any(testElement => testElement == sInput.ToLower());
+            return NegativeResponses.Contains(sInput.ToLower());
         }
 
-        public static bool compareAnyStr(string sInput, string[] testArray)
-        {
-            /*
-                test input for *any* response contained in testArray
-                public facing function exposing comparAny() function
-
-                sInput; input string
-                testArray; string array for comparison with input
-            */
-
-            return testArray.Any(testElement => testElement == sInput.ToLower());
-        }
-
+        /// <summary>
+        /// Waits for a busy indicator to appear and disappear within the specified timeout.
+        /// </summary>
+        /// <param name="driver">The WebDriver instance.</param>
+        /// <param name="locator">The locator for the busy indicator element.</param>
+        /// <param name="timeOut">The maximum time to wait for the busy indicator. If not specified, a default timeout is used.</param>
         public static void PauseOnBusyIndicator(this IWebDriver driver, By locator, TimeSpan? timeOut = null)
         {
-            timeOut = (timeOut == null) ? TimeSpan.FromSeconds(_defaultTimeSpan) : timeOut.Value;                   // default value for TimeSpan parameter
-            WebDriverWait wait = new WebDriverWait(driver, (TimeSpan)timeOut);
-            wait.Until(ExpectedConditions.ElementIsVisible(locator));                                               //wait for the loader to appear
-            wait.Until(ExpectedConditions.InvisibilityOfElementLocated(locator));                                   //wait for the loader to disappear
-            driver.wait_A_Moment(timeDelay);
+            TimeSpan effectiveTimeOut = timeOut ?? TimeSpan.FromSeconds(_defaultTimeSpan);
+            WebDriverWait wait = new WebDriverWait(driver, effectiveTimeOut);
+
+            try
+            {
+                // Wait for the loader to appear and then disappear
+                wait.Until(ExpectedConditions.ElementIsVisible(locator));
+                wait.Until(ExpectedConditions.InvisibilityOfElementLocated(locator));
+            }
+            catch (WebDriverTimeoutException ex)
+            {
+                throw new WebDriverTimeoutException($"Timeout waiting for the busy indicator to complete within {effectiveTimeOut.TotalSeconds} seconds.", ex);
+            }
         }
 
+        /// <summary>
+        /// Forcefully terminates all processes associated with a specified browser type.
+        /// </summary>
+        /// <param name="browser">The browser type whose processes are to be terminated.</param>
         public static void CloseProcesses(BrowserType browser)
-        {  // Forcefully kill off old test processes from previous iteration(s)
+        {
+            string[] processNames = GetProcessByName(browser) ?? throw new NotImplementedException($"Driver {browser} is not supported");
+            foreach (string processName in processNames)
+            {
+                foreach (Process process in Process.GetProcessesByName(processName))
+                {
+                    try
+                    {
+                        process.Kill();
+                    }
+                    catch (Exception ex)
+                    {
+                        // Consider logging the exception with details of the process attempted to kill
+                        Debug.WriteLine($"Failed to kill process {processName}: {ex.Message}");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns an array of process names associated with each browser type.
+        /// </summary>
+        /// <param name="browser">The browser type.</param>
+        /// <returns>An array of process names to terminate, or null if the browser type is not supported.</returns>
+        private static string[] GetProcessByName(BrowserType browser)
+        {
             switch (browser)
             {
                 case BrowserType.Chrome:
                 case BrowserType.Chromium:
-                    foreach (Process p in Process.GetProcesses("."))
-                    {
-                        try
-                        {
-                            if (p.ProcessName.ToString().Equals("chromedriver") || p.ProcessName.ToString().Equals("chrome"))
-                                p.Kill();
-                        }
-                        catch { }
-                    }
-                    break;
-
+                    return new[] { "chromedriver", "chrome" };
                 case BrowserType.Firefox:
-                    foreach (Process p in Process.GetProcesses("."))
-                    {
-                        try
-                        {
-                            if (p.ProcessName.ToString().Equals("geckodriver") || p.ProcessName.ToString().Equals("firefox"))
-                                p.Kill();
-                        }
-                        catch { }
-                    }
-                    break;
-
+                    return new[] { "geckodriver", "firefox" };
                 case BrowserType.Edge:
-                    foreach (Process p in Process.GetProcesses("."))
-                    {
-                        try
-                        {
-                            if (p.ProcessName.ToString().Equals("msedgedriver") || p.ProcessName.ToString().Equals("msedge"))
-                                p.Kill();
-                        }
-                        catch { }
-                    }
-                    break;
-
+                    return new[] { "msedgedriver", "msedge" };
                 case BrowserType.IE:
-                    // Who the hell uses IE these days?!?
-                    foreach (Process p in Process.GetProcesses("."))
-                    {
-                        try
-                        {
-                            if (p.ProcessName.ToString().Contains("IEDriverServer") || p.ProcessName.ToString().Equals("iexplore"))
-                                p.Kill();
-                        }
-                        catch { }
-                    }
-                    break;
-
+                    return new[] { "IEDriverServer", "iexplore" };
                 default:
-                    throw new NotImplementedException(string.Format("Driver {0} is not supported", browser));
+                    return null;
             }
         }
 
@@ -951,7 +1156,7 @@ namespace Element34.ExtensionClasses
             File.Delete(fileName);
         }
 
-        public static void PerformActionWithRetry(this IWebDriver driver, TimeSpan timeout, int attempts, Func<IWebDriver, bool> action)
+        public static bool PerformActionWithRetry(this IWebDriver driver, TimeSpan timeout, int attempts, Func<IWebDriver, bool> action)
         {
             DateTime endTime = DateTime.Now.Add(timeout);
             int iterations = 0;
@@ -962,7 +1167,7 @@ namespace Element34.ExtensionClasses
                 {
                     if (action(driver))
                     {
-                        return; // Action succeeded, exit the loop
+                        return true; // Action succeeded, exit the loop
                     }
                 }
                 catch (StaleElementReferenceException ex)
@@ -979,9 +1184,8 @@ namespace Element34.ExtensionClasses
 
             // Throw an exception or handle the failure scenario after all attempts
             Debug.WriteLine($"Action failed after {attempts} attempts within the specified timeout.");
+            return false;
         }
-
-
         #endregion
 
         #region [Private Functions]
@@ -989,10 +1193,12 @@ namespace Element34.ExtensionClasses
         {  // Windows Shell Command
             ProcessStartInfo ProcessInfo;
 
-            ProcessInfo = new ProcessStartInfo("cmd.exe", "/C " + Command);
-            ProcessInfo.CreateNoWindow = true;
-            ProcessInfo.UseShellExecute = true;
-            ProcessInfo.WindowStyle = ProcessWindowStyle.Hidden;
+            ProcessInfo = new ProcessStartInfo("cmd.exe", "/C " + Command)
+            {
+                CreateNoWindow = true,
+                UseShellExecute = true,
+                WindowStyle = ProcessWindowStyle.Hidden
+            };
 
             Process.Start(ProcessInfo);
         }
@@ -1006,125 +1212,6 @@ namespace Element34.ExtensionClasses
         private static ShadowRoot getShadowRootElement(this IWebDriver driver, IWebElement element)
         {  // Return shadowroot of given element
             return driver.ExecuteJavaScript<ShadowRoot>("return arguments[0].shadowRoot", element);
-        }
-
-        private static IWebDriver getDriver(BrowserType browser, string[] browserArguments = null)
-        {
-            IWebDriver driver;
-
-            switch (browser)
-            {
-                case BrowserType.Chrome:
-                    if (browserArguments != null)
-                    {
-                        var options = new ChromeOptions();
-                        options.AddArguments(browserArguments);
-                        driver = new ChromeDriver(options);
-                    }
-                    else
-                        driver = WebDriverFactory.CreateChromeDriver();
-                    break;
-
-                case BrowserType.Firefox:
-                    if (browserArguments != null)
-                    {
-                        var options = new FirefoxOptions();
-                        options.AddArguments(browserArguments);
-                        driver = new FirefoxDriver(options);
-                    }
-                    else
-                        driver = new FirefoxDriver();
-                    break;
-
-                case BrowserType.Edge:
-                    if (browserArguments != null)
-                    {
-                        var options = new EdgeOptions();
-                        options.AddArguments(browserArguments);
-                        driver = new EdgeDriver(options);
-                    }
-                    else
-                        driver = new EdgeDriver();
-                    break;
-
-                case BrowserType.IE:
-                    if (browserArguments != null)
-                    {
-                        var options = new InternetExplorerOptions();
-
-                        for (int i = 0; i < browserArguments.Length; i += 2)
-                        {
-                            options.AddAdditionalInternetExplorerOption(browserArguments[i], browserArguments[i + 1]);
-                        }
-
-                        driver = new InternetExplorerDriver(options);
-                    }
-                    else
-                        driver = new InternetExplorerDriver();
-                    break;
-
-                default:
-                    throw new NotImplementedException(string.Format("Driver {0} is not supported", browser));
-            }
-
-            return driver;
-        }
-
-        private static StringBuilder TrimEnd(this StringBuilder sb)
-        {
-            if (sb == null || sb.Length == 0) return sb;
-
-            int i = sb.Length - 1;
-
-            for (; i >= 0; i--)
-                if (!char.IsWhiteSpace(sb[i]))
-                    break;
-
-            if (i < sb.Length - 1)
-                sb.Length = i + 1;
-
-            return sb;
-        }
-
-        private static StringBuilder TrimBeginning(this StringBuilder sb)
-        {
-            if (sb == null || sb.Length == 0) return sb;
-
-            int i = 0;
-
-            for (; i <= (sb.Length - 1); i++)
-                if (!char.IsWhiteSpace(sb[i]))
-                    break;
-
-            if (i > 0)
-                sb.Remove(sb.Length - i, i);
-
-            return sb;
-        }
-
-        private static StringBuilder Trim(this StringBuilder sb)
-        {
-            if (sb == null || sb.Length == 0) return sb;
-
-            // leading whitespaces
-            int i = sb.Length - 1;
-            for (; i >= 0; i--)
-            {
-                if (!char.IsWhiteSpace(sb[i]))
-                    break;
-            }
-            if (i < sb.Length - 1) sb.Length = i + 1;
-
-            // trailing whitespaces
-            i = 0;
-            for (; i <= (sb.Length - 1); i++)
-            {
-                if (!char.IsWhiteSpace(sb[i]))
-                    break;
-            }
-            if (i > 0) sb.Remove(sb.Length - i, i);
-
-            return sb;
         }
         #endregion
     }

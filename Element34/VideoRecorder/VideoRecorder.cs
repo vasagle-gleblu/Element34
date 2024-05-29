@@ -1,4 +1,5 @@
-﻿using SharpAvi;
+﻿using Microsoft.Extensions.Logging;
+using SharpAvi;
 using SharpAvi.Codecs;
 using SharpAvi.Output;
 using System;
@@ -11,17 +12,33 @@ using System.Windows.Forms;
 
 namespace Element34.VideoRecorder
 {
+    /// <summary>
+    /// Parameters for configuring the screen recorder.
+    /// </summary>
     public class RecorderParams
-    {   // CSharp-screen-recorder by https://github.com/vmille25
-        // Updated for SharpAvi v3.x.x
-
-        public RecorderParams(string filename, string contextName, int FrameRate, FourCC Encoder, int Quality)
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RecorderParams"/> class.
+        /// </summary>
+        /// <param name="filename">The output filename for the recording.</param>
+        /// <param name="contextName">The context name for the recording.</param>
+        /// <param name="frameRate">The frame rate of the recording.</param>
+        /// <param name="encoder">The codec to use for encoding the video.</param>
+        /// <param name="quality">The quality of the recording.</param>
+        /// <exception cref="ArgumentException">Thrown when filename or contextName is null or empty.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when frameRate is less than or equal to 0, or quality is not between 0 and 100.</exception>
+        public RecorderParams(string filename, string contextName, int frameRate, FourCC encoder, int quality)
         {
+            if (string.IsNullOrEmpty(filename)) throw new ArgumentException("Filename cannot be null or empty", nameof(filename));
+            if (string.IsNullOrEmpty(contextName)) throw new ArgumentException("ContextName cannot be null or empty", nameof(contextName));
+            if (frameRate <= 0) throw new ArgumentOutOfRangeException(nameof(frameRate), "FrameRate must be greater than zero");
+            if (quality < 0 || quality > 100) throw new ArgumentOutOfRangeException(nameof(quality), "Quality must be between 0 and 100");
+
             FileName = filename;
             ContextName = contextName;
-            FramesPerSecond = FrameRate;
-            Codec = Encoder;
-            this.Quality = Quality;
+            FramesPerSecond = frameRate;
+            Codec = encoder;
+            Quality = quality;
 
             Height = Screen.PrimaryScreen.Bounds.Height;
             Width = Screen.PrimaryScreen.Bounds.Width;
@@ -35,6 +52,10 @@ namespace Element34.VideoRecorder
         public int Height { get; private set; }
         public int Width { get; private set; }
 
+        /// <summary>
+        /// Creates an AviWriter instance with the specified parameters.
+        /// </summary>
+        /// <returns>A configured <see cref="AviWriter"/> instance.</returns>
         public AviWriter CreateAviWriter()
         {
             return new AviWriter(FileName)
@@ -44,72 +65,98 @@ namespace Element34.VideoRecorder
             };
         }
 
+        /// <summary>
+        /// Creates a video stream with the specified parameters.
+        /// </summary>
+        /// <param name="writer">The AviWriter instance to which the video stream will be added.</param>
+        /// <returns>A configured <see cref="IAviVideoStream"/> instance.</returns>
         public IAviVideoStream CreateVideoStream(AviWriter writer)
         {
-            // Select encoder type based on FOURCC of codec
             if (Codec == CodecIds.Uncompressed)
                 return writer.AddUncompressedVideoStream(Width, Height);
 
-            else if (Codec == CodecIds.MotionJpeg)
+            if (Codec == CodecIds.MotionJpeg)
                 return writer.AddMJpegWpfVideoStream(Width, Height, Quality);
 
-            else
-                return writer.AddMpeg4VcmVideoStream(Width, Height, (double)writer.FramesPerSecond,
-                    // It seems that all tested MPEG-4 VfW codecs ignore the quality affecting parameters passed through VfW API
-                    // They only respect the settings from their own configuration dialogs, and Mpeg4VideoEncoder currently has no support for this
-                    quality: Quality,
-                    codec: Codec,
-                    // Most of VfW codecs expect single-threaded use, so we wrap this encoder to special wrapper
-                    // Thus all calls to the encoder (including its instantiation) will be invoked on a single thread although encoding (and writing) is performed asynchronously
-                    forceSingleThreadedAccess: true);
+            return writer.AddMpeg4VcmVideoStream(Width, Height, (double)writer.FramesPerSecond,
+                quality: Quality,
+                codec: Codec,
+                forceSingleThreadedAccess: true);
         }
     }
 
+    /// <summary>
+    /// A class to handle screen recording functionality.
+    /// </summary>
     public class Recorder : IDisposable
     {
-        #region Fields
-        readonly AviWriter writer;
-        readonly RecorderParams Params;
-        readonly IAviVideoStream videoStream;
-        readonly Thread screenThread;
-        readonly ManualResetEvent stopThread = new ManualResetEvent(false);
-        #endregion
+        private readonly AviWriter writer;
+        private readonly RecorderParams Params;
+        private readonly IAviVideoStream videoStream;
+        private readonly Thread screenThread;
+        private readonly ManualResetEvent stopThread = new ManualResetEvent(false);
+        private readonly bool record;
+        private readonly ILogger<Recorder> logger;
 
-        public Recorder(RecorderParams Params)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Recorder"/> class.
+        /// </summary>
+        /// <param name="Params">The parameters for configuring the recorder.</param>
+        /// <param name="record">A flag to control additional behavior in the recorder.</param>
+        /// <param name="logger">An optional logger instance for logging purposes.</param>
+        /// <exception cref="ArgumentNullException">Thrown when Params is null.</exception>
+        public Recorder(RecorderParams Params, bool record, ILogger<Recorder> logger = null)
         {
-            this.Params = Params;
+            this.Params = Params ?? throw new ArgumentNullException(nameof(Params));
+            this.record = record;
+            this.logger = logger;
 
-            // Create AVI writer and specify FPS
-            writer = Params.CreateAviWriter();
-
-            // Create video stream
-            videoStream = Params.CreateVideoStream(writer);
-
-            // Set only name. Other properties were when creating stream, 
-            // either explicitly by arguments or implicitly by the encoder used
-            videoStream.Name = Params.ContextName;
-
-            screenThread = new Thread(RecordScreen)
+            if (record)
             {
-                Name = typeof(Recorder).Name + ".RecordScreen",
-                IsBackground = true
-            };
+                logger?.LogInformation("Recorder enabled");
 
-            screenThread.Start();
+                try
+                {
+                    writer = Params.CreateAviWriter();
+                    videoStream = Params.CreateVideoStream(writer);
+                    videoStream.Name = Params.ContextName;
+
+                    screenThread = new Thread(RecordScreen)
+                    {
+                        Name = typeof(Recorder).Name + ".RecordScreen",
+                        IsBackground = true
+                    };
+
+                    screenThread.Start();
+                }
+                catch (Exception ex)
+                {
+                    logger?.LogError(ex, "Error initializing Recorder");
+                    Dispose();
+                    throw;
+                }
+            }
+            else
+            {
+                logger?.LogInformation("Recorder disabled");
+            }
         }
 
+        /// <summary>
+        /// Disposes the resources used by the Recorder.
+        /// </summary>
         public void Dispose()
         {
             stopThread.Set();
-            screenThread.Join();
-
-            // Close writer: the remaining data is written to a file and file is closed
-            writer.Close();
-
+            screenThread?.Join();
+            writer?.Close();
             stopThread.Dispose();
         }
 
-        void RecordScreen()
+        /// <summary>
+        /// Records the screen based on the specified parameters.
+        /// </summary>
+        private void RecordScreen()
         {
             TimeSpan frameInterval = TimeSpan.FromSeconds(1 / (double)writer.FramesPerSecond);
             byte[] buffer = new byte[Params.Width * Params.Height * 4];
@@ -120,57 +167,43 @@ namespace Element34.VideoRecorder
             {
                 var timestamp = DateTime.Now;
 
-                Screenshot(buffer);
-
-                // Wait for the previous frame is written
-                videoWriteTask?.Wait();
-
-                // Start asynchronous (encoding and) writing of the new frame
-                videoWriteTask = videoStream.WriteFrameAsync(true, buffer, 0, buffer.Length);
+                try
+                {
+                    CaptureScreenshot(buffer);
+                    videoWriteTask?.Wait();
+                    videoWriteTask = videoStream.WriteFrameAsync(true, buffer, 0, buffer.Length);
+                }
+                catch (Exception ex)
+                {
+                    logger?.LogError(ex, "Error during screen recording");
+                }
 
                 timeTillNextFrame = timestamp + frameInterval - DateTime.Now;
                 if (timeTillNextFrame < TimeSpan.Zero)
                     timeTillNextFrame = TimeSpan.Zero;
             }
 
-            // Wait for the last frame is written
             videoWriteTask?.Wait();
         }
 
-        public void Screenshot(byte[] Buffer)
+        /// <summary>
+        /// Captures a screenshot of the screen and stores it in the provided buffer.
+        /// </summary>
+        /// <param name="buffer">The buffer to store the screenshot data.</param>
+        private void CaptureScreenshot(byte[] buffer)
         {
-            using (Bitmap BMP = new Bitmap(Params.Width, Params.Height))
+            using (Bitmap bmp = new Bitmap(Params.Width, Params.Height))
             {
-                using (Graphics newGraphics = Graphics.FromImage(BMP))
+                using (Graphics g = Graphics.FromImage(bmp))
                 {
-                    newGraphics.CopyFromScreen(Point.Empty, Point.Empty, new Size(Params.Width, Params.Height), CopyPixelOperation.SourceCopy);
+                    g.CopyFromScreen(Point.Empty, Point.Empty, new Size(Params.Width, Params.Height), CopyPixelOperation.SourceCopy);
+                    g.Flush();
 
-                    newGraphics.Flush();
-
-                    var bits = BMP.LockBits(new Rectangle(0, 0, Params.Width, Params.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppRgb);
-                    Marshal.Copy(bits.Scan0, Buffer, 0, Buffer.Length);
-                    BMP.UnlockBits(bits);
+                    var bits = bmp.LockBits(new Rectangle(0, 0, Params.Width, Params.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppRgb);
+                    Marshal.Copy(bits.Scan0, buffer, 0, buffer.Length);
+                    bmp.UnlockBits(bits);
                 }
             }
         }
     }
 }
-
-/*
-    USAGE:
-
-    var rec = new Recorder(new RecorderParams("out.avi", 10, SharpAvi.KnownFourCCs.Codecs.MotionJpeg, 70));
-
-    Console.WriteLine("Press any key to Stop...");
-    Console.ReadKey();
-
-    // Finish Writing
-    rec.Dispose();
-
-    // Or...
-    using (var rec = new Recorder(new RecorderParams("out.avi", "out", 10, CodecIds.MotionJpeg, 70)))
-    {
-        ...
-    }
- 
- */

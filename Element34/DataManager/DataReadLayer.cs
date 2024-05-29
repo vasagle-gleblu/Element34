@@ -1,596 +1,667 @@
 using Element34.StringMetrics;
-using Microsoft.Data.Sqlite;
 using Microsoft.VisualBasic.FileIO;
-using MySql.Data.MySqlClient;
+using Newtonsoft.Json;
 using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.OleDb;
 using System.Data.SqlClient;
-using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
-using static Element34.DataManager.Common;
+using System.Runtime.Serialization;
+using System.Text;
+using System.Xml;
 
 namespace Element34.DataManager
 {
     public static class DataReadLayer
     {
-        #region [MS-SQL Server Support]
-        public static DataSet DataSetFromMsSql(SqlConnection connection, string query, Dictionary<string, object> paramList = null)
+        #region Fields
+
+        private static readonly Encoding enc = Encoding.Default;
+        private static readonly CultureInfo culture = CultureInfo.CurrentCulture;
+
+        #endregion
+
+        #region Public Functions
+
+        #region MS-SQL Server Support
+
+        /// <summary>
+        /// Creates a DataSet from a SQL Server database using a specified SQL query.
+        /// </summary>
+        /// <param name="sqlConn">The SQL connection.</param>
+        /// <param name="sqlQuery">The SQL query.</param>
+        /// <param name="paramList">The parameters for the SQL query.</param>
+        /// <returns>A DataSet containing the results of the SQL query.</returns>
+        public static DataSet DataSetFromMsSql(SqlConnection sqlConn, string sqlQuery, Dictionary<string, object> paramList = null)
         {
+            if (sqlConn == null) throw new ArgumentNullException(nameof(sqlConn));
+            if (string.IsNullOrEmpty(sqlQuery)) throw new ArgumentNullException(nameof(sqlQuery));
+
             DataSet result = new DataSet();
-
-            try
+            using (SqlCommand command = new SqlCommand(sqlQuery, sqlConn))
             {
-                using (SqlCommand command = new SqlCommand(query, connection))
+                if (paramList != null)
                 {
-                    if (paramList != null)
+                    command.Parameters.Clear();
+                    foreach (KeyValuePair<string, object> param in paramList)
                     {
-                        command.Parameters.Clear();
-                        foreach (KeyValuePair<string, object> param in paramList)
-                        {
-                            command.Parameters.AddWithValue(param.Key, param.Value);
-                        }
-                    }
-
-                    using (SqlDataAdapter sda = new SqlDataAdapter(command))
-                    {
-                        connection.Open();
-                        sda.Fill(result);
+                        command.Parameters.AddWithValue(param.Key, param.Value);
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Error reading data from MS-SQL Server: {ex.Message}");
-            }
-            finally
-            {
-                if (connection.State == ConnectionState.Open)
+
+                using (SqlDataAdapter sda = new SqlDataAdapter(command))
                 {
-                    connection.Close();
+                    sqlConn.Open();
+                    sda.Fill(result);
+                    sqlConn.Close();
                 }
             }
 
             return result;
         }
 
-        public static DataTable DataTableFromMsSql(SqlConnection connection, string query, Dictionary<string, object> paramList = null)
+        /// <summary>
+        /// Creates a DataTable from a SQL Server database using a specified SQL query.
+        /// </summary>
+        /// <param name="sqlConn">The SQL connection.</param>
+        /// <param name="sqlQuery">The SQL query.</param>
+        /// <param name="paramList">The parameters for the SQL query.</param>
+        /// <returns>A DataTable containing the results of the SQL query.</returns>
+        public static DataTable DataTableFromMsSql(SqlConnection sqlConn, string sqlQuery, Dictionary<string, object> paramList = null)
         {
+            if (sqlConn == null) throw new ArgumentNullException(nameof(sqlConn));
+            if (string.IsNullOrEmpty(sqlQuery)) throw new ArgumentNullException(nameof(sqlQuery));
+
+            DataTable result = new DataTable();
+            using (SqlCommand command = new SqlCommand(sqlQuery, sqlConn))
+            {
+                if (paramList != null)
+                {
+                    command.Parameters.Clear();
+                    foreach (KeyValuePair<string, object> param in paramList)
+                    {
+                        command.Parameters.AddWithValue(param.Key, param.Value);
+                    }
+                }
+
+                using (SqlDataAdapter sda = new SqlDataAdapter(command))
+                {
+                    sqlConn.Open();
+                    sda.Fill(result);
+                    sqlConn.Close();
+                }
+            }
+
+            return result;
+        }
+
+        #endregion
+
+        #region MS Access File Support
+
+        /// <summary>
+        /// Creates a DataSet from an Access database (MDB) file.
+        /// </summary>
+        /// <param name="connString">The connection string to the Access database.</param>
+        /// <returns>A DataSet containing all user tables from the Access database.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when the connection string is null or empty.</exception>
+        /// <exception cref="Exception">Thrown when an error occurs while accessing the database.</exception>
+        public static DataSet DataSetFromMDB(string connString)
+        {
+            if (string.IsNullOrEmpty(connString))
+                throw new ArgumentNullException(nameof(connString), "Connection string cannot be null or empty.");
+
+            DataSet result = new DataSet();
+
+            try
+            {
+                using (OleDbConnection conn = new OleDbConnection(connString))
+                {
+                    conn.Open();
+                    string fileName = conn.DataSource;
+                    result.DataSetName = Path.GetFileNameWithoutExtension(fileName)?.Replace(" ", "_");
+
+                    DataTable schemaTable = conn.GetSchema("Tables");
+                    List<string> tableNames = schemaTable.AsEnumerable()
+                        .Where(row => row.Field<string>("TABLE_TYPE") == "TABLE" && !row.Field<string>("TABLE_NAME").StartsWith("MSys"))
+                        .Select(row => row.Field<string>("TABLE_NAME"))
+                        .ToList();
+
+                    foreach (string tableName in tableNames)
+                    {
+                        using (OleDbCommand cmd = new OleDbCommand($"SELECT * FROM [{tableName}]", conn))
+                        {
+                            using (OleDbDataAdapter adapter = new OleDbDataAdapter(cmd))
+                            {
+                                DataTable table = new DataTable(tableName);
+                                adapter.Fill(table);
+                                result.Tables.Add(table);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An error occurred while creating the DataSet from the Access database.", ex);
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Creates a DataTable from an Access database (MDB) file using a specified SQL query.
+        /// </summary>
+        /// <param name="connString">The connection string to the Access database.</param>
+        /// <param name="sqlStmt">The SQL statement to execute.</param>
+        /// <param name="paramList">An optional dictionary of parameters to add to the SQL statement.</param>
+        /// <returns>A DataTable containing the results of the SQL query.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when the connection string or SQL statement is null or empty.</exception>
+        /// <exception cref="Exception">Thrown when an error occurs while executing the SQL query.</exception>
+        public static DataTable DataTableFromMDB(string connString, string sqlStmt, Dictionary<string, object> paramList = null)
+        {
+            if (string.IsNullOrEmpty(connString))
+                throw new ArgumentNullException(nameof(connString), "Connection string cannot be null or empty.");
+            if (string.IsNullOrEmpty(sqlStmt))
+                throw new ArgumentNullException(nameof(sqlStmt), "SQL statement cannot be null or empty.");
+
             DataTable result = new DataTable();
 
             try
             {
-                using (SqlCommand command = new SqlCommand(query, connection))
+                using (OleDbConnection conn = new OleDbConnection(connString))
                 {
-                    if (paramList != null)
+                    using (OleDbCommand cmd = new OleDbCommand(sqlStmt, conn))
                     {
-                        command.Parameters.Clear();
-                        foreach (KeyValuePair<string, object> param in paramList)
+                        if (paramList != null)
                         {
-                            command.Parameters.AddWithValue(param.Key, param.Value);
+                            foreach (var param in paramList)
+                            {
+                                cmd.Parameters.AddWithValue(param.Key, param.Value);
+                            }
                         }
-                    }
 
-                    using (SqlDataAdapter adapter = new SqlDataAdapter(command))
-                    {
-                        connection.Open();
-                        adapter.Fill(result);
+                        conn.Open();
+                        using (OleDbDataAdapter adapter = new OleDbDataAdapter(cmd))
+                        {
+                            adapter.Fill(result);
+                        }
                     }
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Error reading data from MS-SQL Server: {ex.Message}");
-            }
-            finally
-            {
-                if (connection.State == ConnectionState.Open)
-                {
-                    connection.Close();
-                }
+                throw new Exception("An error occurred while creating the DataTable from the Access database.", ex);
             }
 
             return result;
         }
+
         #endregion
 
-        #region [MySQL Server Support]
-        public static DataSet DataSetFromMySql(MySqlConnection connection, string query, Dictionary<string, object> paramList = null)
+        #region MS Excel File Support
+
+        /// <summary>
+        /// Creates a DataSet from an Excel file.
+        /// </summary>
+        /// <param name="file">The Excel file to read.</param>
+        /// <returns>A DataSet containing the data from the Excel file.</returns>
+        /// <exception cref="FileNotFoundException">Thrown when the Excel file is not found.</exception>
+        public static DataSet DataSetFromXLS(FileInfo file)
         {
-            DataSet result = new DataSet();
+            if (file == null) throw new ArgumentNullException(nameof(file));
+            if (!file.Exists) throw new FileNotFoundException("Excel file not found.", file.FullName);
 
-            try
+            DataSet dataSet = new DataSet();
+
+            using (ExcelPackage package = new ExcelPackage(file))
             {
-                using (MySqlCommand command = new MySqlCommand(query, connection))
+                foreach (ExcelWorksheet worksheet in package.Workbook.Worksheets)
                 {
-                    if (paramList != null)
+                    DataTable dataTable = new DataTable(worksheet.Name);
+
+                    foreach (ExcelRangeBase headerCell in worksheet.Cells[1, 1, 1, worksheet.Dimension.End.Column])
                     {
-                        command.Parameters.Clear();
-                        foreach (KeyValuePair<string, object> param in paramList)
-                        {
-                            command.Parameters.AddWithValue(param.Key, param.Value);
-                        }
+                        dataTable.Columns.Add(headerCell.Text);
                     }
 
-                    connection.Open();
-                    using (MySqlDataAdapter adapter = new MySqlDataAdapter(command))
+                    for (int row = 2; row <= worksheet.Dimension.End.Row; row++)
                     {
-                        adapter.Fill(result);
+                        ExcelRange rowCells = worksheet.Cells[row, 1, row, worksheet.Dimension.End.Column];
+                        DataRow dataRow = dataTable.NewRow();
+                        dataRow.ItemArray = rowCells.Select(cell => cell.Text).ToArray();
+                        dataTable.Rows.Add(dataRow);
                     }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Error reading data from MySQL Server: {ex.Message}");
-            }
-            finally
-            {
-                if (connection.State == ConnectionState.Open)
-                {
-                    connection.Close();
+
+                    dataSet.Tables.Add(dataTable);
                 }
             }
 
-            return result;
+            return dataSet;
         }
 
-        public static DataTable DataTableFromMySql(MySqlConnection connection, string query, Dictionary<string, object> paramList = null)
+        /// <summary>
+        /// Creates a DataTable from an Excel file.
+        /// </summary>
+        /// <param name="file">The Excel file to read.</param>
+        /// <param name="sheetName">The name of the worksheet to read. If not specified, the first worksheet is used.</param>
+        /// <param name="hasHeader">Indicates whether the worksheet has a header row.</param>
+        /// <returns>A DataTable containing the data from the specified worksheet.</returns>
+        /// <exception cref="FileNotFoundException">Thrown when the Excel file is not found.</exception>
+        /// <exception cref="Exception">Thrown when the specified worksheet is not found.</exception>
+        public static DataTable DataTableFromXLS(FileInfo file, string sheetName = "", bool hasHeader = true)
         {
-            DataTable result = new DataTable();
+            if (file == null) throw new ArgumentNullException(nameof(file));
+            if (!file.Exists) throw new FileNotFoundException("Excel file not found.", file.FullName);
 
-            try
+            DataTable dataTable = new DataTable();
+
+            using (ExcelPackage package = new ExcelPackage(file))
             {
-                using (MySqlCommand command = new MySqlCommand(query, connection))
-                {
-                    if (paramList != null)
-                    {
-                        command.Parameters.Clear();
-                        foreach (KeyValuePair<string, object> param in paramList)
-                        {
-                            command.Parameters.AddWithValue(param.Key, param.Value);
-                        }
-                    }
+                ExcelWorksheet worksheet = (string.IsNullOrEmpty(sheetName)
+                    ? package.Workbook.Worksheets[0]
+                    : package.Workbook.Worksheets[sheetName]) ?? throw new Exception($"Worksheet '{sheetName}' not found.");
 
-                    connection.Open();
-                    using (MySqlDataAdapter adapter = new MySqlDataAdapter(command))
-                    {
-                        adapter.Fill(result);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Error reading data from MySQL Server: {ex.Message}");
-            }
-            finally
-            {
-                if (connection.State == ConnectionState.Open)
-                {
-                    connection.Close();
-                }
-            }
-
-            return result;
-        }
-        #endregion
-
-        #region [MS Access File Support]
-        public static DataSet DataSetFromMDB(OleDbConnection connection)
-        {
-            DataSet result = new DataSet();
-
-            // For convenience, the DataSet is identified by the name of the loaded file (without extension).
-            string fileName = (connection.DataSource);
-            result.DataSetName = Path.GetFileNameWithoutExtension(fileName).Replace(" ", "_");
-
-            try
-            {
-                // Opening the Access connection
-                connection.Open();
-
-                // Getting all user tables present in the Access file (Msys* tables are system thus useless for this scenario)
-                DataTable dt = connection.GetSchema("Tables");
-                List<string> tableNames = dt.AsEnumerable().Select(dr => dr.Field<string>("TABLE_NAME")).Where(dr => !dr.StartsWith("MSys")).ToList();
-
-                // Getting the data for every user tables
-                foreach (string tableName in tableNames)
-                {
-                    using (OleDbCommand command = new OleDbCommand(string.Format("SELECT * FROM [{0}]", tableName), connection))
-                    {
-                        using (OleDbDataAdapter adapter = new OleDbDataAdapter(command))
-                        {
-                            // Saving all tables in our result DataSet.
-                            dt = new DataTable("[" + tableName + "]");
-                            adapter.Fill(dt);
-                            result.Tables.Add(dt);
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Error reading from MS Access database: {ex.Message}");
-            }
-            finally
-            {
-                if (connection.State == ConnectionState.Open)
-                {
-                    connection.Close();
-                }
-            }
-
-            // Return the filled DataSet
-            return result;
-        }
-
-        public static DataTable DataTableFromMDB(OleDbConnection connection, string query, Dictionary<string, object> paramList = null)
-        {
-            DataTable result = new DataTable();
-
-            try
-            {
-                using (OleDbCommand command = new OleDbCommand(query, connection))
-                {
-                    if (paramList != null)
-                    {
-                        command.Parameters.Clear();
-                        foreach (KeyValuePair<string, object> param in paramList)
-                        {
-                            command.Parameters.AddWithValue(param.Key, param.Value);
-                        }
-                    }
-
-                    connection.Open();
-                    using (OleDbDataAdapter adapter = new OleDbDataAdapter(command))
-                    {
-                        adapter.Fill(result);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Error reading table from MS Access database: {ex.Message}");
-            }
-            finally
-            {
-                if (connection.State == ConnectionState.Open)
-                {
-                    connection.Close();
-                }
-            }
-
-            return result;
-        }
-        #endregion
-
-        #region [MS Excel File Support]
-        public static DataSet DataSetFromXLS(FileInfo oFile)
-        {
-            if (!oFile.Exists)
-                throw new FileNotFoundException("Excel file not found.");
-
-            // Create a new DataSet to hold the data
-            DataSet result = new DataSet();
-
-            using (ExcelPackage pkg = new ExcelPackage(oFile))
-            {
-                // Iterate through all worksheets in the Excel file
-                foreach (ExcelWorksheet WkSht in pkg.Workbook.Worksheets)
-                {
-                    // Create a DataTable for each worksheet
-                    DataTable dt = new DataTable(WkSht.Name);
-
-                    // Add columns to the DataTable
-                    foreach (ExcelRangeBase headerCell in WkSht.Cells[1, 1, 1, WkSht.Dimension.End.Column])
-                    {
-                        dt.Columns.Add(headerCell.Text);
-                    }
-
-                    // Add rows to the DataTable
-                    for (int row = 2; row <= WkSht.Dimension.End.Row; row++)
-                    {
-                        ExcelRange excelRow = WkSht.Cells[row, 1, row, WkSht.Dimension.End.Column];
-                        DataRow newRow = dt.Rows.Add();
-                        newRow.ItemArray = excelRow.Select(cell => cell.Text).ToArray();
-                    }
-
-                    // Add the DataTable to the DataSet
-                    result.Tables.Add(dt);
-                }
-            }
-
-            return result;
-        }
-
-        public static DataTable DataTableFromXLS(FileInfo oFile, string sSheetName = "", bool hasHeader = true)
-        {
-            if (!oFile.Exists)
-                throw new FileNotFoundException("Excel file not found.");
-
-            DataTable dt = new DataTable();
-
-            using (ExcelPackage package = new ExcelPackage(oFile))
-            {
-                // Select named worksheet, default to first if name not supplied
-                ExcelWorksheet worksheet = ((string.IsNullOrEmpty(sSheetName)) ? package.Workbook.Worksheets[0] : package.Workbook.Worksheets[sSheetName]) ?? throw new Exception("Worksheet not found");
-                int colCount = worksheet.Dimension.End.Column;  // get column count
-                int rowCount = worksheet.Dimension.End.Row;     // get row count
-                int start = 1;
+                int colCount = worksheet.Dimension.End.Column;
+                int rowCount = worksheet.Dimension.End.Row;
+                int startRow = hasHeader ? 2 : 1;
 
                 if (hasHeader)
                 {
-                    start = 2;
-                    ExcelRange wsHeader = worksheet.Cells[1, 1, 1, colCount];
-                    foreach (ExcelRangeBase firstRowCell in wsHeader)
+                    foreach (ExcelRangeBase headerCell in worksheet.Cells[1, 1, 1, colCount])
                     {
-                        dt.Columns.Add(firstRowCell.Value.ToString().Trim(), typeof(string));
+                        dataTable.Columns.Add(headerCell.GetValue<string>().Trim(), typeof(string));
                     }
                 }
 
-                for (int row = start; row <= rowCount; row++)
+                for (int row = startRow; row <= rowCount; row++)
                 {
-                    ExcelRange wsRow = worksheet.Cells[row, 1, row, colCount];
-                    DataRow dr = dt.Rows.Add();
-
-                    foreach (ExcelRangeBase cell in wsRow)
+                    DataRow dataRow = dataTable.NewRow();
+                    for (int col = 1; col <= colCount; col++)
                     {
-
-                        if (cell.Value != null)
-                            dr[cell.Start.Column - 1] = cell.Value.ToString().Trim();
+                        dataRow[col - 1] = GetCellText(worksheet.Cells[row, col]);
                     }
+                    dataTable.Rows.Add(dataRow);
                 }
             }
 
-            return dt;
+            return dataTable;
         }
+
         #endregion
 
-        #region [SQLite File Support]
-        public static DataSet DataSetFromSqlite(SqliteConnection connection)
+        #region CSV File Support
+
+        /// <summary>
+        /// Creates a DataSet from a directory of CSV files.
+        /// </summary>
+        /// <param name="directoryPath">The directory path containing CSV files.</param>
+        /// <returns>A DataSet containing DataTables from each CSV file in the directory.</returns>
+        public static DataSet DataSetFromCSV(string directoryPath)
         {
-            DataSet result = new DataSet();
-            List<string> tables = new List<string>();
+            if (string.IsNullOrEmpty(directoryPath)) throw new ArgumentNullException(nameof(directoryPath));
+            if (!Directory.Exists(directoryPath)) throw new DirectoryNotFoundException("Directory not found: " + directoryPath);
 
-            try
+            DataSet result = new DataSet
             {
-                connection.Open();
+                DataSetName = new DirectoryInfo(directoryPath).Name.Replace(" ", "_")
+            };
 
-                SqliteCommand command = new SqliteCommand("SELECT name FROM sqlite_master WHERE type='table'", connection);
-                SqliteDataReader reader = command.ExecuteReader();
-
-                while (reader.Read())
-                {
-                    string tableName = reader.GetString(0);
-                    tables.Add(tableName);
-                }
-
-                foreach (string table in tables)
-                {
-                    command = new SqliteCommand($"SELECT * FROM {table}", connection);
-                    reader = command.ExecuteReader();
-
-                    // Load data into a DataTable
-                    DataTable dt = new DataTable();
-                    dt.Load(reader);
-
-                    // Add the DataTable to the DataSet
-                    result.Tables.Add(dt);
-                }
-            }
-            catch (Exception ex)
+            foreach (string csvFile in Directory.GetFiles(directoryPath, "*.csv"))
             {
-                Console.WriteLine($"Error reading data from SQLite database: {ex.Message}");
-            }
-            finally
-            {
-                if (connection.State == ConnectionState.Open)
-                {
-                    connection.Close();
-                }
-            }
-
-            return result;
-        }
-
-        public static DataTable DataTableFromSqlite(SqliteConnection connection, string query, Dictionary<string, object> paramList = null)
-        {
-            DataTable result = new DataTable();
-
-            try
-            {
-                connection.Open();
-
-                using (SqliteCommand command = new SqliteCommand(query, connection))
-                {
-                    if (paramList != null)
-                    {
-                        command.Parameters.Clear();
-                        foreach (KeyValuePair<string, object> param in paramList)
-                        {
-                            command.Parameters.AddWithValue(param.Key, param.Value);
-                        }
-                    }
-
-                    connection.Open();
-                    using (SqliteDataReader reader = command.ExecuteReader())
-                    {
-                        result.Load(reader);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error reading data from SQLite database: {ex.Message}");
-            }
-            finally
-            {
-                if (connection.State == ConnectionState.Open)
-                {
-                    connection.Close();
-                }
-            }
-
-            return result;
-        }
-        #endregion
-
-        #region [CSV File Support]
-        public static DataSet DataSetFromCSV(string sPath)
-        {
-            DataSet result = new DataSet();
-            DataTable dt;
-
-            // For convenience, the DataSet is identified by the name of the named folder.
-            string sFolder = Path.GetDirectoryName(sPath);
-            result.DataSetName = sFolder.Substring(sFolder.LastIndexOf('\\'), sFolder.Length - sFolder.LastIndexOf('\\') - 1).Replace(" ", "_");
-
-            // Process the list of files found in the folder.
-            foreach (string sFile in Directory.GetFiles(sFolder, "*.csv"))
-            {
-                dt = DataTableFromCSV(sFile);
+                DataTable dt = DataTableFromCSV(csvFile);
                 result.Tables.Add(dt);
             }
 
-            // Return the filled DataSet
             return result;
         }
 
-        public static DataTable DataTableFromCSV(string sFile, bool blnFoldChars = false, bool blnTableReadOnly = false, bool blnMakeBackup = true)
+        /// <summary>
+        /// Creates a DataTable from a CSV file.
+        /// </summary>
+        /// <param name="filePath">The path to the CSV file.</param>
+        /// <param name="foldChars">Indicates whether to fold characters to ASCII.</param>
+        /// <param name="tableReadOnly">Indicates whether the DataTable should be read-only.</param>
+        /// <param name="makeBackup">Indicates whether to create a backup of the CSV file.</param>
+        /// <returns>A DataTable containing the data from the CSV file.</returns>
+        public static DataTable DataTableFromCSV(string filePath, bool foldChars = false, bool tableReadOnly = false, bool makeBackup = true)
         {
-            // Create a new DataTable
+            if (string.IsNullOrEmpty(filePath)) throw new ArgumentNullException(nameof(filePath));
+            if (!File.Exists(filePath)) throw new FileNotFoundException("CSV file not found.", filePath);
+
             DataTable dt = new DataTable
             {
-                TableName = Path.GetFileNameWithoutExtension(Path.GetFileName(sFile))
+                TableName = Path.GetFileNameWithoutExtension(filePath)
             };
 
-            // Create backup
-            if (blnMakeBackup)
+            if (makeBackup)
             {
-                FileInfo destFile = new FileInfo(Path.ChangeExtension(sFile, ".bak"));
-                File.Copy(sFile, destFile.FullName, true);
+                File.Copy(filePath, Path.ChangeExtension(filePath, ".bak"), true);
             }
 
-
-            // Load data from file 
-            using (StreamReader reader = new StreamReader(sFile, enc))
+            using (StreamReader reader = new StreamReader(filePath, enc))
             {
-                StreamReader sr;
+                StreamReader sr = reader;
 
-                if (blnFoldChars)
+                if (foldChars)
                 {
+                    List<string> lines = new List<string>();
                     string line;
-                    IList<string> lines = new List<string>();
-
                     while ((line = reader.ReadLine()) != null)
                     {
-                        line = Transforms.FoldToASCII(line.ToCharArray()).ToString();
-
-                        lines.Add(line);
+                        lines.Add(Transforms.FoldToASCII(line.ToCharArray()).ToString());
                     }
-                    reader.Close();
-                    reader.Dispose();
-
-                    byte[] bytes = enc.GetBytes(string.Join(Environment.NewLine, lines.ToArray()));
-                    Stream s = new MemoryStream(bytes);
-                    sr = new StreamReader(s);
+                    sr = new StreamReader(new MemoryStream(enc.GetBytes(string.Join(Environment.NewLine, lines))));
                 }
-                else
-                    sr = reader;
 
                 using (TextFieldParser parser = new TextFieldParser(sr))
                 {
-                    // Set the delimiter (comma in this case)
                     parser.TextFieldType = FieldType.Delimited;
                     parser.SetDelimiters(",");
 
-                    // Read the first line to create column headers
                     string[] headers = parser.ReadFields();
-
-                    // Add columns to the DataTable
-                    foreach (string header in headers)
+                    if (headers != null)
                     {
-                        dt.Columns.Add(header);
-                    }
+                        foreach (string header in headers)
+                        {
+                            dt.Columns.Add(header);
+                        }
 
-                    // Read and add data rows
-                    while (!parser.EndOfData)
-                    {
-                        string[] fields = parser.ReadFields();
-                        dt.Rows.Add(fields);
+                        while (!parser.EndOfData)
+                        {
+                            string[] fields = parser.ReadFields();
+                            if (fields != null)
+                            {
+                                dt.Rows.Add(fields);
+                            }
+                        }
                     }
                 }
             }
 
-            // DataTable readonly or not.
-            if (!blnTableReadOnly)
+            if (tableReadOnly)
             {
                 foreach (DataColumn col in dt.Columns)
                 {
-                    col.ReadOnly = blnTableReadOnly;
+                    col.ReadOnly = true;
                 }
             }
 
             return dt;
         }
+
         #endregion
 
-        #region [XML File Support]
-        public static DataSet DataSetFromXML(string sInput)
+        #region XML File Support
+
+        /// <summary>
+        /// Creates a DataSet from an XML string.
+        /// </summary>
+        /// <param name="xmlContent">The XML string content.</param>
+        /// <returns>A DataSet containing the data from the XML string.</returns>
+        public static DataSet DataSetFromXML(string xmlContent)
         {
-            DataSet result = sInput.DeserializefromXML<DataSet>();
-            return result;
+            if (string.IsNullOrEmpty(xmlContent)) throw new ArgumentNullException(nameof(xmlContent));
+
+            return xmlContent.DeserializefromXML<DataSet>();
         }
 
-        public static DataTable DataTableFromXML(string sInput, string sFilter = "")
+        /// <summary>
+        /// Creates a DataTable from an XML string.
+        /// </summary>
+        /// <param name="xmlContent">The XML string content.</param>
+        /// <param name="filter">The filter expression to apply to the DataTable.</param>
+        /// <returns>A DataTable containing the data from the XML string, optionally filtered.</returns>
+        public static DataTable DataTableFromXML(string xmlContent, string filter = "")
         {
-            DataTable result = sInput.DeserializefromXML<DataTable>();
+            if (string.IsNullOrEmpty(xmlContent)) throw new ArgumentNullException(nameof(xmlContent));
 
-            if (result.Rows.Count > 0)
+            DataTable result = xmlContent.DeserializefromXML<DataTable>();
+
+            if (!string.IsNullOrEmpty(filter) && result.Rows.Count > 0)
             {
-                if (sFilter.Length > 0)
+                DataRow[] filteredRows = result.Select(filter);
+                if (filteredRows.Length > 0)
                 {
-                    DataRow[] dr = result.Select(sFilter);
-                    if (dr.Length > 0)
-                    {
-                        DataTable dt = dr.CopyToDataTable();
-                        result = dt;
-                    }
+                    result = filteredRows.CopyToDataTable();
                 }
             }
 
             return result;
         }
-        #endregion
 
-        #region [JSON File Support]
-        public static DataSet DataSetFromJSON(string sInput)
+        private static T DeserializefromXML<T>(this string xmlContent)
         {
-            return sInput.DeserializeFromJSON<DataSet>();
+            if (string.IsNullOrEmpty(xmlContent)) throw new ArgumentNullException(nameof(xmlContent));
+
+            using (StringReader stringReader = new StringReader(xmlContent))
+            using (XmlReader xmlReader = XmlReader.Create(stringReader))
+            {
+                DataContractSerializer serializer = new DataContractSerializer(typeof(T));
+                return (T)serializer.ReadObject(xmlReader);
+            }
         }
 
-        public static DataTable DataTableFromJSON(string sInput, string sFilter = "")
-        {
-            DataTable result = sInput.DeserializeFromJSON<DataTable>();
+        #endregion
 
-            if (result.Rows.Count > 0)
+        #region JSON File Support
+
+        /// <summary>
+        /// Creates a DataSet from a JSON string.
+        /// </summary>
+        /// <param name="jsonContent">The JSON string content.</param>
+        /// <returns>A DataSet containing the data from the JSON string.</returns>
+        public static DataSet DataSetFromJSON(string jsonContent)
+        {
+            if (string.IsNullOrEmpty(jsonContent)) throw new ArgumentNullException(nameof(jsonContent));
+
+            return jsonContent.DeserializeFromJSON<DataSet>();
+        }
+
+        /// <summary>
+        /// Creates a DataTable from a JSON string.
+        /// </summary>
+        /// <param name="jsonContent">The JSON string content.</param>
+        /// <param name="filter">The filter expression to apply to the DataTable.</param>
+        /// <returns>A DataTable containing the data from the JSON string, optionally filtered.</returns>
+        public static DataTable DataTableFromJSON(string jsonContent, string filter = "")
+        {
+            if (string.IsNullOrEmpty(jsonContent)) throw new ArgumentNullException(nameof(jsonContent));
+
+            DataTable result = jsonContent.DeserializeFromJSON<DataTable>();
+
+            if (!string.IsNullOrEmpty(filter) && result.Rows.Count > 0)
             {
-                if (sFilter.Length > 0)
+                DataRow[] filteredRows = result.Select(filter);
+                if (filteredRows.Length > 0)
                 {
-                    DataRow[] dr = result.Select(sFilter);
-                    if (dr.Length > 0)
-                    {
-                        DataTable dt = dr.CopyToDataTable();
-                        result = dt;
-                    }
+                    result = filteredRows.CopyToDataTable();
                 }
             }
 
             return result;
         }
+
+        #endregion
+
+        #endregion
+
+        #region Private Functions
+
+        private static string GetCellText(ExcelRange cell)
+        {
+            // Handle different cell types based on cell.Value type
+            if (cell.Value == null)
+            {
+                return string.Empty;
+            }
+
+            switch (cell.Value)
+            {
+                case DateTime dateTime:
+                    if (dateTime.Date == new DateTime(1899, 12, 30))
+                    {
+                        // Treat this as a TimeSpan
+                        return dateTime.TimeOfDay.ToString(@"hh\:mm\:ss");
+                    }
+                    return dateTime.ToString("yyyy-MM-dd");
+                case double numeric:
+                    // Check if the cell's number format indicates a TimeSpan
+                    if (cell.Style.Numberformat.Format.Contains("h") || cell.Style.Numberformat.Format.Contains("m") || cell.Style.Numberformat.Format.Contains("s"))
+                    {
+                        // Convert numeric value to TimeSpan
+                        TimeSpan timeSpan = TimeSpan.FromDays(numeric);
+                        // Use cell.Style.Numberformat.Format to determine the format string
+                        if (cell.Style.Numberformat.Format.Contains("AM/PM"))
+                        {
+                            // Convert to 12-hour format with AM/PM
+                            DateTime dateTime = new DateTime().Add(timeSpan);
+                            return dateTime.ToString("hh:mm tt");
+                        }
+                        return timeSpan.ToString(@"hh\:mm\:ss");
+                    }
+                    return numeric.ToString();
+                case bool boolean:
+                    return boolean.ToString();
+                default:
+                    string value = (string)cell.Value;
+
+                    if (int.TryParse(value, out int resultInteger))
+                    {
+                        return resultInteger.ToString();
+                    }
+
+                    if (TimeSpan.TryParse(value, out TimeSpan resultTimeSpan))
+                    {
+                        if (cell.Style.Numberformat.Format.Contains("AM/PM"))
+                        {
+                            DateTime dateTime = DateTime.Today.Add(resultTimeSpan);
+                            return dateTime.ToString("hh:mm tt");
+                        }
+                        return resultTimeSpan.ToString(@"hh\:mm\:ss");
+                    }
+
+                    if (DateTime.TryParseExact(value, "hh:mm tt", null, System.Globalization.DateTimeStyles.None, out DateTime result))
+                    {
+                        return result.ToString("hh:mm tt");
+                    }
+
+                    return cell.Text.Trim();
+            }
+        }
+
+        private static string ParameterValueForSQL(SqlParameter sp)
+        {
+            if (sp == null) throw new ArgumentNullException(nameof(sp));
+
+            string retval;
+            switch (sp.SqlDbType)
+            {
+                case SqlDbType.Char:
+                case SqlDbType.NChar:
+                case SqlDbType.NText:
+                case SqlDbType.NVarChar:
+                case SqlDbType.Text:
+                case SqlDbType.Time:
+                case SqlDbType.VarChar:
+                case SqlDbType.Xml:
+                case SqlDbType.Date:
+                case SqlDbType.DateTime:
+                case SqlDbType.DateTime2:
+                case SqlDbType.DateTimeOffset:
+                    retval = "'" + sp.Value.ToString().Replace("'", "''") + "'";
+                    break;
+
+                case SqlDbType.Bit:
+                    retval = ToBooleanOrDefault(sp.Value, false) ? "1" : "0";
+                    break;
+
+                default:
+                    retval = sp.Value.ToString().Replace("'", "''");
+                    break;
+            }
+
+            return retval;
+        }
+
+        private static string ParameterValueForSQL(OleDbParameter sp)
+        {
+            if (sp == null) throw new ArgumentNullException(nameof(sp));
+
+            string retval;
+            switch (sp.OleDbType)
+            {
+                case OleDbType.Char:
+                case OleDbType.WChar:
+                case OleDbType.VarChar:
+                case OleDbType.VarWChar:
+                case OleDbType.LongVarChar:
+                case OleDbType.LongVarWChar:
+                case OleDbType.Date:
+                case OleDbType.DBTime:
+                case OleDbType.DBDate:
+                case OleDbType.DBTimeStamp:
+                    retval = "'" + sp.Value.ToString().Replace("'", "''") + "'";
+                    break;
+
+                case OleDbType.Boolean:
+                    retval = ToBooleanOrDefault(sp.Value, false) ? "1" : "0";
+                    break;
+
+                default:
+                    retval = sp.Value.ToString().Replace("'", "''");
+                    break;
+            }
+
+            return retval;
+        }
+
+        private static bool ToBooleanOrDefault(object o, bool Default)
+        {
+            return ToBooleanOrDefault(o?.ToString(), Default);
+        }
+
+        private static bool ToBooleanOrDefault(string s, bool defaultValue)
+        {
+            if (string.IsNullOrEmpty(s))
+            {
+                return defaultValue;
+            }
+
+            string lowerCaseString = s.ToLower();
+
+            switch (lowerCaseString)
+            {
+                case "yes":
+                case "affirmative":
+                case "positive":
+                case "true":
+                case "ok":
+                case "okay":
+                case "y":
+                case "+":
+                    return true;
+                case "no":
+                case "negative":
+                case "negatory":
+                case "false":
+                case "n":
+                case "-":
+                    return false;
+                default:
+                    return bool.TryParse(lowerCaseString, out bool parsedValue) ? parsedValue : defaultValue;
+            }
+        }
+
+        private static T DeserializeFromJSON<T>(this string sInput)
+        {
+            return JsonConvert.DeserializeObject<T>(sInput);
+        }
+
         #endregion
     }
 }
-

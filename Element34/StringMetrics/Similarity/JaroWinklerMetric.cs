@@ -14,7 +14,7 @@ namespace Element34.StringMetrics
     /// </summary>
     public class JaroWinklerMetric : StringMetric<double?>
     {
-        private static JaroMetric m_jaroDist = new JaroMetric();
+        private static readonly JaroMetric m_jaroDist = new JaroMetric();
 
         public override double? Compute(string source, string target)
         {

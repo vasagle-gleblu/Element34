@@ -16,7 +16,7 @@ namespace Element34.StringMetrics.Phonetic
     public class SoundExReverse : IStringEncoder, IStringComparison
     {
         private const int tokenLength = 4;
-        private IReadOnlyDictionary<char, char> Map = new Dictionary<char, char>()
+        private readonly IReadOnlyDictionary<char, char> Map = new Dictionary<char, char>()
             { { 'B', '1' }, { 'F', '1' }, { 'P', '1' }, { 'V', '1' }, { 'C', '2' },
               { 'G', '2' }, { 'J', '2' }, { 'K', '2' }, { 'Q', '2' }, { 'S', '2' },
               { 'X', '2' }, { 'Z', '2' }, { 'D', '3' }, { 'T', '3' }, { 'L', '4' },
@@ -50,7 +50,7 @@ namespace Element34.StringMetrics.Phonetic
         public string Encode(string source)
         {
             int i = 0, s = 0, p = 0;
-            char c, j;
+            char c;
             char[] token = new char[tokenLength];
 
             for (int k = 0; k < tokenLength; k++)
@@ -70,7 +70,7 @@ namespace Element34.StringMetrics.Phonetic
                 else
                     break;
 
-                if (Map.TryGetValue(c, out j))
+                if (Map.TryGetValue(c, out char j))
                 {
                     if (j != p)
                     {

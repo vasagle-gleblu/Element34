@@ -51,7 +51,7 @@ namespace Element34.StringMetrics.Phonetic
         public string Encode(string source)
         {
             int i = 0, s = 0, p = 0;
-            char c, j;
+            char c;
             char[] token = new char[tokenLength];
 
             for (int k = 0; k < tokenLength; k++)
@@ -71,7 +71,7 @@ namespace Element34.StringMetrics.Phonetic
                 else
                     break;
 
-                if (Map.TryGetValue(c, out j))
+                if (Map.TryGetValue(c, out char j))
                 {
                     if (j != p)
                     {

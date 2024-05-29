@@ -28,7 +28,7 @@ namespace Element34.ExtensionClasses
         #region Fields
         private static bool _acceptNextAlert = true;
         private const int _defaultTimeSpan = 45;
-        const int timeDelay = 1500;
+        private const int timeDelay = 1500;
         //private static Logger _logger;
         #endregion
 
@@ -403,46 +403,6 @@ namespace Element34.ExtensionClasses
 
             string fullXPath = (string)executor.ExecuteScript(script, element);
             return fullXPath.ToLower();
-        }
-
-        public static By GetLocatorFromElement(this IWebElement element)
-        {// Experimental
-            By locator = null;
-            string[] pathVariables = (element.ToString().Split("->"))[1].ReplaceFirst("(?s)(.*)\\]", "$1" + "").Split(":");
-
-            string selector = pathVariables[0].Trim();
-            string value = pathVariables[1].Trim();
-
-            switch (selector)
-            {
-                case "id":
-                    locator = By.Id(value);
-                    break;
-                case "className":
-                    locator = By.ClassName(value);
-                    break;
-                case "tagName":
-                    locator = By.TagName(value);
-                    break;
-                case "xpath":
-                    locator = By.XPath(value);
-                    break;
-                case "cssSelector":
-                    locator = By.CssSelector(value);
-                    break;
-                case "linkText":
-                    locator = By.LinkText(value);
-                    break;
-                case "name":
-                    locator = By.Name(value);
-                    break;
-                case "partialLinkText":
-                    locator = By.PartialLinkText(value);
-                    break;
-                default:
-                    throw new InvalidOperationException("locator : " + selector + " not found!!!");
-            }
-            return locator;
         }
 
         ///<summary>
@@ -970,12 +930,8 @@ namespace Element34.ExtensionClasses
         {
             timeOut = (timeOut == null) ? TimeSpan.FromSeconds(_defaultTimeSpan) : timeOut.Value;                   // default value for TimeSpan parameter
             WebDriverWait wait = new WebDriverWait(driver, (TimeSpan)timeOut);
-            try
-            {
-                wait.Until(ExpectedConditions.ElementIsVisible(locator));                                               //wait for the loader to appear
-                wait.Until(ExpectedConditions.InvisibilityOfElementLocated(locator));                                   //wait for the loader to disappear
-            }
-            catch { }
+            wait.Until(ExpectedConditions.ElementIsVisible(locator));                                               //wait for the loader to appear
+            wait.Until(ExpectedConditions.InvisibilityOfElementLocated(locator));                                   //wait for the loader to disappear
             driver.wait_A_Moment(timeDelay);
         }
 
@@ -1192,6 +1148,30 @@ namespace Element34.ExtensionClasses
             // rename downloaded file
             File.Move(fileName, newFileName);
             File.Delete(fileName);
+        }
+
+        public static void PerformActionWithRetry(this IWebDriver driver, TimeSpan timeout, int attempts, Func<IWebDriver, bool> action)
+        {
+            // For Stale Reference Exception
+            var wait = new WebDriverWait(driver, timeout);
+            wait.IgnoreExceptionTypes(typeof(StaleElementReferenceException));
+            int iterations = 0;
+
+            while (iterations < attempts)
+            {
+                wait.Until((d) =>
+                {
+                    try
+                    {
+                        return action(d);
+                    }
+                    catch (StaleElementReferenceException)
+                    {
+                        iterations++;
+                        return false;
+                    }
+                });
+            }
         }
         #endregion
 

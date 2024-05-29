@@ -9,224 +9,270 @@ using System.Web;
 
 namespace Element34.Utilities
 {
-    // Reorganization of this class suggested by u/Slypenslyde of Reddit.
+    /// <summary>
+    /// Abstract class representing a control type.
+    /// </summary>
     public abstract class ControlType
     {
+        /// <summary>
+        /// Abstract method to choose a value in a specified column of a table.
+        /// </summary>
+        /// <param name="cells">The table cells.</param>
+        /// <param name="iColumn">The column index.</param>
+        /// <param name="value">The value to choose.</param>
         public abstract void Choose(ReadOnlyCollection<IWebElement> cells, int iColumn, string value);
     }
 
+    /// <summary>
+    /// Interface representing a selection type.
+    /// </summary>
     public interface ISelectionType
     {
+        /// <summary>
+        /// Selects a row in a table.
+        /// </summary>
+        /// <param name="table">The table elements.</param>
+        /// <param name="iRow">The row index.</param>
         void Select(IEnumerable<IWebElement> table, int iRow);
     }
 
+    /// <summary>
+    /// Abstract class representing a selection type.
+    /// </summary>
     public abstract class SelectionType : ISelectionType
     {
+        /// <summary>
+        /// Selects a row in a table.
+        /// </summary>
+        /// <param name="table">The table elements.</param>
+        /// <param name="iRow">The row index.</param>
         public abstract void Select(IEnumerable<IWebElement> table, int iRow);
     }
 
+    /// <summary>
+    /// Interface representing a grid type.
+    /// </summary>
     public interface IGridType
     {
+        /// <summary>
+        /// Searches a grid for a row that matches the specified criteria.
+        /// </summary>
+        /// <param name="driver">The WebDriver instance.</param>
+        /// <param name="Locators">Dictionary containing locators for important HTML items.</param>
+        /// <param name="oSelectType">A derived selection type.</param>
+        /// <param name="criteria">Criteria to find in a table row.</param>
+        /// <param name="blnAllTrue">All criteria must match if true, any one of criteria can match if false.</param>
+        /// <returns>True if a matching row is found; otherwise, false.</returns>
         bool GridSearch(IWebDriver driver, Dictionary<string, By> Locators, ISelectionType oSelectType, List<string> criteria, bool blnAllTrue);
-        int findRow(IEnumerable<IWebElement> tableRows, List<string> criteria, bool blnAllTrue = true, bool blnExactMatch = false);
+
+        /// <summary>
+        /// Finds a row in a table that matches the specified criteria.
+        /// </summary>
+        /// <param name="tableRows">The table rows.</param>
+        /// <param name="criteria">The search criteria.</param>
+        /// <param name="blnAllTrue">All criteria must match if true, any one of criteria can match if false.</param>
+        /// <param name="blnExactMatch">Text comparison method (Equals if true, Contains if false).</param>
+        /// <returns>The index of the matching row; 0 if no match is found.</returns>
+        int FindRow(IEnumerable<IWebElement> tableRows, List<string> criteria, bool blnAllTrue = true, bool blnExactMatch = false);
+
+        /// <summary>
+        /// Selects a row in the table.
+        /// </summary>
+        /// <param name="tableRows">The table rows.</param>
+        /// <param name="oSelectType">A derived selection type.</param>
+        /// <param name="iRowFound">The index of the row to select.</param>
         void RowSelect(ReadOnlyCollection<IWebElement> tableRows, ISelectionType oSelectType, int iRowFound);
     }
 
+    /// <summary>
+    /// Abstract class representing a grid type.
+    /// </summary>
     public abstract class GridType : IGridType
     {
         protected static readonly int _defaultTimeSpan = 1;
         protected static readonly int _timeDelay = 1500;
 
-        ///<summary>
-        ///Grid Search:
-        ///   1) Find and select a specific row in a table of search results given search criteria.
-        ///   2) This method will automatically advance through paginated results until the end is reached.
-        ///</summary>
-        ///<param name="Locators">Dictionary containing locators for important HTML items</param>
-        ///<param name="oSelectType">A derived selection type.</param>
-        ///<param name="criteria">Criteria to find in a table row</param>
-        ///<param name="blnAllTrue">all criteria must match if true, any one of criteria can match if false</param>
+        /// <summary>
+        /// Searches a grid for a row that matches the specified criteria.
+        /// </summary>
+        /// <param name="driver">The WebDriver instance.</param>
+        /// <param name="Locators">Dictionary containing locators for important HTML items.</param>
+        /// <param name="oSelectType">A derived selection type.</param>
+        /// <param name="criteria">Criteria to find in a table row.</param>
+        /// <param name="blnAllTrue">All criteria must match if true, any one of criteria can match if false.</param>
+        /// <returns>True if a matching row is found; otherwise, false.</returns>
         public bool GridSearch(IWebDriver driver, Dictionary<string, By> Locators, ISelectionType oSelectType, List<string> criteria, bool blnAllTrue)
         {
             int iRowFound = 0;
             bool blnKeepSearching = true;
-            bool blnNextDisabled, blnPrevDisabled;
-            IWebElement btnNext, btnPrevious;
-            IWebElement gridContainer;
+            IWebElement btnNext, btnPrevious, gridContainer;
 
-            //find row
             while (blnKeepSearching)
             {
-                // Wait for busy indicator
-                driver.PauseOnBusyIndicator(Locators["busySpinnerLocator"], TimeSpan.FromSeconds(_defaultTimeSpan));
+                WaitForBusyIndicator(driver, Locators["busySpinnerLocator"]);
                 gridContainer = driver.FindElement(Locators["gridContainerLocator"]);
 
-                // No gridContainer; bail!
                 if (gridContainer == null)
                     break;
 
-                // Scroll to gridContainer
                 driver.ScrollToElement(gridContainer);
                 driver.wait_A_Moment(_timeDelay / 2);
 
-                // Find table within gridContainer
                 ReadOnlyCollection<IWebElement> tableRows = gridContainer.FindElements(Locators["tableRowsLocator"]);
+                if (TableHasNoRecords(tableRows))
+                    return false;
 
-                // No results; bail!
-                foreach (var row in tableRows)
+                btnNext = TryFindElement(gridContainer, Locators["nextButtonLocator"]);
+                btnPrevious = TryFindElement(gridContainer, Locators["previousButtonLocator"]);
+
+                bool blnNextDisabled = IsButtonDisabled(btnNext);
+                bool blnPrevDisabled = IsButtonDisabled(btnPrevious);
+
+                if (blnNextDisabled && blnPrevDisabled)
                 {
-                    if (row.Text.ToLower().Contains("no records"))
-                        return false;
-                }
-
-                // Find Next and Previous buttons
-                try { btnNext = gridContainer.FindElement(Locators["nextButtonLocator"]); } catch { btnNext = null; }
-                try { btnPrevious = gridContainer.FindElement(Locators["previousButtonLocator"]); } catch { btnPrevious = null; }
-
-                // Ascertain state of Next and Previous buttons
-                blnNextDisabled = (btnNext == null) || Convert.ToBoolean(btnNext.GetAttribute("disabled"));
-                blnPrevDisabled = (btnPrevious == null) || Convert.ToBoolean(btnPrevious.GetAttribute("disabled"));
-
-                // Page Navigation
-                if (blnNextDisabled && blnPrevDisabled)  //one page
-                {
-                    iRowFound = findRow(tableRows, criteria, blnAllTrue);
+                    iRowFound = FindRow(tableRows, criteria, blnAllTrue);
                     if (iRowFound > 0)
-                    {
                         oSelectType.Select(tableRows, iRowFound);
-                    }
 
                     blnKeepSearching = false;
                 }
-                else if (blnPrevDisabled) //first of multi page
+                else if (blnPrevDisabled)
                 {
-                    iRowFound = findRow(tableRows, criteria, blnAllTrue);
+                    iRowFound = FindRow(tableRows, criteria, blnAllTrue);
                     if (iRowFound > 0)
                     {
                         oSelectType.Select(tableRows, iRowFound);
                         break;
                     }
 
-                    if (!blnNextDisabled)
-                        btnNext.Click();
+                    btnNext?.Click();
                 }
-                else if (blnNextDisabled) // last page (end of search)
+                else if (blnNextDisabled)
                 {
-                    iRowFound = findRow(tableRows, criteria, blnAllTrue);
+                    iRowFound = FindRow(tableRows, criteria, blnAllTrue);
                     if (iRowFound > 0)
-                    {
                         oSelectType.Select(tableRows, iRowFound);
-                    }
 
                     blnKeepSearching = false;
                 }
-                else //next pages
+                else
                 {
-                    iRowFound = findRow(tableRows, criteria, blnAllTrue);
+                    iRowFound = FindRow(tableRows, criteria, blnAllTrue);
                     if (iRowFound > 0)
                     {
                         oSelectType.Select(tableRows, iRowFound);
                         break;
                     }
 
-                    if (!blnNextDisabled)
-                        btnNext.Click();
+                    btnNext?.Click();
                 }
             }
 
-            return (iRowFound > 0);
+            return iRowFound > 0;
         }
 
-        ///<summary>
-        /// findRow(): Support function for all Grid Search functions.
-        /// Returns the index of the first row that matches given criteria (0 is returned if not found).
-        /// Subtract 1 to use in zero-based array.
-        /// Algorithm improved by u/vidaj from Reddit.
-        ///</summary>
-        ///<param name="tableRows">Enumerated table rows</param>
-        ///<param name="criteria">Criteria to find in a table row</param>
-        ///<param name="blnAllTrue">all criteria must match if true, any one of criteria can match if false</param>
-        ///<param name="blnExactMatch">text comparison method (Equals if true, Contains if false)</param>
-        public int findRow(IEnumerable<IWebElement> tableRows, List<string> criteria, bool blnAllTrue = true, bool blnExactMatch = false)
+        private static void WaitForBusyIndicator(IWebDriver driver, By busySpinnerLocator)
         {
-            // Avoid doing a .Trim() on each criteria for each row and column.
-            var normalizedCriteria = criteria.Where(c => !string.IsNullOrEmpty(c)).Select(c => c.Trim()).ToArray();
+            driver.PauseOnBusyIndicator(busySpinnerLocator, TimeSpan.FromSeconds(_defaultTimeSpan));
+        }
+
+        private static bool TableHasNoRecords(ReadOnlyCollection<IWebElement> tableRows)
+        {
+            return tableRows.Any(row => row.Text.ToLower().Contains("no records"));
+        }
+
+        private static IWebElement TryFindElement(IWebElement container, By locator)
+        {
+            try
+            {
+                return container.FindElement(locator);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static bool IsButtonDisabled(IWebElement button)
+        {
+            return button == null || Convert.ToBoolean(button.GetAttribute("disabled"));
+        }
+
+        /// <summary>
+        /// Finds a row in a table that matches the specified criteria.
+        /// </summary>
+        /// <param name="tableRows">The table rows.</param>
+        /// <param name="criteria">The search criteria.</param>
+        /// <param name="blnAllTrue">All criteria must match if true, any one of criteria can match if false.</param>
+        /// <param name="blnExactMatch">Text comparison method (Equals if true, Contains if false).</param>
+        /// <returns>The index of the matching row; 0 if no match is found.</returns>
+        public int FindRow(IEnumerable<IWebElement> tableRows, List<string> criteria, bool blnAllTrue = true, bool blnExactMatch = false)
+        {
+            string[] normalizedCriteria = criteria.Where(c => !string.IsNullOrEmpty(c)).Select(c => c.Trim()).ToArray();
             if (normalizedCriteria.Length == 0)
-                throw new ArgumentException("no criteria", nameof(criteria));
+                throw new ArgumentException("No criteria provided", nameof(criteria));
 
             IWebDriver driver = ((IWrapsDriver)tableRows.FirstOrDefault()).WrappedDriver;
 
-            for (int iRow = 0, rowLength = tableRows.Count(); iRow < rowLength; iRow++)
+            for (int iRow = 0; iRow < tableRows.Count(); iRow++)
             {
-                IWebElement row = null;
-                IEnumerable<IWebElement> rowCells = null;
-                string[] cellContents = null;
-
-                // Common place for StaleElementReferenceException
-                driver.PerformActionWithRetry(TimeSpan.FromSeconds(45), 15,
-                    d =>
-                    {
-                        try
-                        {
-                            row = tableRows.ElementAt(iRow);
-                            rowCells = row.FindElements(By.TagName("td"));
-                            return (row != null) && (rowCells != null);
-                        }
-                        catch
-                        {
-                            return false;
-                        }
-                    });
-
-                // This can cause a slowdown for tables with lots of columns where the criteria matches early columns.
-                // If that's the case, one can create an array of strings with null-values and initialize each cell on
-                // first read if cellContents[cellColumn] == null
-                if (rowCells != null)
-                    cellContents = rowCells.Select(cell => DecodeAndTrim(cell.Text)).ToArray();
-                else
-                    return 0;
-
-
-                bool isMatch = false;
-                foreach (string criterion in normalizedCriteria)
+                if (TryGetRowCells(driver, tableRows, iRow, out string[] cellContents))
                 {
-                    foreach (string cellContent in cellContents)
-                    {
-                        // string.Contains(string, StringComparison) is not available for .Net Framework.
-                        // If you're using .Net Framework, substitute by "cellContent.IndexOf(criterion, StringComparison.InvariantCultureIgnoreCase) >= 0
-                        isMatch = (blnExactMatch && string.Equals(criterion, cellContent, StringComparison.InvariantCultureIgnoreCase)) || cellContent.IndexOf(criterion, StringComparison.InvariantCultureIgnoreCase) >= 0;
-
-                        if (isMatch)
-                        {
-                            if (!blnAllTrue)
-                            {
-                                return iRow + 1;
-                            }
-                            break;
-                        }
-                    }
-
-                    if (blnAllTrue && !isMatch)
-                    {
-                        break;
-                    }
-                }
-
-                if (isMatch)
-                {
-                    return iRow + 1;
+                    if (DoesRowMatchCriteria(normalizedCriteria, cellContents, blnAllTrue, blnExactMatch))
+                        return iRow + 1;
                 }
             }
 
             return 0;
         }
 
+        private static bool TryGetRowCells(IWebDriver driver, IEnumerable<IWebElement> tableRows, int rowIndex, out string[] cellContents)
+        {
+            IWebElement row = null;
+            IEnumerable<IWebElement> rowCells = null;
+
+            bool success = driver.PerformActionWithRetry(TimeSpan.FromSeconds(60), 15, d =>
+            {
+                try
+                {
+                    row = tableRows.ElementAt(rowIndex);
+                    rowCells = row.FindElements(By.TagName("td"));
+                    return row != null && rowCells != null;
+                }
+                catch
+                {
+                    return false;
+                }
+            });
+
+            cellContents = success ? rowCells.Select(cell => DecodeAndTrim(cell.Text)).ToArray() : null;
+            return success;
+        }
+
+        private static bool DoesRowMatchCriteria(string[] criteria, string[] cellContents, bool allCriteriaMustMatch, bool exactMatch)
+        {
+            foreach (string criterion in criteria)
+            {
+                bool isMatch = cellContents.Any(cellContent =>
+                    exactMatch ? string.Equals(criterion, cellContent, StringComparison.InvariantCultureIgnoreCase)
+                               : cellContent.IndexOf(criterion, StringComparison.InvariantCultureIgnoreCase) >= 0);
+
+                if (isMatch && !allCriteriaMustMatch)
+                    return true;
+
+                if (!isMatch && allCriteriaMustMatch)
+                    return false;
+            }
+
+            return allCriteriaMustMatch;
+        }
+
         /// <summary>
-        /// Exposes the Select method from the SelectionType.
+        /// Selects a row in the table.
         /// </summary>
-        /// <param name="tableRows">ReadOnlyCollection of HTML "tr" objects as IWebElements.</param>
-        /// <param name="oSelectType">A selection type derived from the SelectionType abstract class.</param>
-        /// <param name="iRowFound">Index of the table row.</param>
+        /// <param name="tableRows">The table rows.</param>
+        /// <param name="oSelectType">A derived selection type.</param>
+        /// <param name="iRowFound">The index of the row to select.</param>
         public void RowSelect(ReadOnlyCollection<IWebElement> tableRows, ISelectionType oSelectType, int iRowFound)
         {
             if (iRowFound > 0)
@@ -235,54 +281,46 @@ namespace Element34.Utilities
             }
         }
 
-        ///<summary>
-        /// DecodeAndTrim:
-        ///   1) Converts a string that has been HTML-encoded for HTTP transmission into a decoded string.
-        ///   2) Replace any sequence of whitespaces by a single one.
-        ///   3) Remove any leading or trailing whitespaces.
-        ///   Function improved by u/vidaj from Reddit.
-        ///</summary>
-        ///<param name="sInput">Input string</param>
-        ///<param name="chNormalizeTo">Whitespace replacement char</param>
+        /// <summary>
+        /// Decodes an HTML-encoded string and trims excess whitespace.
+        /// </summary>
+        /// <param name="sInput">The input string.</param>
+        /// <param name="chNormalizeTo">Whitespace replacement character.</param>
+        /// <returns>The decoded and trimmed string.</returns>
         private static string DecodeAndTrim(string sInput, char chNormalizeTo = ' ')
         {
-            // If blank, just carry on...
             if (string.IsNullOrWhiteSpace(sInput))
             {
                 return string.Empty;
             }
 
-            // Don't allocate a new string if there is nothing to decode
             if (sInput.IndexOf('&') != -1)
             {
                 sInput = HttpUtility.HtmlDecode(sInput);
             }
 
-            // Pre-initialize the stringbuilder with the previous string's length.
-            // This will over-allocate by the number of extra whitespace,
-            // but will avoid new allocations every time the stringbuilder runs out of storage space.
             StringBuilder sbOutput = new StringBuilder(sInput.Length);
-            bool blnPreviousWasWhiteSpace = false;
-            bool blnHasSeenNonWhiteSpace = false;
+            bool previousWasWhiteSpace = false;
+            bool hasSeenNonWhiteSpace = false;
+
             foreach (char c in sInput)
             {
                 if (char.IsWhiteSpace(c))
                 {
-                    // Trims the start of the string
-                    if (!blnHasSeenNonWhiteSpace)
+                    if (!hasSeenNonWhiteSpace)
                     {
                         continue;
                     }
-                    if (!blnPreviousWasWhiteSpace)
+                    if (!previousWasWhiteSpace)
                     {
                         sbOutput.Append(chNormalizeTo);
-                        blnPreviousWasWhiteSpace = true;
+                        previousWasWhiteSpace = true;
                     }
                 }
                 else
                 {
-                    blnPreviousWasWhiteSpace = false;
-                    blnHasSeenNonWhiteSpace = true;
+                    previousWasWhiteSpace = false;
+                    hasSeenNonWhiteSpace = true;
                     sbOutput.Append(c);
                 }
             }
@@ -292,25 +330,7 @@ namespace Element34.Utilities
                 return string.Empty;
             }
 
-            // remove trailing whitespaces
-            int i = sbOutput.Length - 1;
-            for (; i >= 0; i--)
-            {
-                if (!char.IsWhiteSpace(sbOutput[i]))
-                    break;
-            }
-            if (i < sbOutput.Length - 1) sbOutput.Length = i + 1;
-
-            // trim leading whitespaces
-            i = 0;
-            for (; i <= (sbOutput.Length - 1); i++)
-            {
-                if (!char.IsWhiteSpace(sbOutput[i]))
-                    break;
-            }
-            if (i > 0) sbOutput.Remove(sbOutput.Length - i, i);
-
-            return sbOutput.ToString();
+            return sbOutput.ToString().Trim();
         }
     }
 }

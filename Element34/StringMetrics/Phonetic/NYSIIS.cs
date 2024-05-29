@@ -42,7 +42,7 @@ namespace Element34.StringMetrics.Phonetic
                 key = key.Substring(0, suffix[0].Length);
 
             suffix = Regex.Split(key, @"\s+[VI]+$");
-            if (suffix.Length > 0)
+            if(suffix.Length > 0)
                 key = key.Substring(0, suffix[0].Length);
 
             // remove all non-alpha characters

@@ -103,7 +103,7 @@ namespace Element34.StringMetrics.Phonetic
             txt = RegexReplaceG(txt, @"w", @"2");
             txt = RegexReplaceG(txt, @"^h", @"A");
             txt = RegexReplaceG(txt, @"h", @"2");
-            txt = RegexReplaceG(txt, @"r3", @"R3");
+            txt = RegexReplaceG(txt, @"r3",@"R3");
             txt = RegexReplaceG(txt, @"ry", @"Ry"); // 1.0 only
             txt = RegexReplaceG(txt, @"r", @"2");
             txt = RegexReplaceG(txt, @"l3", @"L3");
@@ -118,7 +118,7 @@ namespace Element34.StringMetrics.Phonetic
             txt = RegexReplaceG(txt, @"3", @"");
 
             // 6. put six 1s on the end
-            txt = txt + SIX_1;
+            txt += SIX_1;
 
             // 7. take the first six characters as the code
             return txt.Substring(0, tokenLength);

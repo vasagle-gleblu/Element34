@@ -1,3 +1,4 @@
+using ADOX;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -16,7 +17,7 @@ namespace Element34.StringMetrics.Similarity
         private static int N { get; set; }
 
         public SorensenDiceMetric() : this(1)
-        {
+        { 
         }
 
         public SorensenDiceMetric(int n)

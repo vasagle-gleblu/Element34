@@ -26,7 +26,7 @@ namespace Element34.StringMetrics.Similarity
         }
 
         public WeightedLevenshteinMetric() : this(1.0m, 1.0m, 1.0m)
-        { }
+        {}
 
         public override double? Compute(string a, string b)
         {

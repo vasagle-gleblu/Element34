@@ -2,39 +2,48 @@
 
 namespace Element34.ExtensionClasses
 {
-    public static class TimeExtensions
+    /// <summary>
+    /// Provides extension methods for the <see cref="TimeSpan"/> structure.
+    /// </summary>
+    public static class TimeSpanExtensions
     {
         private const int SecondsInDay = 86400;
 
+        /// <summary>
+        /// Parses a string into a <see cref="TimeSpan"/> object. The string can represent a time in the following formats:
+        /// - A time of day (e.g., "13:45:30")
+        /// - A decimal representing a fraction of a day (e.g., "0.5" for 12:00:00)
+        /// - A <see cref="TimeSpan"/> string (e.g., "12:30:00")
+        /// </summary>
+        /// <param name="sValue">The string representation of the time.</param>
+        /// <returns>A <see cref="TimeSpan"/> object representing the parsed time.</returns>
+        /// <exception cref="ArgumentException">Thrown when the input string is not in a valid format.</exception>
         public static TimeSpan ParseTimespan(string sValue)
         {
-            decimal decimalValue;
-            DateTime dateTime;
-            TimeSpan timeOfDay = TimeSpan.Zero;
+            if (string.IsNullOrWhiteSpace(sValue))
+                throw new ArgumentException("Input value cannot be null or empty.", nameof(sValue));
 
-            if (DateTime.TryParse(sValue, out dateTime))
+            if (DateTime.TryParse(sValue, out DateTime dateTime))
             {
-                timeOfDay = TimeSpan.Parse(string.Format("{0:HH:mm:ss}", dateTime));
+                return dateTime.TimeOfDay;
             }
-            else if (Decimal.TryParse(sValue, out decimalValue))
+
+            if (decimal.TryParse(sValue, out decimal decimalValue))
             {
-                // Ensure the decimal value is within the range [0, 1]
                 decimal normalizedValue = decimalValue % 1;
                 if (normalizedValue < 0)
                     normalizedValue += 1;
 
-                // Calculate the number of seconds elapsed
                 int elapsedSeconds = (int)Math.Round(normalizedValue * SecondsInDay);
-
-                // Convert seconds to TimeSpan
-                timeOfDay = TimeSpan.FromSeconds(elapsedSeconds);
+                return TimeSpan.FromSeconds(elapsedSeconds);
             }
-            else if (TimeSpan.TryParse(sValue, out timeOfDay))
-            { }
-            else
-                throw new ArgumentException("Invalid time format.", nameof(sValue));
 
-            return timeOfDay;
+            if (TimeSpan.TryParse(sValue, out TimeSpan timeOfDay))
+            {
+                return timeOfDay;
+            }
+
+            throw new ArgumentException("Invalid time format.", nameof(sValue));
         }
     }
 }

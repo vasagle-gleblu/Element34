@@ -162,6 +162,15 @@ namespace Element34.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum..
+        /// </summary>
+        internal static string Lorem_Ipsum {
+            get {
+                return ResourceManager.GetString("Lorem_Ipsum", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-16&quot;?&gt;
         ///&lt;ArrayOfanyType xmlns:i=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; xmlns=&quot;http://schemas.microsoft.com/2003/10/Serialization/Arrays&quot;&gt;
         ///	&lt;anyType xmlns:d2p1=&quot;http://www.w3.org/2001/XMLSchema&quot; i:type=&quot;d2p1:string&quot;&gt;a&lt;/anyType&gt;

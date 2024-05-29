@@ -7,7 +7,7 @@ namespace Element34.StringMetrics.Phonetic
     /// encoding algorithm takes a word, spelled correctly or incorrectly, or a name, and returns a 'phoneticised' 
     /// key value that should be the same for all words that are pronounced similarly.
     /// </summary>
-
+ 
     public class Metaphone3 : IStringMetaphoneEncoder, IStringMetaphoneComparison
     {
 
